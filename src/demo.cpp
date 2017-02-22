@@ -1,6 +1,7 @@
  
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdexcept>
 #include <memory.h>
 #include <math.h>
 #include <GL/glew.h>

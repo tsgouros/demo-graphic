@@ -17,6 +17,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # Linux specific code
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   set(CMAKE_CXX_FLAGS_DEBUG "-lsvml -lirc ${CMAKE_CXX_FLAGS_DEBUG}")
+
+#  set(CMAKE_C_COMPILER gcc)
+#  set(CMAKE_CXX_COMPILER g++)
+
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
