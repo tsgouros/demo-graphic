@@ -10,6 +10,11 @@
 #include <iostream>
 #include <fstream>
 
+// Include GLM
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+
 std::string textFileRead(std::string fileName) {
 
   std::string shaderCode;
@@ -32,7 +37,7 @@ std::string textFileRead(std::string fileName) {
 
 // Data for drawing Axis
 float verticesAxis[] = {-20.0f, 0.0f, 0.0f, 1.0f,
-                        20.0f, 0.0f, 0.0f, 1.0f,
+                         20.0f, 0.0f, 0.0f, 1.0f,
  
                         0.0f, -20.0f, 0.0f, 1.0f,
                         0.0f,  20.0f, 0.0f, 1.0f,
@@ -40,21 +45,21 @@ float verticesAxis[] = {-20.0f, 0.0f, 0.0f, 1.0f,
                         0.0f, 0.0f, -20.0f, 1.0f,
                         0.0f, 0.0f,  20.0f, 1.0f};
  
-float colorAxis[] = {   1.0f, 0.0f, 0.0f, 0.0f,
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        1.0f, 0.0f, 0.0f, 0.0f};
+float colorAxis[] = {   0.0f, 1.0f, 1.0f, 0.0f,
+                        0.0f, 1.0f, 1.0f, 0.0f,
+                        1.0f, 1.0f, 0.0f, 0.0f,
+                        1.0f, 1.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 1.0f, 0.0f,
+                        1.0f, 0.0f, 1.0f, 0.0f};
  
 // Data for triangle 1
 float vertices1[] = {   -3.0f, 0.0f, -5.0f, 1.0f,
                         -1.0f, 0.0f, -5.0f, 1.0f,
                         -2.0f, 2.0f, -5.0f, 1.0f};
  
-float colors1[] = { 0.0f, 0.0f, 1.0f, 1.0f,
-                    0.0f, 0.0f, 1.0f, 1.0f,
-                    0.0f,0.0f, 1.0f, 1.0f};
+float colors1[] = { 0.0f, 1.0f, 1.0f, 1.0f,
+                    0.0f, 1.0f, 1.0f, 1.0f,
+                    0.0f, 1.0f, 1.0f, 1.0f};
  
 // Data for triangle 2
 float vertices2[] = {   1.0f, 0.0f, -5.0f, 1.0f,
@@ -64,7 +69,11 @@ float vertices2[] = {   1.0f, 0.0f, -5.0f, 1.0f,
 float colors2[] = { 1.0f, 1.0f, 0.0f, 1.0f,
                     1.0f, 1.0f, 0.0f, 1.0f,
                     1.0f, 1.0f, 0.0f, 1.0f};
- 
+
+// Where are we and where are we looking?
+float posX, posY, posZ, lookAtX, lookAtY, lookAtZ;
+float stepX, stepY, stepZ;
+
 // Shader Names
 std::string vertexFileName = "../src/shader.vp";
 std::string fragmentFileName = "../src/shader.fp";
@@ -147,6 +156,7 @@ void multMatrix(float *a, float *b) {
 void setTranslationMatrix(float *mat, float x, float y, float z) {
  
     setIdentityMatrix(mat,4);
+
     mat[12] = x;
     mat[13] = y;
     mat[14] = z;
@@ -161,7 +171,8 @@ void buildProjectionMatrix(float fov, float ratio, float nearP, float farP) {
     float f = 1.0f / tan (fov * (M_PI / 360.0));
  
     setIdentityMatrix(projMatrix,4);
- 
+
+    
     projMatrix[0] = f / ratio;
     projMatrix[1 * 4 + 1] = f;
     projMatrix[2 * 4 + 2] = (farP + nearP) / (nearP - farP);
@@ -189,10 +200,10 @@ void setCamera(float posX, float posY, float posZ,
     dir[2] =  (lookAtZ - posZ);
     normalize(dir);
  
-    crossProduct(dir,up,right);
+    crossProduct(dir, up, right);
     normalize(right);
  
-    crossProduct(right,dir,up);
+    crossProduct(right, dir, up);
     normalize(up);
  
     float aux[16];
@@ -229,14 +240,13 @@ void changeSize(int w, int h) {
     float ratio;
     // Prevent a divide by zero, when window is too short
     // (you cant make a window of zero width).
-    if(h == 0)
-        h = 1;
+    if(h == 0) h = 1;
  
     // Set the viewport to be the entire window
     glViewport(0, 0, w, h);
  
     ratio = (1.0f * w) / h;
-    buildProjectionMatrix(53.13f, ratio, 1.0f, 30.0f);
+    buildProjectionMatrix(53.13f, ratio, 0.1f, 100.0f);
 }
  
 void setupBuffers() {
@@ -312,7 +322,8 @@ void renderScene(void) {
  
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-    setCamera(20, 2, 20, 0, 2, -5);
+    //    setCamera(20, 2, 20, 0, 2, -5);
+    setCamera(posX, posY, posZ, lookAtX, lookAtY, lookAtZ);
  
     glUseProgram(shaderProgramID);
     setUniforms();
@@ -330,12 +341,54 @@ void renderScene(void) {
 }
  
 void processNormalKeys(unsigned char key, int x, int y) {
- 
-    if (key == 27) {
-        glDeleteVertexArrays(3, &vao[0]);
-        glDeleteProgram(shaderProgramID);
-        exit(0);
-    }
+
+  //std::cout << "key:" << key << " x:" << x << " y:" << y << std::endl;
+  switch (key) {
+  case 27:
+    glDeleteVertexArrays(3, &vao[0]);
+    glDeleteProgram(shaderProgramID);
+    exit(0);
+
+    // These next few are for steering the position of the viewer.
+  case 'a':
+    posX -= stepX;
+    break;
+  case 'q':
+    posX += stepX;
+    break;
+  case 's':
+    posY -= stepY;
+    break;
+  case 'w':
+    posY += stepY;
+    break;
+  case 'd':
+    posZ -= stepZ;
+    break;
+  case 'e':
+    posZ += stepZ;
+    break;
+
+    // These next are for steering the position of where you're looking.
+  case 'j':
+    lookAtX -= stepX;
+    break;
+  case 'u':
+    lookAtX += stepX;
+    break;
+  case 'k':
+    lookAtY -= stepY;
+    break;
+  case 'i':
+    lookAtY += stepY;
+    break;
+  case 'l':
+    lookAtZ -= stepZ;
+    break;
+  case 'o':
+    lookAtZ += stepZ;
+    break;
+  }
 }
  
 void printShaderInfoLog(GLuint obj) {
@@ -416,7 +469,13 @@ GLuint setupShaders() {
 }
  
 int main(int argc, char **argv) {
-    glutInit(&argc, argv);
+
+  // Initialize position:
+  posX = 20.0f;   posY = 2.0f;     posZ = 20.0f;
+  lookAtX = 0.0f; lookAtY = 2.0f;  lookAtZ = -5.0f;
+  stepX = 0.1f;   stepY = 0.1f;    stepZ = 0.1f;  
+
+  glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100,100);
