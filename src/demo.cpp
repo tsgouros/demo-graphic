@@ -252,19 +252,17 @@ void changeSize(int w, int h) {
     ratio = (1.0f * w) / h;
     buildProjectionMatrix(53.13f, ratio, 0.1f, 100.0f);
 }
- 
+
+GLuint buffers[6];
+
 void setupBuffers() {
  
-    GLuint buffers[2];
+    glGenBuffers(6, buffers);
 
-    glGenVertexArraysAPPLE(3, vao);
+    // Buffers for first triangle
     //
-    // VAO for first triangle
-    //
-    glBindVertexArrayAPPLE(vao[0]);
+
     // Generate two slots for the vertex and color buffers
-    glGenBuffers(2, buffers);
-    std::cout << "for vao[0]: " << buffers[0] << ", " << buffers[1] << std::endl;
     // bind buffer for vertices and copy data into buffer
     glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
@@ -278,40 +276,31 @@ void setupBuffers() {
     glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
  
     //
-    // VAO for second triangle
+    // second triangle
     //
-    glBindVertexArrayAPPLE(vao[1]);
-    // Generate two slots for the vertex and color buffers
-    glGenBuffers(2, buffers);
-    std::cout << "for vao[1]: " << buffers[0] << ", " << buffers[1] << std::endl;
-    
     // bind buffer for vertices and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
     glEnableVertexAttribArray(vertexLoc);
     glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
  
     // bind buffer for colors and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colors2), colors2, GL_STATIC_DRAW);
     glEnableVertexAttribArray(colorLoc);
     glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
  
     //
-    // This VAO is for the Axis
+    //  Axis
     //
-    glBindVertexArrayAPPLE(vao[2]);
-    // Generate two slots for the vertex and color buffers
-    glGenBuffers(2, buffers);
-    std::cout << "for vao[2]: " << buffers[0] << ", " << buffers[1] << std::endl;
     // bind buffer for vertices and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[4]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesAxis), verticesAxis, GL_STATIC_DRAW);
     glEnableVertexAttribArray(vertexLoc);
     glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
  
     // bind buffer for colors and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[5]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colorAxis), colorAxis, GL_STATIC_DRAW);
     glEnableVertexAttribArray(colorLoc);
     glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
@@ -334,13 +323,34 @@ void renderScene(void) {
     glUseProgram(shaderProgramID);
     setUniforms();
  
-    glBindVertexArrayAPPLE(vao[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+    glEnableVertexAttribArray(vertexLoc);
+    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+    glEnableVertexAttribArray(colorLoc);
+    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+
     glDrawArrays(GL_TRIANGLES, 0, 3);
  
-    glBindVertexArrayAPPLE(vao[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
+    glEnableVertexAttribArray(vertexLoc);
+    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);
+    glEnableVertexAttribArray(colorLoc);
+    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+
     glDrawArrays(GL_TRIANGLES, 0, 3);
  
-    glBindVertexArrayAPPLE(vao[2]);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[4]);
+    glEnableVertexAttribArray(vertexLoc);
+    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
+ 
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[5]);
+    glEnableVertexAttribArray(colorLoc);
+    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+
     glDrawArrays(GL_LINES, 0, 6);
  
     glutSwapBuffers();
