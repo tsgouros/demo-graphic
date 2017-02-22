@@ -1,10 +1,3 @@
-/*
- 
-  Simple GLSL 1.5 Demo 
- 
-  www.lighthouse3d.com
- 
-*/
  
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,51 +32,51 @@ std::string textFileRead(std::string fileName) {
 
 // Data for drawing Axis
 float verticesAxis[] = {-20.0f, 0.0f, 0.0f, 1.0f,
-            20.0f, 0.0f, 0.0f, 1.0f,
+                        20.0f, 0.0f, 0.0f, 1.0f,
  
-            0.0f, -20.0f, 0.0f, 1.0f,
-            0.0f,  20.0f, 0.0f, 1.0f,
+                        0.0f, -20.0f, 0.0f, 1.0f,
+                        0.0f,  20.0f, 0.0f, 1.0f,
  
-            0.0f, 0.0f, -20.0f, 1.0f,
-            0.0f, 0.0f,  20.0f, 1.0f};
+                        0.0f, 0.0f, -20.0f, 1.0f,
+                        0.0f, 0.0f,  20.0f, 1.0f};
  
-float colorAxis[] = {   0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f};
+float colorAxis[] = {   1.0f, 0.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        1.0f, 0.0f, 0.0f, 0.0f};
  
 // Data for triangle 1
 float vertices1[] = {   -3.0f, 0.0f, -5.0f, 1.0f,
-            -1.0f, 0.0f, -5.0f, 1.0f,
-            -2.0f, 2.0f, -5.0f, 1.0f};
+                        -1.0f, 0.0f, -5.0f, 1.0f,
+                        -2.0f, 2.0f, -5.0f, 1.0f};
  
 float colors1[] = { 0.0f, 0.0f, 1.0f, 1.0f,
-            0.0f, 0.0f, 1.0f, 1.0f,
-            0.0f,0.0f, 1.0f, 1.0f};
+                    0.0f, 0.0f, 1.0f, 1.0f,
+                    0.0f,0.0f, 1.0f, 1.0f};
  
 // Data for triangle 2
 float vertices2[] = {   1.0f, 0.0f, -5.0f, 1.0f,
-            3.0f, 0.0f, -5.0f, 1.0f,
-            2.0f, 2.0f, -5.0f, 1.0f};
+                        3.0f, 0.0f, -5.0f, 1.0f,
+                        2.0f, 2.0f, -5.0f, 1.0f};
  
-float colors2[] = { 1.0f, 0.0f, 0.0f, 1.0f,
-            1.0f, 0.0f, 0.0f, 1.0f,
-            1.0f,0.0f, 0.0f, 1.0f};
+float colors2[] = { 1.0f, 1.0f, 0.0f, 1.0f,
+                    1.0f, 1.0f, 0.0f, 1.0f,
+                    1.0f, 1.0f, 0.0f, 1.0f};
  
 // Shader Names
-std::string vertexFileName = "shader.vp";
-std::string fragmentFileName = "shader.fp";
+std::string vertexFileName = "../src/shader.vp";
+std::string fragmentFileName = "../src/shader.fp";
  
 // Program and Shader Identifiers
-GLuint shaderProgramID,v,f;
+GLuint shaderProgramID;
  
 // Vertex Attribute Locations
 GLuint vertexLoc, colorLoc;
  
 // Uniform variable Locations
-GLuint projMatrixLoc, viewMatrixLoc;
+GLuint projMatrixID, viewMatrixID;
  
 // Vertex Array Objects Identifiers
 GLuint vao[3];
@@ -311,15 +304,15 @@ void setupBuffers() {
 void setUniforms() {
  
     // must be called after glUseProgram
-    glUniformMatrix4fv(projMatrixLoc,  1, false, projMatrix);
-    glUniformMatrix4fv(viewMatrixLoc,  1, false, viewMatrix);
+    glUniformMatrix4fv(projMatrixID,  1, false, projMatrix);
+    glUniformMatrix4fv(viewMatrixID,  1, false, viewMatrix);
 }
  
 void renderScene(void) {
  
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-    setCamera(10,2,10,0,2,-5);
+    setCamera(20, 2, 20, 0, 2, -5);
  
     glUseProgram(shaderProgramID);
     setUniforms();
@@ -341,8 +334,6 @@ void processNormalKeys(unsigned char key, int x, int y) {
     if (key == 27) {
         glDeleteVertexArrays(3, &vao[0]);
         glDeleteProgram(shaderProgramID);
-        glDeleteShader(v);
-        glDeleteShader(f);
         exit(0);
     }
 }
@@ -384,10 +375,10 @@ void printProgramInfoLog(GLuint obj) {
  
 GLuint setupShaders() {
  
-    GLuint shaderProgramID, vertShaderIndex, fragShaderIndex;
+    GLuint shaderProgramID, vertShaderID, fragShaderID;
  
-    vertShaderIndex = glCreateShader(GL_VERTEX_SHADER);
-    fragShaderIndex = glCreateShader(GL_FRAGMENT_SHADER);
+    vertShaderID = glCreateShader(GL_VERTEX_SHADER);
+    fragShaderID = glCreateShader(GL_FRAGMENT_SHADER);
  
     std::string vs = textFileRead(vertexFileName.c_str());
     std::string fs = textFileRead(fragmentFileName.c_str());
@@ -395,18 +386,18 @@ GLuint setupShaders() {
     const char * vv = vs.c_str();
     const char * ff = fs.c_str();
  
-    glShaderSource(vertShaderIndex, 1, &vv, NULL);
-    glShaderSource(fragShaderIndex, 1, &ff, NULL);
+    glShaderSource(vertShaderID, 1, &vv, NULL);
+    glShaderSource(fragShaderID, 1, &ff, NULL);
  
-    glCompileShader(vertShaderIndex);
-    glCompileShader(fragShaderIndex);
+    glCompileShader(vertShaderID);
+    glCompileShader(fragShaderID);
  
-    printShaderInfoLog(vertShaderIndex);
-    printShaderInfoLog(fragShaderIndex);
+    printShaderInfoLog(vertShaderID);
+    printShaderInfoLog(fragShaderID);
  
     shaderProgramID = glCreateProgram();
-    glAttachShader(shaderProgramID,vertShaderIndex);
-    glAttachShader(shaderProgramID,fragShaderIndex);
+    glAttachShader(shaderProgramID,vertShaderID);
+    glAttachShader(shaderProgramID,fragShaderID);
  
     //    glBindFragDataLocation(shaderProgramID, 0, "outputF");
     glLinkProgram(shaderProgramID);
@@ -415,9 +406,12 @@ GLuint setupShaders() {
     vertexLoc = glGetAttribLocation(shaderProgramID,"position");
     colorLoc = glGetAttribLocation(shaderProgramID, "color"); 
  
-    projMatrixLoc = glGetUniformLocation(shaderProgramID, "projMatrix");
-    viewMatrixLoc = glGetUniformLocation(shaderProgramID, "viewMatrix");
+    projMatrixID = glGetUniformLocation(shaderProgramID, "projMatrix");
+    viewMatrixID = glGetUniformLocation(shaderProgramID, "viewMatrix");
  
+    glDeleteShader(vertShaderID);
+    glDeleteShader(fragShaderID);
+
     return(shaderProgramID);
 }
  
@@ -427,7 +421,7 @@ int main(int argc, char **argv) {
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100,100);
     glutInitWindowSize(320,320);
-    glutCreateWindow("Lighthouse 3D");
+    glutCreateWindow("OpenGL Demo");
  
     glutDisplayFunc(renderScene);
     glutIdleFunc(renderScene);
@@ -451,7 +445,7 @@ int main(int argc, char **argv) {
     }
  
     glEnable(GL_DEPTH_TEST);
-    glClearColor(1.0,1.0,1.0,1.0);
+    glClearColor(0.1 , 0.0, 0.7, 1.0);
  
     shaderProgramID = setupShaders(); 
     setupBuffers(); 
