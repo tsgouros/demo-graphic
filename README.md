@@ -6,7 +6,7 @@ This uses FreeGLUT, which can be installed on a Mac using Homebrew.  It is, at l
 
 To build on a Mac or on Linux:
 
-    $ git clone http://github.com:tsgouros/demo-graphic.git
+    $ git clone http://github.com/tsgouros/demo-graphic.git
     $ cd demo-graphic
     $ mkdir build
     $ cd build

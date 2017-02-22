@@ -257,11 +257,11 @@ void setupBuffers() {
  
     GLuint buffers[2];
 
-    glGenVertexArrays(3, vao);
+    glGenVertexArraysAPPLE(3, vao);
     //
     // VAO for first triangle
     //
-    glBindVertexArray(vao[0]);
+    glBindVertexArrayAPPLE(vao[0]);
     // Generate two slots for the vertex and color buffers
     glGenBuffers(2, buffers);
     std::cout << "for vao[0]: " << buffers[0] << ", " << buffers[1] << std::endl;
@@ -280,7 +280,7 @@ void setupBuffers() {
     //
     // VAO for second triangle
     //
-    glBindVertexArray(vao[1]);
+    glBindVertexArrayAPPLE(vao[1]);
     // Generate two slots for the vertex and color buffers
     glGenBuffers(2, buffers);
     std::cout << "for vao[1]: " << buffers[0] << ", " << buffers[1] << std::endl;
@@ -300,7 +300,7 @@ void setupBuffers() {
     //
     // This VAO is for the Axis
     //
-    glBindVertexArray(vao[2]);
+    glBindVertexArrayAPPLE(vao[2]);
     // Generate two slots for the vertex and color buffers
     glGenBuffers(2, buffers);
     std::cout << "for vao[2]: " << buffers[0] << ", " << buffers[1] << std::endl;
@@ -334,13 +334,13 @@ void renderScene(void) {
     glUseProgram(shaderProgramID);
     setUniforms();
  
-    glBindVertexArray(vao[0]);
+    glBindVertexArrayAPPLE(vao[0]);
     glDrawArrays(GL_TRIANGLES, 0, 3);
  
-    glBindVertexArray(vao[1]);
+    glBindVertexArrayAPPLE(vao[1]);
     glDrawArrays(GL_TRIANGLES, 0, 3);
  
-    glBindVertexArray(vao[2]);
+    glBindVertexArrayAPPLE(vao[2]);
     glDrawArrays(GL_LINES, 0, 6);
  
     glutSwapBuffers();
