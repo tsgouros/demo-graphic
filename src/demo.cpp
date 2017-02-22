@@ -36,39 +36,43 @@ std::string textFileRead(std::string fileName) {
 }
 
 // Data for drawing Axis
-float verticesAxis[] = {-20.0f, 0.0f, 0.0f, 1.0f,
-                         20.0f, 0.0f, 0.0f, 1.0f,
+float verticesAxis[] = {
+  -20.0f, 0.0f, 0.0f, 1.0f,
+  20.0f, 0.0f, 0.0f, 1.0f,
  
-                        0.0f, -20.0f, 0.0f, 1.0f,
-                        0.0f,  20.0f, 0.0f, 1.0f,
+  0.0f, -20.0f, 0.0f, 1.0f,
+  0.0f,  20.0f, 0.0f, 1.0f,
+
+  0.0f, 0.0f, -20.0f, 1.0f,
+  0.0f, 0.0f,  20.0f, 1.0f,
+};
  
-                        0.0f, 0.0f, -20.0f, 1.0f,
-                        0.0f, 0.0f,  20.0f, 1.0f};
- 
-float colorAxis[] = {   0.0f, 1.0f, 1.0f, 0.0f,
-                        0.0f, 1.0f, 1.0f, 0.0f,
-                        1.0f, 1.0f, 0.0f, 0.0f,
-                        1.0f, 1.0f, 0.0f, 0.0f,
-                        1.0f, 0.0f, 1.0f, 0.0f,
-                        1.0f, 0.0f, 1.0f, 0.0f};
+float colorAxis[] = {
+  1.0f, 1.0f, 0.0f, 0.0f,
+  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 1.0f, 1.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f,
+  0.0f, 0.0f, 1.0f, 0.0f
+};
  
 // Data for triangle 1
 float vertices1[] = {   -3.0f, 0.0f, -5.0f, 1.0f,
                         -1.0f, 0.0f, -5.0f, 1.0f,
                         -2.0f, 2.0f, -5.0f, 1.0f};
  
-float colors1[] = { 0.0f, 1.0f, 1.0f, 1.0f,
-                    0.0f, 1.0f, 1.0f, 1.0f,
-                    0.0f, 1.0f, 1.0f, 1.0f};
+float colors1[] = { 0.0f, 1.0f, 1.0f, 0.0f,
+                    0.0f, 1.0f, 1.0f, 0.0f,
+                    0.0f, 1.0f, 1.0f, 0.0f};
  
 // Data for triangle 2
 float vertices2[] = {   1.0f, 0.0f, -5.0f, 1.0f,
                         3.0f, 0.0f, -5.0f, 1.0f,
                         2.0f, 2.0f, -5.0f, 1.0f};
  
-float colors2[] = { 1.0f, 1.0f, 0.0f, 1.0f,
-                    1.0f, 1.0f, 0.0f, 1.0f,
-                    1.0f, 1.0f, 0.0f, 1.0f};
+float colors2[] = { 1.0f, 1.0f, 0.0f, 0.0f,
+                    1.0f, 1.0f, 0.0f, 0.0f,
+                    1.0f, 1.0f, 0.0f, 0.0f};
 
 // Where are we and where are we looking?
 float posX, posY, posZ, lookAtX, lookAtY, lookAtZ;
@@ -78,7 +82,7 @@ float stepX, stepY, stepZ;
 std::string vertexFileName = "../src/shader.vp";
 std::string fragmentFileName = "../src/shader.fp";
  
-// Program and Shader Identifiers
+// Program Identifier
 GLuint shaderProgramID;
  
 // Vertex Attribute Locations
@@ -260,6 +264,7 @@ void setupBuffers() {
     glBindVertexArray(vao[0]);
     // Generate two slots for the vertex and color buffers
     glGenBuffers(2, buffers);
+    std::cout << "for vao[0]: " << buffers[0] << ", " << buffers[1] << std::endl;
     // bind buffer for vertices and copy data into buffer
     glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
@@ -278,7 +283,8 @@ void setupBuffers() {
     glBindVertexArray(vao[1]);
     // Generate two slots for the vertex and color buffers
     glGenBuffers(2, buffers);
- 
+    std::cout << "for vao[1]: " << buffers[0] << ", " << buffers[1] << std::endl;
+    
     // bind buffer for vertices and copy data into buffer
     glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
@@ -297,6 +303,7 @@ void setupBuffers() {
     glBindVertexArray(vao[2]);
     // Generate two slots for the vertex and color buffers
     glGenBuffers(2, buffers);
+    std::cout << "for vao[2]: " << buffers[0] << ", " << buffers[1] << std::endl;
     // bind buffer for vertices and copy data into buffer
     glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesAxis), verticesAxis, GL_STATIC_DRAW);
@@ -322,7 +329,6 @@ void renderScene(void) {
  
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-    //    setCamera(20, 2, 20, 0, 2, -5);
     setCamera(posX, posY, posZ, lookAtX, lookAtY, lookAtZ);
  
     glUseProgram(shaderProgramID);
@@ -471,9 +477,9 @@ GLuint setupShaders() {
 int main(int argc, char **argv) {
 
   // Initialize position:
-  posX = 20.0f;   posY = 2.0f;     posZ = 20.0f;
+  posX = 40.0f;   posY = 4.0f;     posZ = 40.0f;
   lookAtX = 0.0f; lookAtY = 2.0f;  lookAtZ = -5.0f;
-  stepX = 0.1f;   stepY = 0.1f;    stepZ = 0.1f;  
+  stepX = 0.5f;   stepY = 0.5f;    stepZ = 0.5f;  
 
   glutInit(&argc, argv);
 
@@ -503,7 +509,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
  
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST | GL_PROGRAM_POINT_SIZE);
     glClearColor(0.1 , 0.0, 0.7, 1.0);
  
     shaderProgramID = setupShaders(); 
