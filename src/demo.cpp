@@ -37,181 +37,211 @@ std::string textFileRead(std::string fileName) {
 }
 
 // Data for drawing Axis
-float verticesAxis[] = {
-  -20.0f, 0.0f, 0.0f, 1.0f,
-  20.0f, 0.0f, 0.0f, 1.0f,
- 
-  0.0f, -20.0f, 0.0f, 1.0f,
-  0.0f,  20.0f, 0.0f, 1.0f,
+float verticesAxis[] = {  -20.0f, 0.0f, 0.0f, 1.0f, // The X axis
+                          20.0f, 0.0f, 0.0f, 1.0f,
 
-  0.0f, 0.0f, -20.0f, 1.0f,
-  0.0f, 0.0f,  20.0f, 1.0f,
-};
+                          0.0f, -20.0f, 0.0f, 1.0f, // The Y axis
+                          0.0f,  20.0f, 0.0f, 1.0f,
+
+                          0.0f, 0.0f, -20.0f, 1.0f, // The Z axis
+                          0.0f, 0.0f,  20.0f, 1.0f};
  
-float colorAxis[] = {
-  1.0f, 1.0f, 0.0f, 0.0f,
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 1.0f, 1.0f, 0.0f,
-  0.0f, 1.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f
-};
+float colorAxis[] = {  1.0f, 1.0f, 0.0f, 0.0f,
+                       1.0f, 0.0f, 0.0f, 0.0f,
+                       
+                       0.0f, 1.0f, 1.0f, 0.0f,
+                       0.0f, 1.0f, 0.0f, 0.0f,
+                       
+                       1.0f, 0.0f, 1.0f, 0.0f,
+                       0.0f, 0.0f, 1.0f, 0.0f};
  
 // Data for triangle 1
-float vertices1[] = {   -3.0f, 0.0f, -5.0f, 1.0f,
-                        -1.0f, 0.0f, -5.0f, 1.0f,
-                        -2.0f, 2.0f, -5.0f, 1.0f};
+float vertices1[] = { -3.0f, 0.0f, -5.0f, 1.0f,
+                      -1.0f, 0.0f, -5.0f, 1.0f,
+                      -2.0f, 2.0f, -5.0f, 1.0f};
  
 float colors1[] = { 0.0f, 1.0f, 1.0f, 0.0f,
                     0.0f, 1.0f, 1.0f, 0.0f,
                     0.0f, 1.0f, 1.0f, 0.0f};
  
 // Data for triangle 2
-float vertices2[] = {   1.0f, 0.0f, -5.0f, 1.0f,
-                        3.0f, 0.0f, -5.0f, 1.0f,
-                        2.0f, 2.0f, -5.0f, 1.0f};
+float vertices2[] = { 1.0f, 0.0f, -5.0f, 1.0f,
+                      3.0f, 0.0f, -5.0f, 1.0f,
+                      2.0f, 2.0f, -5.0f, 1.0f};
  
 float colors2[] = { 1.0f, 1.0f, 0.0f, 0.0f,
                     1.0f, 1.0f, 0.0f, 0.0f,
                     1.0f, 1.0f, 0.0f, 0.0f};
 
-// Where are we and where are we looking?
-float posX, posY, posZ, lookAtX, lookAtY, lookAtZ;
+// Where we are ...
+float posX, posY, posZ;
+
+// And where we're looking.
+float lookAtX, lookAtY, lookAtZ;
+
+// The step value for moving the pos or lookAt values.
 float stepX, stepY, stepZ;
 
-// Shader Names
+// Shader file names
 std::string vertexFileName = "../src/shader.vp";
 std::string fragmentFileName = "../src/shader.fp";
  
-// Program Identifier
+// This is where the index numbers for each of the data buffers are
+// stored.  They are initialized in the setupBuffers() function below,
+// and used in teh renderScene() function.
+GLuint buffers[6];
+
+// Program Identifier -- This represents the compiled collection
+// of shaders.
 GLuint shaderProgramID;
  
-// Vertex Attribute Locations
-GLuint vertexLoc, colorLoc;
+// Vertex attribute locations -- These tell OpenGL what variable
+// (called "attribute" in glsl-speak) in your shader goes with a
+// particular buffer of data.
+GLuint vertexID, colorID;
  
-// Uniform variable Locations
+// These are IDs of the glsl "uniform" values, used to tell OpenGL
+// which one belongs with which matrix in this program.
 GLuint projMatrixID, viewMatrixID;
  
-// Vertex Array Objects Identifiers
-GLuint vao[3];
- 
-// storage for Matrices
+// These are the actual matrices.
 float projMatrix[16];
 float viewMatrix[16];
  
-// ----------------------------------------------------
-// VECTOR STUFF
+// ---------------------------------------------------------------
+// VECTOR STUFF -- You will usually use a matrix math package that
+// takes care of all this stuff.  It's here for your edification in
+// case you're interested.
 //
  
 // res = a cross b;
 void crossProduct( float *a, float *b, float *res) {
  
-    res[0] = a[1] * b[2]  -  b[1] * a[2];
-    res[1] = a[2] * b[0]  -  b[2] * a[0];
-    res[2] = a[0] * b[1]  -  b[0] * a[1];
+  res[0] = a[1] * b[2]  -  b[1] * a[2];
+  res[1] = a[2] * b[0]  -  b[2] * a[0];
+  res[2] = a[0] * b[1]  -  b[0] * a[1];
 }
- 
-// Normalize a vec3
+
+// Normalize a vec3 -- Produce a unit length vector in the same
+// direction as the input vector.
 void normalize(float *a) {
  
-    float mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
+  float mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
  
-    a[0] /= mag;
-    a[1] /= mag;
-    a[2] /= mag;
+  a[0] /= mag;
+  a[1] /= mag;
+  a[2] /= mag;
 }
  
-// ----------------------------------------------------
-// MATRIX STUFF
+// ----------------------------------------------------------------
+// MATRIX STUFF -- Same as above.  You'll usually use a matrix math
+// package for this.
 //
  
-// sets the square matrix mat to the identity matrix,
-// size refers to the number of rows (or columns)
+// Creates a square identity matrix, i.e. a square matrix with 1's on
+// the diagonal.  It's an identity matrix because if you multiply it
+// by some vector or another matrix, you get the original vector or
+// matrix.
 void setIdentityMatrix( float *mat, int size) {
+  // size refers to the number of rows (or columns)
+  
+  // fill matrix with 0s
+  for (int i = 0; i < size * size; ++i)
+    mat[i] = 0.0f;
  
-    // fill matrix with 0s
-    for (int i = 0; i < size * size; ++i)
-            mat[i] = 0.0f;
- 
-    // fill diagonal with 1s
-    for (int i = 0; i < size; ++i)
-        mat[i + i * size] = 1.0f;
+  // fill diagonal with 1s
+  for (int i = 0; i < size; ++i)
+    mat[i + i * size] = 1.0f;
 }
  
-//
+// Multiplication of two matrices.
 // a = a * b;
 //
 void multMatrix(float *a, float *b) {
  
-    float res[16];
+  float res[16];
  
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            res[j*4 + i] = 0.0f;
-            for (int k = 0; k < 4; ++k) {
-                res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
-            }
-        }
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      res[j*4 + i] = 0.0f;
+      for (int k = 0; k < 4; ++k) {
+        res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
+      }
     }
-    memcpy(a, res, 16 * sizeof(float));
- 
+  }
+  memcpy(a, res, 16 * sizeof(float));
 }
- 
-// Defines a transformation matrix mat with a translation
+
+// A 'translation' matrix is one that moves a vector in a particular
+// direction.  If you define the direction with an (x, y, z), then the
+// matrix that moves another vector in that direction is an identity
+// matrix,
 void setTranslationMatrix(float *mat, float x, float y, float z) {
  
-    setIdentityMatrix(mat,4);
+  setIdentityMatrix(mat, 4);
 
-    mat[12] = x;
-    mat[13] = y;
-    mat[14] = z;
+  mat[12] = x;
+  mat[13] = y;
+  mat[14] = z;
 }
  
-// ----------------------------------------------------
-// Projection Matrix
+// --------------------------------------------------------------------
+// Projection Matrix -- This is how you build a projection matrix.
+// 'fov' stands for 'field of view' and is measured in degrees.
+// 'ratio' refers to the aspect ratio of the window the scene is
+// displayed in.  The nearClip and farClip distances define planes
+// perpendicular to the direction of view.  Objects closer than
+// nearClip or farther than farClip will not be displayed.  This is
+// applied to the view in the viewer space, also called the camera
+// space.
 //
+void buildProjectionMatrix(float fov, float ratio, float nearClip, float farClip) {
  
-void buildProjectionMatrix(float fov, float ratio, float nearP, float farP) {
+  float f = 1.0f / tan (fov * (M_PI / 360.0));
  
-    float f = 1.0f / tan (fov * (M_PI / 360.0));
- 
-    setIdentityMatrix(projMatrix,4);
-
+  setIdentityMatrix(projMatrix,4);
     
-    projMatrix[0] = f / ratio;
-    projMatrix[1 * 4 + 1] = f;
-    projMatrix[2 * 4 + 2] = (farP + nearP) / (nearP - farP);
-    projMatrix[3 * 4 + 2] = (2.0f * farP * nearP) / (nearP - farP);
-    projMatrix[2 * 4 + 3] = -1.0f;
-    projMatrix[3 * 4 + 3] = 0.0f;
+  projMatrix[0] = f / ratio;
+  projMatrix[1 * 4 + 1] = f;
+  projMatrix[2 * 4 + 2] = (farClip + nearClip) / (nearClip - farClip);
+  projMatrix[3 * 4 + 2] = (2.0f * farClip * nearClip) / (nearClip - farClip);
+  projMatrix[2 * 4 + 3] = -1.0f;
+  projMatrix[3 * 4 + 3] = 0.0f;
 }
  
 // ----------------------------------------------------
-// View Matrix
+
+// View Matrix -- Defines how we move from object space to viewer
+// space, also called 'camera space'.  One way to think of this is
+// that it's kind of the same as moving the viewer to the origin and
+// rotating the whole world to accommodate the viewer's orientation.
 //
-// note: it assumes the camera is not tilted,
-// i.e. a vertical up vector (remmeber gluLookAt?)
-//
- 
+// Note: We assume here that the camera is not tilted, and that 'up'
+// is in the positive Y direction.
+// 
 void setCamera(float posX, float posY, float posZ,
                float lookAtX, float lookAtY, float lookAtZ) {
  
     float dir[3], right[3], up[3];
- 
+
+    // Define the 'up' vector.
     up[0] = 0.0f;   up[1] = 1.0f;   up[2] = 0.0f;
- 
+
+    // Figure out the vector that represents the viewer's gaze direction.
     dir[0] =  (lookAtX - posX);
     dir[1] =  (lookAtY - posY);
     dir[2] =  (lookAtZ - posZ);
     normalize(dir);
- 
+
+    // The gaze direction cross the up vector should point to the
+    // viewer's right.
     crossProduct(dir, up, right);
     normalize(right);
- 
+
+    // The right vector cross the gaze direction should point up
+    // again, but it might be slightly different.
     crossProduct(right, dir, up);
     normalize(up);
- 
-    float aux[16];
  
     viewMatrix[0]  = right[0];
     viewMatrix[4]  = right[1];
@@ -232,14 +262,17 @@ void setCamera(float posX, float posY, float posZ,
     viewMatrix[7]  = 0.0f;
     viewMatrix[11] = 0.0f;
     viewMatrix[15] = 1.0f;
+
+    float transMatrix[16];
+    setTranslationMatrix(transMatrix, -posX, -posY, -posZ);
  
-    setTranslationMatrix(aux, -posX, -posY, -posZ);
- 
-    multMatrix(viewMatrix, aux);
+    multMatrix(viewMatrix, transMatrix);
 }
  
-// ----------------------------------------------------
- 
+// -----------------------------------------------------------------
+// This function is called when the window changes size.  It adjusts
+// the projection matrix, and resets an OpenGL value for the size of
+// the viewport.
 void changeSize(int w, int h) {
  
     float ratio;
@@ -254,115 +287,132 @@ void changeSize(int w, int h) {
     buildProjectionMatrix(53.13f, ratio, 0.1f, 100.0f);
 }
 
-GLuint buffers[6];
 
+// This function sets up each buffer in the buffers array, and loads
+// them with data.  This program moves the view of the objects around,
+// but doesn't do much in the way of modification of those objects, so
+// these buffers can be loaded and then left alone.
 void setupBuffers() {
- 
-    glGenBuffers(6, buffers);
 
-    // Buffers for first triangle
-    //
+  // Ask OpenGL for some ID numbers for data buffers.
+  glGenBuffers(6, buffers);
 
-    // Generate two slots for the vertex and color buffers
-    // bind buffer for vertices and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(vertexLoc);
-    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
+  // These are the buffers for first triangle.  We use two buffers for
+  // it, one for the vertices and the other for the colors.
+  
+  // First we 'bind' the buffer with the ID, which means that the
+  // commands after this call refer to that ID...
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+
+  // ... And then we copy data into the bound buffer.
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
  
-    // bind buffer for colors and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors1), colors1, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+  // Repeat -- bind buffer and then fill it -- for the colors.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(colors1), colors1, GL_STATIC_DRAW);
  
-    //
-    // second triangle
-    //
-    // bind buffer for vertices and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(vertexLoc);
-    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
+  //
+  // Second triangle, bind and fill, once for the vertices...
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
  
-    // bind buffer for colors and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors2), colors2, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+  // ... and once for the colors.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(colors2), colors2, GL_STATIC_DRAW);
  
-    //
-    //  Axis
-    //
-    // bind buffer for vertices and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[4]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesAxis), verticesAxis, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(vertexLoc);
-    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
+  //
+  //  Same thing with the axis: bind the buffer and then fill it, once
+  //  for the vertices, and once for the colors.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[4]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(verticesAxis), verticesAxis, GL_STATIC_DRAW);
  
-    // bind buffer for colors and copy data into buffer
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[5]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colorAxis), colorAxis, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[5]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(colorAxis), colorAxis, GL_STATIC_DRAW);
  
 }
  
 void setUniforms() {
  
-    // must be called after glUseProgram
+  // This function must be called after glUseProgram, which does the
+  // same sort of thing as glBindBuffer(): it affects the OpenGL calls
+  // after it.
     glUniformMatrix4fv(projMatrixID,  1, false, projMatrix);
     glUniformMatrix4fv(viewMatrixID,  1, false, viewMatrix);
 }
- 
+
+// This is the heart of any graphics program, the render function.  It
+// is called each time through the main graphics loop, and re-draws
+// the scene according to whatever has changed since the last time it
+// was drawn.
 void renderScene(void) {
- 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-    setCamera(posX, posY, posZ, lookAtX, lookAtY, lookAtZ);
- 
-    glUseProgram(shaderProgramID);
-    setUniforms();
- 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
-    glEnableVertexAttribArray(vertexLoc);
-    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
- 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
- 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
-    glEnableVertexAttribArray(vertexLoc);
-    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
- 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+  // First clear the display.
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
- 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[4]);
-    glEnableVertexAttribArray(vertexLoc);
-    glVertexAttribPointer(vertexLoc, 4, GL_FLOAT, 0, 0, 0);
- 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[5]);
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 4, GL_FLOAT, 0, 0, 0);
+  // Generate a view matrix using the viewer (camera) location and
+  // where the viewer is looking.
+  setCamera(posX, posY, posZ, lookAtX, lookAtY, lookAtZ);
 
-    glDrawArrays(GL_LINES, 0, 6);
+  // We want to use this program, that was compiled in setupShaders()
+  // below.  When we call glUseProgram(), we are affecting a bunch of
+  // calls that follow.
+  glUseProgram(shaderProgramID);
+
+  // Set the uniforms (in this case, the view and projection matrices)
+  // for the shaders that are attached to shaderProgramID.
+  setUniforms();
+
+  // Bind a buffer.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[4]);
+  // This is a buffer with vertex data, which we say with this function.
+  glEnableVertexAttribArray(vertexID);
+  // This function describes how the data is laid out in the buffer.
+  glVertexAttribPointer(vertexID, 4, GL_FLOAT, 0, 0, 0);
+
+  // Now bind, label, and describe the color buffer.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[5]);
+  glEnableVertexAttribArray(colorID);
+  glVertexAttribPointer(colorID, 4, GL_FLOAT, 0, 0, 0);
+
+  // Now draw the data in the active buffers.  Draw it as a set of lines.
+  glDrawArrays(GL_LINES, 0, 6);
+
+  // Repeat the process with another pair of vertex/color buffers.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  glEnableVertexAttribArray(vertexID);
+  glVertexAttribPointer(vertexID, 4, GL_FLOAT, 0, 0, 0);
  
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+  glEnableVertexAttribArray(colorID);
+  glVertexAttribPointer(colorID, 4, GL_FLOAT, 0, 0, 0);
+
+  // The last two buffers drew one of the triangles, so when we draw
+  // it, make sure you're drawing it as a triangle.
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+
+  // One more pair of vertex/color buffers.
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[2]);
+  glEnableVertexAttribArray(vertexID);
+  glVertexAttribPointer(vertexID, 4, GL_FLOAT, 0, 0, 0);
+ 
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[3]);
+  glEnableVertexAttribArray(colorID);
+  glVertexAttribPointer(colorID, 4, GL_FLOAT, 0, 0, 0);
+
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+
+  // Now swap the image buffers, so the unseen buffer is swapped onto
+  // the screen and the image buffer that was on the screen is hidden
+  // so it can be drawn into again.
     glutSwapBuffers();
 }
  
 void processNormalKeys(unsigned char key, int x, int y) {
 
-  //std::cout << "key:" << key << " x:" << x << " y:" << y << std::endl;
+  // This function processes only the 'normal' keys.  The arrow keys
+  // don't appear here, nor mouse events.
   switch (key) {
   case 27:
-    glDeleteVertexArrays(3, &vao[0]);
     glDeleteProgram(shaderProgramID);
     exit(0);
 
@@ -406,8 +456,17 @@ void processNormalKeys(unsigned char key, int x, int y) {
     lookAtZ += stepZ;
     break;
   }
+
+  // Uncomment these to see where you are (where the camera is) and where
+  // you're looking.
+  // std::cout << "location:(" << posX << ", "
+  //           << posY << ", " << posZ << ")" << std::endl; 
+  // std::cout << "lookAt:(" << lookAtX << ", "
+  //           << lookAtY << ", " << lookAtZ << ")" << std::endl; 
+
 }
- 
+
+// If there are errors when compiling your shader, they are printed here.
 void printShaderInfoLog(GLuint obj) {
   
     int infologLength = 0;
@@ -425,14 +484,15 @@ void printShaderInfoLog(GLuint obj) {
       free(infoLog);
     }
 }
- 
+
+// If there are errors in your program, this prints them.
 void printProgramInfoLog(GLuint obj) {
   
     int infologLength = 0;
     int charsWritten  = 0;
     char *infoLog;
  
-    glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+    glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
  
     if (infologLength > 0)
     {
@@ -442,91 +502,150 @@ void printProgramInfoLog(GLuint obj) {
         free(infoLog);
     }
 }
- 
-GLuint setupShaders() {
- 
-    GLuint shaderProgramID, vertShaderID, fragShaderID;
- 
-    vertShaderID = glCreateShader(GL_VERTEX_SHADER);
-    fragShaderID = glCreateShader(GL_FRAGMENT_SHADER);
- 
-    std::string vs = textFileRead(vertexFileName.c_str());
-    std::string fs = textFileRead(fragmentFileName.c_str());
- 
-    const char * vv = vs.c_str();
-    const char * ff = fs.c_str();
- 
-    glShaderSource(vertShaderID, 1, &vv, NULL);
-    glShaderSource(fragShaderID, 1, &ff, NULL);
- 
-    glCompileShader(vertShaderID);
-    glCompileShader(fragShaderID);
- 
-    printShaderInfoLog(vertShaderID);
-    printShaderInfoLog(fragShaderID);
- 
-    shaderProgramID = glCreateProgram();
-    glAttachShader(shaderProgramID,vertShaderID);
-    glAttachShader(shaderProgramID,fragShaderID);
- 
-    //    glBindFragDataLocation(shaderProgramID, 0, "outputF");
-    glLinkProgram(shaderProgramID);
-    printProgramInfoLog(shaderProgramID);
- 
-    vertexLoc = glGetAttribLocation(shaderProgramID,"position");
-    colorLoc = glGetAttribLocation(shaderProgramID, "color"); 
- 
-    projMatrixID = glGetUniformLocation(shaderProgramID, "projMatrix");
-    viewMatrixID = glGetUniformLocation(shaderProgramID, "viewMatrix");
- 
-    glDeleteShader(vertShaderID);
-    glDeleteShader(fragShaderID);
 
-    return(shaderProgramID);
+// This is the meat of the shader management.  Here is where the
+// shaders are read in and compiled, and reviewed for the names that
+// will link them to the data you'll feed to them.
+GLuint setupShaders(std::string vertexFile, std::string fragmentFile) {
+
+  // This is the ID for the whole shader program, which includes both
+  // the vertex and fragment shaders.  This is the return value of
+  // this function.
+  GLuint shaderProgramID;
+
+  // These are IDs for the two shaders we're using.
+  GLuint vertShaderID, fragShaderID;
+
+  // Prepare the proper IDs for each kind of shader.
+  vertShaderID = glCreateShader(GL_VERTEX_SHADER);
+  fragShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+  // Read the contents of the two shader files.
+  std::string vs = textFileRead(vertexFile.c_str());
+  std::string fs = textFileRead(fragmentFile.c_str());
+
+  // The OpenGL calls don't really like the modern C++ types, so we
+  // convert back to old-fashioned char*.
+  const char * vv = vs.c_str();
+  const char * ff = fs.c_str();
+
+  // Feed the shader source to OpenGL.
+  glShaderSource(vertShaderID, 1, &vv, NULL);
+  glShaderSource(fragShaderID, 1, &ff, NULL);
+
+  // Compule the shader source.
+  glCompileShader(vertShaderID);
+  glCompileShader(fragShaderID);
+
+  // If there are any errors, print them.
+  printShaderInfoLog(vertShaderID);
+  printShaderInfoLog(fragShaderID);
+
+  // Now create a program to contain the two shaders, and attach the
+  // shaders to it.
+  shaderProgramID = glCreateProgram();
+  glAttachShader(shaderProgramID,vertShaderID);
+  glAttachShader(shaderProgramID,fragShaderID);
+
+  // Assemble the shaders into a single program with 'link', which
+  // will make sure that the inputs to the fragment shader correspond
+  // with outputs from the vertex shader, and so on.
+  glLinkProgram(shaderProgramID);
+  printProgramInfoLog(shaderProgramID);
+
+  // Now that the program has been linked, create links to the
+  // locations where these names point.  Data from this program will
+  // be 'labeled' with these ID numbers.
+  vertexID = glGetAttribLocation(shaderProgramID,"position");
+  colorID = glGetAttribLocation(shaderProgramID, "color"); 
+ 
+  projMatrixID = glGetUniformLocation(shaderProgramID, "projMatrix");
+  viewMatrixID = glGetUniformLocation(shaderProgramID, "viewMatrix");
+
+  // The shaders are linked into the program, so we can delete the raw
+  // shaders.
+  glDeleteShader(vertShaderID);
+  glDeleteShader(fragShaderID);
+
+  // The return value is the product of all that.
+  return(shaderProgramID);
 }
  
 int main(int argc, char **argv) {
 
-  // Initialize position:
-  posX = 40.0f;   posY = 4.0f;     posZ = 40.0f;
+  // Initialize position of the camera.
+  posX = -3.5f;   posY = 4.0f;     posZ = -12.5f;
+
+  // Initialize where the camera is pointing (aka where you are looking).
   lookAtX = 0.0f; lookAtY = 2.0f;  lookAtZ = -5.0f;
+
+  // When you press an active key, the coordinate changes by this much.
   stepX = 0.5f;   stepY = 0.5f;    stepZ = 0.5f;  
 
+  // Initialize the graphics display, in all the ways required.
+  // You'll often see this as "creating a graphics *context*".  The
+  // funny thing about OpenGL is that its functions don't even exist
+  // if there is no graphics context.  This means that glBufferData()
+  // doesn't merely fail, it pretends not to exist.
   glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100,100);
-    glutInitWindowSize(320,320);
-    glutCreateWindow("OpenGL Demo");
- 
-    glutDisplayFunc(renderScene);
-    glutIdleFunc(renderScene);
-    glutReshapeFunc(changeSize);
-    glutKeyboardFunc(processNormalKeys);
+  // Create the window, at this position and with this size, and heading.
+  glutInitWindowPosition(100,100);
+  glutInitWindowSize(320,320);
+  glutCreateWindow("OpenGL Demo");
 
-    std::cout << glGetString(GL_RENDERER)  // e.g. Intel 3000 OpenGL Engine
-              << glGetString(GL_VERSION)    // e.g. 3.2 INTEL-8.0.61
-              << std::endl;
+  // These next few functions tell glut what to do under certain
+  // conditions.  This is where the render function (it's called
+  // renderScene) is nominated, and where the keyboard handler
+  // (processNormalKeys) is, too.
+  glutDisplayFunc(renderScene);
+  glutIdleFunc(renderScene);
+  glutKeyboardFunc(processNormalKeys);
+  // This function is called when the user changes the size of the window.
+  glutReshapeFunc(changeSize);
 
-    glewExperimental = true; // Needed for core profile
-    if (glewInit() != GLEW_OK) {
-      throw std::runtime_error("Failed to initialize GLEW");
-    }
+  // Now that we have a graphics context, let's look at what's inside.
+  std::cout << glGetString(GL_RENDERER)  // e.g. Intel 3000 OpenGL Engine
+            << std::endl
+            << glGetString(GL_VERSION)    // e.g. 3.2 INTEL-8.0.61
+            << std::endl;
 
-    if (glewIsSupported("GL_VERSION_2_1"))
-        printf("Ready for OpenGL 2.1\n");
-    else {
-        printf("OpenGL 2.1 not supported\n");
-        exit(1);
-    }
+  // There is one more graphics library used here, called GLEW.  This
+  // library sorts through the various OpenGL updates and changes and
+  // allows a user to pretend that it's all a consistent and simple
+  // system.  The 'core profile' refers to some modern OpenGL
+  // enhancements that are not so modern as of 2017.  Set this to true
+  // to get those enhancements.
+  glewExperimental = true; // Needed for core profile
+  if (glewInit() != GLEW_OK) {
+    throw std::runtime_error("Failed to initialize GLEW");
+  }
+
+  if (glewIsSupported("GL_VERSION_2_1")) {
+    std::cout << "Ready for OpenGL 2.1." << std::endl;
+  } else {
+    throw std::runtime_error("OpenGL 2.1 not supported.");
+  }
  
-    glEnable(GL_DEPTH_TEST | GL_PROGRAM_POINT_SIZE);
-    glClearColor(0.1 , 0.0, 0.7, 1.0);
- 
-    shaderProgramID = setupShaders(); 
-    setupBuffers(); 
- 
-    glutMainLoop();
- 
-    return(0); 
+  // Now we're ready to start issuing OpenGL calls.  Start by enabling
+  // the modes we want.  The DEPTH_TEST and CULL_FACE are how you get
+  // hidden faces.
+  glEnable(GL_DEPTH_TEST | GL_PROGRAM_POINT_SIZE | GL_CULL_FACE);
+
+  // This is the background color of the viewport.
+  glClearColor(0.1 , 0.0, 0.4, 1.0);
+
+  // Compile our shaders.
+  shaderProgramID = setupShaders(vertexFileName, fragmentFileName);
+
+  // Set up our buffers.
+  setupBuffers(); 
+
+  // This loop never exits.
+  glutMainLoop();
+
+  // We never get here, but the compiler is annoyed when you don't
+  // exit from a function.
+  return(0); 
 }
