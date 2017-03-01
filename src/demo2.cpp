@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
   lights->addLight(glm::vec3(10.0f,-10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 1.0f));
 
   if (argc < 3) {
-    throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\n");
+    throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../src/shader2.vp ../src/shader.fp\n'");
   }
 
   bsg::shaderMgr* shader = new bsg::shaderMgr();

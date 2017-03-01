@@ -1,0 +1,45 @@
+#version 120
+// This is a little indicator line to say that this is a version 1.2
+// OpenGL Shader Language (GLSL) program.
+
+// This is pretty much the simplest possible vertex shader, just takes
+// a position and color and two matrices.  It uses the matrices to
+// move the position from model coordinates to world coordinates, and
+// copies the color to its output.
+
+// These values are uniform over all the vertices to be drawn, and are
+// thus called 'uniforms', which might seem odd, but there are odder
+// things in this crazy world.  These names are connected to data in
+// the main program using the glGetUniformLocation() function, which
+// connects these names with an ID over there.  Then the ID is used to
+// load the actual matrix data, making it available over here.
+uniform mat4 projMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 modelMatrix;
+
+// The 'attributes' of a vertex shader are the inputs to the shader.
+// Each vertex of the object to be drawn has a set of attributes.
+// They could be position, or color.  Also popular are the normal
+// vector (perpendicular to a face) and texture coordinates.
+//
+// Like the uniforms above, these names are connected to the main
+// program with the glGetAttribLocation() function, which creates an
+// ID over there used to point a buffer over there to one of these
+// values over here.
+attribute vec4 position;
+attribute vec3 color;
+
+// The 'varying' keyword indicates one of the outputs of the vertex
+// shader, made available to the fragment shader down the processing
+// line.
+varying vec3 Color;
+ 
+void main()
+{
+  // We copy the input color to the output Color and...
+  Color = color;
+  // ... use our matrices to transform the position (in model
+  // space) to a position in the world space.  The gl_Position name is
+  // a predefined output name for a vertex shader.
+  gl_Position = projMatrix * viewMatrix * modelMatrix * position ;
+}
