@@ -7,6 +7,14 @@ It is, at least on my machine, limited to OpenGL 2.1 and GLSL 120.  It
 also uses GLEW, and includes an updated cmake Find module for both of
 these libraries.
 
+To install FreeGLUT, if needed, using Homebrew:
+
+    $ brew install freeglut
+
+To install GLEW, if needed, using Homebrew:
+
+    $ brew install glew
+
 To build on a Mac or on Linux:
 
     $ git clone http://github.com/tsgouros/demo-graphic.git
