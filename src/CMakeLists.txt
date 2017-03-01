@@ -31,3 +31,10 @@ target_link_libraries(demo
   ${GLEW_LIBRARY}
 )
 
+add_executable(demo2 demo2.cpp bsg.h bsg.cpp)
+
+target_link_libraries(demo2
+  ${FREEGLUT_LIBRARY}
+  ${OPENGL_LIBRARY}
+  ${GLEW_LIBRARY}
+)

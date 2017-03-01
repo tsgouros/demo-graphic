@@ -209,8 +209,7 @@ void buildProjectionMatrix(float fov, float ratio, float nearClip, float farClip
   projMatrix[3 * 4 + 3] = 0.0f;
 }
  
-// ----------------------------------------------------
-
+// ---------------------------------------------------------------
 // View Matrix -- Defines how we move from object space to viewer
 // space, also called 'camera space'.  One way to think of this is
 // that it's kind of the same as moving the viewer to the origin and
@@ -606,8 +605,9 @@ int main(int argc, char **argv) {
   glutReshapeFunc(changeSize);
 
   // Now that we have a graphics context, let's look at what's inside.
-  std::cout << glGetString(GL_RENDERER)  // e.g. Intel 3000 OpenGL Engine
-            << std::endl
+  std::cout << "Hardware check: "
+            << glGetString(GL_RENDERER)  // e.g. Intel 3000 OpenGL Engine
+            << " / "
             << glGetString(GL_VERSION)    // e.g. 3.2 INTEL-8.0.61
             << std::endl;
 
@@ -623,9 +623,9 @@ int main(int argc, char **argv) {
   }
 
   if (glewIsSupported("GL_VERSION_2_1")) {
-    std::cout << "Ready for OpenGL 2.1." << std::endl;
+    std::cout << "Software check: Ready for OpenGL 2.1." << std::endl;
   } else {
-    throw std::runtime_error("OpenGL 2.1 not supported.");
+    throw std::runtime_error("Software check: OpenGL 2.1 not supported.");
   }
  
   // Now we're ready to start issuing OpenGL calls.  Start by enabling
