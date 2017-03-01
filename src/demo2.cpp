@@ -269,13 +269,46 @@ int main(int argc, char **argv) {
   // One triangle is described by these vertices.
   shape.setDrawType(GL_TRIANGLES);  
 
+  bsg::drawableObj axes = bsg::drawableObj(shader);
+  std::vector<glm::vec4> axesVertices;
+  axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
+  axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
+  
+  axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
+  axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
+
+  axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
+  axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
+
+  axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
+
+
+  std::vector<glm::vec4> axesColors;
+
+  axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+  axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+  axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+  axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
+  axes.setDrawType(GL_LINES);
+
+
+
+  
+  
   bsg::drawableCompound* compoundShape =
     new bsg::drawableCompound(shader);
   compoundShape->addObject(shape);
+  compoundShape->addObject(axes);
 
   scene.addCompound(compoundShape);
 
-  scene.setLookAtPosition(glm::vec3(2.5f, 2.5f, 0.0f));
+  scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
   scene.setCameraPosition(glm::vec3(0.0f, 2.0f, 7.5f));
   
   // All the shapes are added to the scene.
