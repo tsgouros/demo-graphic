@@ -357,7 +357,29 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   }  
 }
 
+/// \brief Adjust camera position according to angles.
+void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) {
 
+  std::cout << "angles:" << horizAngle << "," << vertAngle << std::endl;
+  // Calculate current horizontal angle.
+
+  glm::vec3 dir = _lookAtPosition - _cameraPosition;
+  glm::quat rot = glm::quat(glm::vec3(horizAngle, 0.0f, vertAngle));
+
+  glm::vec4 newDir = glm::rotate(rot, glm::vec4(dir.x, dir.y, dir.z, 1.0f));
+  _cameraPosition = _lookAtPosition - glm::vec3(newDir.x, newDir.y, newDir.z);
+  
+  // float r = sqrt(pow(dir.x, 2) + pow(dir.y, 2) + pow(dir.z, 2));
+  // float newHorizAngle = atan(dir.y / dir.x) + horizAngle;
+  // float newVertAngle = acos(dir.z / r) + vertAngle;
+
+  // dir.x = r * sin(newVertAngle) * cos(newHorizAngle);
+  // dir.y = r * sin(newVertAngle) * sin(newHorizAngle);
+  // dir.z = r * cos(newVertAngle);
+
+  // _cameraPosition = _lookAtPosition - dir;  
+}
+  
 void scene::prepare() {
 
   for (compoundList::iterator it =  _compoundObjects.begin();
@@ -386,7 +408,10 @@ void scene::load() {
 void scene::draw() {
 
   // Update the view matrix.
-  glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+  glm::vec3 dir = glm::normalize(_lookAtPosition - _cameraPosition);
+  glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::vec3 up = glm::normalize(glm::cross(right, dir));
+
   _viewMatrix = glm::lookAt(_cameraPosition, _lookAtPosition, up);
 
   // Then draw all the objects.

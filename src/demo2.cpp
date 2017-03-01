@@ -57,7 +57,6 @@ void resizeWindow(int width, int height) {
   //  _projMatrix = glm::perspective(_fov, _aspect, _nearClip, _farClip);
 }
 
-
 void processNormalKeys(unsigned char key, int x, int y) {
 
   float step = 0.5f;
@@ -120,6 +119,37 @@ void processNormalKeys(unsigned char key, int x, int y) {
             << scene.getLookAtPosition().y << ", "
             << scene.getLookAtPosition().z << ")" << std::endl; 
 }
+    
+void processSpecialKeys(int key, int x, int y) {
+
+  float stepAngle = 5.0f / 360.0f;
+
+  switch(key) {    
+  case GLUT_KEY_UP:
+    scene.addToCameraViewAngle(0.0f,  stepAngle);
+    break;
+  case GLUT_KEY_DOWN:
+    scene.addToCameraViewAngle(0.0f, -stepAngle);
+    break;
+  case GLUT_KEY_LEFT:
+    scene.addToCameraViewAngle( stepAngle, 0.0f);
+    break;
+  case GLUT_KEY_RIGHT:
+    scene.addToCameraViewAngle(-stepAngle, 0.0f);
+    break;
+  }
+
+  // Uncomment these to see where you are (where the camera is) and where
+  // you're looking.
+  std::cout << "location:("
+            << scene.getCameraPosition().x << ", "
+            << scene.getCameraPosition().y << ", "
+            << scene.getCameraPosition().z << ")" << std::endl; 
+  std::cout << "_lookAtPosition.:("
+            << scene.getLookAtPosition().x << ", "
+            << scene.getLookAtPosition().y << ", "
+            << scene.getLookAtPosition().z << ")" << std::endl; 
+}
 
 void makeWindow(const int xOffset, const int yOffset,
                 const int xWidth, const int yWidth) {
@@ -136,6 +166,7 @@ void makeWindow(const int xOffset, const int yOffset,
   glutDisplayFunc(renderScene);
   glutIdleFunc(renderScene);
   glutKeyboardFunc(processNormalKeys);
+  glutSpecialFunc(processSpecialKeys);
   // This function is called when the user changes the size of the window.
   glutReshapeFunc(resizeWindow);
 
@@ -202,17 +233,17 @@ int main(int argc, char **argv) {
   shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
 
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
 
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
 
-  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
 
   shape.addData(bsg::GLDATA_VERTICES, "position", shapeVertices);
 
@@ -221,17 +252,17 @@ int main(int argc, char **argv) {
   shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
 
-  shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
 
   shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
+  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
   shape.addData(bsg::GLDATA_COLORS, "color", shapeColors);
 

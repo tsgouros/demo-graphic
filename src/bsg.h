@@ -14,6 +14,7 @@
 
 // Include GLM
 #include <glm/glm.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -662,7 +663,7 @@ class scene {
   scene() {
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
-    _fov = 53.13f;
+    _fov = 35.0f;
     _aspect = 1.0f;
     _nearClip = 0.1f;
     _farClip = 1000.0f;
@@ -685,6 +686,8 @@ class scene {
   }
   glm::vec3 getLookAtPosition() { return _lookAtPosition; };
 
+  void addToCameraViewAngle(const float horizAngle, const float vertAngle);
+  
   glm::mat4 getViewMatrix() {
     _viewMatrix = _calculateViewMatrix();
     return _viewMatrix;

@@ -38,7 +38,7 @@ void main()
 {
   // We copy the input color to the output Color and...
   Color = color;
-  // ... use our two matrices to transform the position (in model
+  // ... use our matrices to transform the position (in model
   // space) to a position in the world space.  The gl_Position name is
   // a predefined output name for a vertex shader.
   gl_Position = projMatrix * viewMatrix * modelMatrix * position ;
