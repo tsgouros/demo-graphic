@@ -13,7 +13,6 @@
 // the main program using the glGetUniformLocation() function, which
 // connects these names with an ID over there.  Then the ID is used to
 // load the actual matrix data, making it available over here.
-uniform mat4 modelMatrix;
 uniform mat4 projMatrix;
 uniform mat4 viewMatrix;
 
@@ -41,5 +40,5 @@ void main()
   // ... use our matrices to transform the position (in model
   // space) to a position in the world space.  The gl_Position name is
   // a predefined output name for a vertex shader.
-  gl_Position = projMatrix * viewMatrix * modelMatrix * position ;
+  gl_Position = projMatrix * viewMatrix * position ;
 }
