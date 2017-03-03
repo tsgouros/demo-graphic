@@ -1,6 +1,11 @@
 #include "bsg.h"
 
+// The scene and the objects in it must be available from the main()
+// function where it is created and the renderScene() function where
+// it is drawn.
 bsg::scene scene = bsg::scene();
+// bsg::drawableObj axes;
+// bsg::drawableObj shape;
 
 void init(int argc, char** argv) {
 
@@ -207,7 +212,11 @@ void makeWindow(const int xOffset, const int yOffset,
   } else {
     std::cout << "No depth test enabled" << std::endl;
   }
-  
+
+  // This is just a performance enhancement that allows OpenGL to
+  // ignore faces that are facing away.
+  glEnable(GL_CULL_FACE);
+
 }
 
 
@@ -237,16 +246,16 @@ int main(int argc, char **argv) {
   bsg::drawableObj shape = bsg::drawableObj(shader);
   std::vector<glm::vec4> shapeVertices;
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
 
   shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
 
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
 
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
@@ -256,16 +265,16 @@ int main(int argc, char **argv) {
 
   std::vector<glm::vec4> shapeColors;
   shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
 
   shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
 
   shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
 
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
