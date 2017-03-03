@@ -12,6 +12,7 @@ void init(int argc, char** argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 
+  std::cout << "Initialize GLUT display mode." << std::endl;
 }
 
 // This is the heart of any graphics program, the render function.  It
@@ -24,7 +25,7 @@ void renderScene() {
   
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  
   // First the load() step.  For a simple desktop display, it is a bit
   // mysterious to have separate load and draw steps, but it makes
   // sense when you have to render to a stereo display, where you only
@@ -141,14 +142,14 @@ void processSpecialKeys(int key, int x, int y) {
 
   // Uncomment these to see where you are (where the camera is) and where
   // you're looking.
-  std::cout << "location:("
+  std::cout << "Camera is at ("
             << scene.getCameraPosition().x << ", "
             << scene.getCameraPosition().y << ", "
-            << scene.getCameraPosition().z << ")" << std::endl; 
-  std::cout << "_lookAtPosition.:("
+            << scene.getCameraPosition().z << ")... ";
+  std::cout << "looking at ("
             << scene.getLookAtPosition().x << ", "
             << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")" << std::endl; 
+            << scene.getLookAtPosition().z << ")." << std::endl; 
 }
 
 void makeWindow(const int xOffset, const int yOffset,
@@ -194,13 +195,19 @@ void makeWindow(const int xOffset, const int yOffset,
     throw std::runtime_error("Software check: OpenGL 2.1 not supported.");
   }
 
-  // Now we're ready to start issuing OpenGL calls.  Start by enabling
-  // the modes we want.  The DEPTH_TEST and CULL_FACE are how you get
-  // hidden faces.
-  glEnable(GL_DEPTH_TEST | GL_PROGRAM_POINT_SIZE | GL_CULL_FACE);
-
   // This is the background color of the viewport.
   glClearColor(0.1 , 0.0, 0.4, 1.0);
+
+  // Now we're ready to start issuing OpenGL calls.  Start by enabling
+  // the modes we want.  The DEPTH_TEST is how you get hidden faces.
+  glEnable(GL_DEPTH_TEST);
+
+  if (glIsEnabled(GL_DEPTH_TEST)) {
+    std::cout << "Depth test enabled" << std::endl;
+  } else {
+    std::cout << "No depth test enabled" << std::endl;
+  }
+  
 }
 
 
@@ -252,7 +259,7 @@ int main(int argc, char **argv) {
   shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
 
-  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
 
@@ -297,9 +304,6 @@ int main(int argc, char **argv) {
   axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
   axes.setDrawType(GL_LINES);
 
-
-
-  
   
   bsg::drawableCompound* compoundShape =
     new bsg::drawableCompound(shader);
@@ -309,7 +313,7 @@ int main(int argc, char **argv) {
   scene.addCompound(compoundShape);
 
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-  scene.setCameraPosition(glm::vec3(0.0f, 2.0f, 7.5f));
+  scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
   
   // All the shapes are added to the scene.
 
