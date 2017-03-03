@@ -391,26 +391,24 @@ void drawableObj::addData(const GLDATATYPE type,
 
 
   
-void drawableObj::prepare() {
+void drawableObj::prepare(GLuint programID) {
 
-  // Specify the OpenGL program to use for the following questions.
-  _pShader->useProgram();
-  
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
-  _vertices.ID = _pShader->getAttribID(_vertices.name);
+  _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
+  //  _vertices.ID = _pShader->getAttribID(_vertices.name);
   
   if (!_colors.data.empty()) {
     glGenBuffers(1, &_colors.bufferID);
-    _colors.ID = _pShader->getAttribID(_colors.name);
+    _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
   }
   if (!_normals.data.empty()) {
     glGenBuffers(1, &_normals.bufferID);
-    _normals.ID = _pShader->getAttribID(_normals.name);
+    _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
   }
   if (!_uvs.data.empty()) {
     glGenBuffers(1, &_uvs.bufferID);
-    _uvs.ID = _pShader->getAttribID(_uvs.name);
+    _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
   }
 
   // Put the data in its buffers, for practice.
@@ -492,7 +490,7 @@ void drawableCompound::prepare() {
   // Prepare each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
-    it->prepare();
+    it->prepare(_pShader->getProgram());
   }
 }
   

@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
 
   shader->compileShaders();
 
-  bsg::drawableObj shape = bsg::drawableObj(shader);
+  bsg::drawableObj shape = bsg::drawableObj();
   std::vector<glm::vec4> shapeVertices;
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
   // One triangle is described by these vertices.
   shape.setDrawType(GL_TRIANGLES);  
 
-  bsg::drawableObj axes = bsg::drawableObj(shader);
+  bsg::drawableObj axes = bsg::drawableObj();
   std::vector<glm::vec4> axesVertices;
   axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
   axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
@@ -314,8 +314,7 @@ int main(int argc, char **argv) {
   axes.setDrawType(GL_LINES);
 
   
-  bsg::drawableCompound* compoundShape =
-    new bsg::drawableCompound(shader);
+  bsg::drawableCompound* compoundShape = new bsg::drawableCompound(shader);
   compoundShape->addObject(shape);
   compoundShape->addObject(axes);
 

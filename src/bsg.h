@@ -398,6 +398,7 @@ class shaderMgr {
   /// Get the ID number for a uniform name that appears in a shader.
   GLuint getUniformID(const std::string& unifName);
 
+  GLuint getProgram() { return _programID; };
   void useProgram() { glUseProgram(_programID); };
   
 };
@@ -405,24 +406,16 @@ class shaderMgr {
 /// \brief The information necessary to draw an object.
 ///
 /// This object contains a set of vertices, colors, normals, texture
-/// coordinates, whatever, along with a pointer to a particular
-/// shaderMgr for drawing the object.  This is meant to work with
-/// modern OpenGL, that uses shaders, specifically OpenGL 2.1 and GLSL
-/// 1.2.  Yes, we know that's old, but it's the latest version that
-/// works identically on *all* the platforms we want to support.
-/// (Thanks, Apple.)
-///
-/// This class imposes a small number of restrictions on the shader
-/// code itself, mostly the names of things.  These are specified in
-/// the setupDefaultName() method.  Setting things up for the number
-/// of lights is also something that needs to be configured carefully.
-/// See the lightList documentation.
-///
+/// coordinates.  This is meant to work with modern OpenGL, that uses
+/// shaders, specifically OpenGL 2.1 and GLSL 1.2.  Yes, we know
+/// that's old, but it's the latest version that works identically on
+/// *all* the platforms we want to support.  (Thanks, Apple.)
+/// 
+/// All the drawableObj shapes in a compound object (see below) use the
+/// same shader, and the same model matrix.
 class drawableObj {
  private:
 
-  shaderPtr<shaderMgr> _pShader;
-  
   // Specifies whether this is a triangle, a triangle strip, fan,
   // whatever.
   GLenum _drawType;
@@ -441,7 +434,6 @@ class drawableObj {
   
  public:
   drawableObj() {};
- drawableObj(const shaderPtr<shaderMgr> pShader) : _pShader(pShader) {};
   
   void setDrawType(const GLenum drawType) {
     _drawType = drawType;
@@ -459,11 +451,9 @@ class drawableObj {
                const std::string& name,
                const std::vector<glm::vec2>& data);
 
-  void setShader(shaderPtr<shaderMgr> pShader) { _pShader = pShader; };
-  
   /// Call this function after all the data is in place and we know
   /// whether we have colors or textures or normals to worry about.
-  void prepare();
+  void prepare(GLuint programID);
   
   /// The load step is separate from the draw step because you might
   /// want to draw several times, for example for a stereo display
@@ -494,6 +484,17 @@ class drawableObj {
 /// So the program that calls this should keep three separate lists:
 /// the objects in the scene, the shaders used to render them, and the
 /// lights used by those shaders.
+///
+/// All the objects in this compound object use the same shader and
+/// have the same model matrix.  If you want to move things relative
+/// to each other, or use multiple shaders, don't put them together in
+/// the same compound object.
+///
+/// This class imposes a small number of restrictions on the shader
+/// code itself, mostly the names of things.  These are specified in
+/// the setupDefaultName() method.  Setting things up for the number
+/// of lights is also something that needs to be configured carefully.
+/// See the lightList documentation.
 ///
 class drawableCompound {
  private:
@@ -562,7 +563,6 @@ class drawableCompound {
   /// change the shader on an individual component object after it's
   /// added to the compound.
   void addObject(drawableObj obj) {
-    obj.setShader(_pShader);
     _objects.push_back(obj);
   };    
 
