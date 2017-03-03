@@ -594,7 +594,7 @@ class drawableCompound {
     _modelMatrixNeedsReset = true;
   };
   /// \brief Set the rotation with a quaternion.
-  void setRotation(glm::quat orientation) {
+  void setOrientation(glm::quat orientation) {
     _orientation = orientation;
     _modelMatrixNeedsReset = true;
   };
@@ -667,10 +667,10 @@ class scene {
   scene() {
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
-    _fov = 15.0f;
+    _fov = 30.0f;
     _aspect = 1.0f;
-    _nearClip = 1.0f;
-    _farClip = 30.0f;
+    _nearClip = 0.1f;
+    _farClip = 100.0f;
     _step = glm::vec3(0.5f, 0.5f, 0.5f);
   }
 

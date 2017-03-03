@@ -510,7 +510,9 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
 
   _pShader->useProgram();
 
-  // Load the model matrix.
+  // Load the model matrix.  This adjusts the position of each object.
+  // Remember that all the objects in a compound object use the same
+  // shader and the same model matrix.
   glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
 
   // The view and projection matrices come from the scene object, above us.
