@@ -629,9 +629,8 @@ int main(int argc, char **argv) {
   }
  
   // Now we're ready to start issuing OpenGL calls.  Start by enabling
-  // the modes we want.  The DEPTH_TEST and CULL_FACE are how you get
-  // hidden faces.
-  glEnable(GL_DEPTH_TEST | GL_PROGRAM_POINT_SIZE | GL_CULL_FACE);
+  // the modes we want.  The DEPTH_TEST is how you get hidden faces.
+  glEnable(GL_DEPTH_TEST);
 
   // This is the background color of the viewport.
   glClearColor(0.1 , 0.0, 0.4, 1.0);
