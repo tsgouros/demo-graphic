@@ -19,6 +19,9 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+// Some miscellaneous dependencies.
+#include <png.h>
+
 namespace bsg {
 
 typedef enum {
@@ -316,6 +319,8 @@ class textureMgr {
 
   GLuint _textureBufferID;
 
+  GLuint loadPNG(const std::string imagePath);
+  
  public:
   textureMgr(const textureType& type, const std::string& fileName);
   textureMgr() {};
