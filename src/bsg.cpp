@@ -227,12 +227,10 @@ void drawableObj::prepare() {
   _pShader->useProgram();
   
   // Figure out which buffers we need and get IDs for them.
-  std::cout << "preparing a vertex buffer" << std::endl;
   glGenBuffers(1, &_vertices.bufferID);  
   _vertices.ID = _pShader->getAttribID(_vertices.name);
   
   if (!_colors.data.empty()) {
-    std::cout << "preparing a color buffer" << std::endl;
     glGenBuffers(1, &_colors.bufferID);
     _colors.ID = _pShader->getAttribID(_colors.name);
   }
@@ -332,10 +330,6 @@ void drawableCompound::load() {
 
   _pShader->useProgram();
 
-  // Load the model matrix, which is the same for however many times
-  // this scene is rendered.
-  glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
-
   // Load each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
@@ -347,7 +341,11 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
                             const glm::mat4& projMatrix) {
 
   _pShader->useProgram();
-  
+
+  // Load the model matrix.
+  glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
+
+  // The view and projection matrices come from the scene object, above us.
   glUniformMatrix4fv(_viewMatrixID, 1, false, &viewMatrix[0][0]);
   glUniformMatrix4fv(_projMatrixID, 1, false, &projMatrix[0][0]);
 
@@ -357,27 +355,26 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   }  
 }
 
-/// \brief Adjust camera position according to angles.
+/// \brief Adjust camera position according to input Euler angles.
+///
+/// We use quaternions in the implementation because they provide a
+/// smooth way to rotate continuously.  You'll notice an oddness in
+/// the rotation in practice, because the up vector is always the same
+/// direction.
 void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) {
 
-  std::cout << "angles:" << horizAngle << "," << vertAngle << std::endl;
-  // Calculate current horizontal angle.
-
+  // Calculate current direction vector.
   glm::vec3 dir = _lookAtPosition - _cameraPosition;
-  glm::quat rot = glm::quat(glm::vec3(horizAngle, 0.0f, vertAngle));
 
+  // Calculate a rotation quaternion based on the input euler angles.
+  glm::quat rot = glm::quat(glm::vec3(vertAngle, horizAngle, 0.0f));
+
+  // Apply the quaternion to the direction vector.
   glm::vec4 newDir = glm::rotate(rot, glm::vec4(dir.x, dir.y, dir.z, 1.0f));
+
+  // Apply the direction vector to the lookat position to get the new
+  // camera location.
   _cameraPosition = _lookAtPosition - glm::vec3(newDir.x, newDir.y, newDir.z);
-  
-  // float r = sqrt(pow(dir.x, 2) + pow(dir.y, 2) + pow(dir.z, 2));
-  // float newHorizAngle = atan(dir.y / dir.x) + horizAngle;
-  // float newVertAngle = acos(dir.z / r) + vertAngle;
-
-  // dir.x = r * sin(newVertAngle) * cos(newHorizAngle);
-  // dir.y = r * sin(newVertAngle) * sin(newHorizAngle);
-  // dir.z = r * cos(newVertAngle);
-
-  // _cameraPosition = _lookAtPosition - dir;  
 }
   
 void scene::prepare() {

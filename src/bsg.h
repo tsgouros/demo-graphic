@@ -19,7 +19,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-
 namespace bsg {
 
 typedef enum {
@@ -312,7 +311,7 @@ class textureMgr {
   std::string _textureAttribName;
 
   void setupDefaultNames() {
-    _textureAttribName = std::string("TextureSampler");
+    _textureAttribName = std::string("textureSampler");
   };
 
   GLuint _textureBufferID;
@@ -648,7 +647,7 @@ class scene {
   glm::vec3 _cameraPosition;
   glm::vec3 _lookAtPosition;
   glm::vec3 _step;
-  
+
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
@@ -663,10 +662,10 @@ class scene {
   scene() {
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
-    _fov = 35.0f;
+    _fov = 15.0f;
     _aspect = 1.0f;
-    _nearClip = 0.1f;
-    _farClip = 1000.0f;
+    _nearClip = 1.0f;
+    _farClip = 30.0f;
     _step = glm::vec3(0.5f, 0.5f, 0.5f);
   }
 
