@@ -72,7 +72,7 @@ typedef enum {
 ///                text of the shader to adjust to match the number of
 ///                lights and so on.
 ///
-///   shaderPtr -- A smart pointer.  We use it for shaderMgr, so that
+///   bsgPtr -- A smart pointer.  We use it for shaderMgr, so that
 ///                multiple objects can use the same shader object.
 ///                We use it from drawableCompound so that you can
 ///                sub-class those and still have an object you can
@@ -95,12 +95,12 @@ typedef enum {
 ///
 
 /// \brief A reference counter for a smart pointer to shader manager objects.
-class shaderPtrRC {
+class bsgPtrRC {
  private:
   int count; // Reference count
 
  public:
- shaderPtrRC(int start) : count(start) {};
+ bsgPtrRC(int start) : count(start) {};
 
   /// Increment the reference count.
   void addRef() { count++; }
@@ -111,27 +111,27 @@ class shaderPtrRC {
 
 /// \brief A smart pointer to a shader manager
 ///
-/// A smart pointer to the shaderPtr so that multiple objects can use
+/// A smart pointer to the bsgPtr so that multiple objects can use
 /// the same shader object.
 ///
 template <class T>
-class shaderPtr {
+class bsgPtr {
  private:
   T* _pData;       // The pointer.
-  shaderPtrRC* _reference; // The reference count.
+  bsgPtrRC* _reference; // The reference count.
 
  public:
- shaderPtr() : _pData(0) { _reference = new shaderPtrRC(1); };
- shaderPtr(T* pValue) : _pData(pValue) { _reference = new shaderPtrRC(1); };
+ bsgPtr() : _pData(0) { _reference = new bsgPtrRC(1); };
+ bsgPtr(T* pValue) : _pData(pValue) { _reference = new bsgPtrRC(1); };
   
   /// Copy constructor
- shaderPtr(const shaderPtr& sp) : _pData(sp._pData), _reference(sp._reference) {
+ bsgPtr(const bsgPtr& sp) : _pData(sp._pData), _reference(sp._reference) {
     _reference->addRef();
   }
 
   /// Destructor.  Decrement the reference count.  If the count
   /// becomes zero, delete the data.
-  ~shaderPtr() {
+  ~bsgPtr() {
     if (_reference->release() == 0) {
       delete _pData;
       delete _reference;
@@ -357,7 +357,7 @@ class shaderMgr {
   /// Tells us whether the shaders have been loaded and compiled yet.
   bool _compiled;
   
-  shaderPtr<lightList> _lightList;
+  bsgPtr<lightList> _lightList;
 
   std::string _getShaderInfoLog(GLuint obj);
   std::string _getProgramInfoLog(GLuint obj);
@@ -386,7 +386,7 @@ class shaderMgr {
   ///
   /// This should be done before adding the shader code itself, unless
   /// the shader does not depend on the number of lights.
-  void addLights(const shaderPtr<lightList> lightList);
+  void addLights(const bsgPtr<lightList> lightList);
   
   void addShader(const GLSHADERTYPE type, const std::string& shaderFile);
 
@@ -506,7 +506,7 @@ class drawableCompound {
   /// compound object.  Or at least the one they will start with.  You
   /// can always go back and change the shader for an individual
   /// object.
-  shaderPtr<shaderMgr> _pShader;
+  bsgPtr<shaderMgr> _pShader;
 
   /// The position in model space.
   glm::vec3 _position;
@@ -534,7 +534,7 @@ class drawableCompound {
   }
   
  public:
- drawableCompound(shaderPtr<shaderMgr> pShader) :
+ drawableCompound(bsgPtr<shaderMgr> pShader) :
   _pShader(pShader),
     _modelMatrixName("modelMatrix"),
     _viewMatrixName("viewMatrix"),
@@ -642,7 +642,7 @@ class scene {
   /// We use a pointer to the drawableCompound objects so you can
   /// create an object that inherits from drawableCompound and still
   /// use it here.
-  typedef std::list<shaderPtr<drawableCompound> > compoundList;
+  typedef std::list<bsgPtr<drawableCompound> > compoundList;
   compoundList _compoundObjects;
 
   glm::mat4 _viewMatrix;
@@ -702,7 +702,7 @@ class scene {
   }
   void setAspect(float aspect) { _aspect = aspect; };
   
-  void addCompound(const shaderPtr<drawableCompound> pCompoundObject) {
+  void addCompound(const bsgPtr<drawableCompound> pCompoundObject) {
       _compoundObjects.push_back( pCompoundObject);
   }
 

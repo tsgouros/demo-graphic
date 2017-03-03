@@ -4,8 +4,10 @@
 // function where it is created and the renderScene() function where
 // it is drawn.
 bsg::scene scene = bsg::scene();
-// bsg::drawableObj axes;
-// bsg::drawableObj shape;
+bsg::drawableObj axes;
+bsg::drawableObj shape;
+bsg::drawableCompound* tetrahedron;
+bsg::drawableCompound* axesSet;
 
 void init(int argc, char** argv) {
 
@@ -233,7 +235,7 @@ int main(int argc, char **argv) {
     throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../src/shader2.vp ../src/shader.fp\n'");
   }
 
-  bsg::shaderMgr* shader = new bsg::shaderMgr();
+  bsg::bsgPtr<bsg::shaderMgr> shader = new bsg::shaderMgr();
   shader->addLights(lights);
   
   std::string vertexFile = std::string(argv[1]);
@@ -243,8 +245,15 @@ int main(int argc, char **argv) {
 
   shader->compileShaders();
 
-  bsg::drawableObj shape = bsg::drawableObj();
+  shape = bsg::drawableObj();
+
+  // Specify the vertices of the shape we're drawing.  Note that the
+  // faces are specified with a *counter-clockwise* winding order, the
+  // OpenGL default.  You can make your faces wind the other
+  // direction, but have to adjust the OpenGL expectations with
+  // glFrontFace().
   std::vector<glm::vec4> shapeVertices;
+
   shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
   shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
@@ -263,6 +272,7 @@ int main(int argc, char **argv) {
 
   shape.addData(bsg::GLDATA_VERTICES, "position", shapeVertices);
 
+  // Here are the corresponding colors for the above vertices.
   std::vector<glm::vec4> shapeColors;
   shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
   shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
@@ -282,10 +292,11 @@ int main(int argc, char **argv) {
 
   shape.addData(bsg::GLDATA_COLORS, "color", shapeColors);
 
-  // One triangle is described by these vertices.
+  // The vertices above are arranged into a set of triangles.
   shape.setDrawType(GL_TRIANGLES);  
 
-  bsg::drawableObj axes = bsg::drawableObj();
+  // Now let's draw a set of axes.
+  axes = bsg::drawableObj();
   std::vector<glm::vec4> axesVertices;
   axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
   axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
@@ -298,9 +309,8 @@ int main(int argc, char **argv) {
 
   axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
 
-
+  // With colors.
   std::vector<glm::vec4> axesColors;
-
   axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
 
@@ -313,12 +323,18 @@ int main(int argc, char **argv) {
   axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
   axes.setDrawType(GL_LINES);
 
-  
-  bsg::drawableCompound* compoundShape = new bsg::drawableCompound(shader);
-  compoundShape->addObject(shape);
-  compoundShape->addObject(axes);
+  // We could put the axes and the tetrahedron in the same compound
+  // shape, but we leave them separate so they can be moved
+  // sseparately.
+  tetrahedron = new bsg::drawableCompound(shader);
+  tetrahedron->addObject(shape);
 
-  scene.addCompound(compoundShape);
+  scene.addCompound(tetrahedron);
+
+  axesSet = new bsg::drawableCompound(shader);
+  axesSet->addObject(axes);
+
+  scene.addCompound(axesSet);
 
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
   scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));

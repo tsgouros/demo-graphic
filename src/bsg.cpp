@@ -344,7 +344,7 @@ GLuint shaderMgr::getUniformID(const std::string& unifName) {
   return glGetUniformLocation(_programID, unifName.c_str());
 }
 
-void shaderMgr::addLights(const shaderPtr<lightList> lightList) {
+void shaderMgr::addLights(const bsgPtr<lightList> lightList) {
     if (_compiled) {
       throw std::runtime_error("Must load lights before compiling shader.");
     } else {
