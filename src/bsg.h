@@ -594,11 +594,13 @@ class drawableCompound {
     _modelMatrixNeedsReset = true;
   };
   /// \brief Set the rotation with a quaternion.
-  void setRotation(glm::quat orientation) {
+  void setOrientation(glm::quat orientation) {
     _orientation = orientation;
     _modelMatrixNeedsReset = true;
   };
   /// \brief Set the rotation with Euler angles.
+  ///
+  /// Uses a 3-vector of (pitch, yaw, roll) in radians.
   void setRotation(glm::vec3 pitchYawRoll) {
     _orientation = glm::quat(pitchYawRoll);      
     _modelMatrixNeedsReset = true;
@@ -667,10 +669,10 @@ class scene {
   scene() {
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
-    _fov = 15.0f;
+    _fov = M_PI / 2.0f;
     _aspect = 1.0f;
-    _nearClip = 1.0f;
-    _farClip = 30.0f;
+    _nearClip = 0.1f;
+    _farClip = 100.0f;
     _step = glm::vec3(0.5f, 0.5f, 0.5f);
   }
 
@@ -690,6 +692,7 @@ class scene {
   }
   glm::vec3 getLookAtPosition() { return _lookAtPosition; };
 
+  /// \brief Rotates the camera location around the lookat point.
   void addToCameraViewAngle(const float horizAngle, const float vertAngle);
   
   glm::mat4 getViewMatrix() {
@@ -700,8 +703,14 @@ class scene {
     _projMatrix = _calculateProjMatrix();
     return _projMatrix;
   }
+
+  /// \brief Set the field of view.  In radians.
+  void setFOV(float fov) { _fov = fov; };
+
+  /// \brief Sets the aspect ratio of the view window.
   void setAspect(float aspect) { _aspect = aspect; };
-  
+
+  /// \brief Add a compound object to our scene.
   void addCompound(const bsgPtr<drawableCompound> pCompoundObject) {
       _compoundObjects.push_back( pCompoundObject);
   }
