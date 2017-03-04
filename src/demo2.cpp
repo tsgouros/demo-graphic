@@ -8,7 +8,6 @@ bsg::drawableObj axes;
 bsg::drawableObj shape;
 bsg::drawableCompound* tetrahedron;
 bsg::drawableCompound* axesSet;
-float distance = 0;
 
 void init(int argc, char** argv) {
 
@@ -30,15 +29,7 @@ void init(int argc, char** argv) {
 void renderScene() {
 
   glm::mat4 viewMatrix, projMatrix;
-
-  // If you want to adjust the positions of the various objects in
-  // your scene, this is where to do that.
-  glm::vec3 pos = tetrahedron->getPosition();
-  distance += 0.01f;
-  // pos.x = sin(distance);
-  // pos.y = 1.0f - cos(distance);
-  tetrahedron->setPosition(pos);
-
+  
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
@@ -346,7 +337,7 @@ int main(int argc, char **argv) {
   scene.addCompound(axesSet);
 
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-  scene.setCameraPosition(glm::vec3(1.0f, 2.0f, -7.5f));
+  scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
   
   // All the shapes are added to the scene.
 
