@@ -5,9 +5,12 @@
 // it is drawn.
 bsg::scene scene = bsg::scene();
 bsg::drawableObj axes;
-bsg::drawableObj shape;
+bsg::drawableObj topShape;
+bsg::drawableObj bottomShape;
 bsg::drawableCompound* tetrahedron;
 bsg::drawableCompound* axesSet;
+float oscillator = 0.0f;
+float oscillationStep = 0.03f;
 
 void init(int argc, char** argv) {
 
@@ -29,6 +32,14 @@ void init(int argc, char** argv) {
 void renderScene() {
 
   glm::mat4 viewMatrix, projMatrix;
+
+  // If you want to adjust the positions of the various objects in
+  // your scene, this is where to do that.
+  glm::vec3 pos = tetrahedron->getPosition();
+  oscillator += oscillationStep;
+  pos.x = sin(oscillator);
+  pos.y = 1.0f - cos(oscillator);
+  tetrahedron->setPosition(pos);
   
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -62,7 +73,18 @@ void resizeWindow(int width, int height) {
 
   // The projection matrix will be recalculated on the next load()
   // during the renderScene function.
-  //  _projMatrix = glm::perspective(_fov, _aspect, _nearClip, _farClip);
+}
+
+void showCameraPosition() {
+
+  std::cout << "Camera is at ("
+            << scene.getCameraPosition().x << ", "
+            << scene.getCameraPosition().y << ", "
+            << scene.getCameraPosition().z << ")... ";
+  std::cout << "looking at ("
+            << scene.getLookAtPosition().x << ", "
+            << scene.getLookAtPosition().y << ", "
+            << scene.getLookAtPosition().z << ")." << std::endl; 
 }
 
 void processNormalKeys(unsigned char key, int x, int y) {
@@ -114,18 +136,16 @@ void processNormalKeys(unsigned char key, int x, int y) {
   case 'o':
     scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f,  step));
     break;
+  default:
+    if (oscillationStep == 0.0f) {
+      oscillationStep = 0.03f;
+    } else {
+      oscillationStep = 0.0f;
+    }
   }
 
-  // Uncomment these to see where you are (where the camera is) and where
-  // you're looking.
-  std::cout << "location:("
-            << scene.getCameraPosition().x << ", "
-            << scene.getCameraPosition().y << ", "
-            << scene.getCameraPosition().z << ")" << std::endl; 
-  std::cout << "_lookAtPosition.:("
-            << scene.getLookAtPosition().x << ", "
-            << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")" << std::endl; 
+  // Show where you are (where the camera is) and where you're looking.
+  showCameraPosition();
 }
     
 void processSpecialKeys(int key, int x, int y) {
@@ -147,16 +167,8 @@ void processSpecialKeys(int key, int x, int y) {
     break;
   }
 
-  // Uncomment these to see where you are (where the camera is) and where
-  // you're looking.
-  std::cout << "Camera is at ("
-            << scene.getCameraPosition().x << ", "
-            << scene.getCameraPosition().y << ", "
-            << scene.getCameraPosition().z << ")... ";
-  std::cout << "looking at ("
-            << scene.getLookAtPosition().x << ", "
-            << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")." << std::endl; 
+  // Show where you are (where the camera is) and where you're looking.
+  showCameraPosition();
 }
 
 void makeWindow(const int xOffset, const int yOffset,
@@ -245,55 +257,98 @@ int main(int argc, char **argv) {
 
   shader->compileShaders();
 
-  shape = bsg::drawableObj();
+  bottomShape = bsg::drawableObj();
 
-  // Specify the vertices of the shape we're drawing.  Note that the
+  // Specify the vertices of the shapes we're drawing.  Note that the
   // faces are specified with a *counter-clockwise* winding order, the
   // OpenGL default.  You can make your faces wind the other
   // direction, but have to adjust the OpenGL expectations with
   // glFrontFace().
-  std::vector<glm::vec4> shapeVertices;
+  std::vector<glm::vec4> topShapeVertices;
 
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
 
-  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
 
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
 
-  shapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-  shapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
 
-  shape.addData(bsg::GLDATA_VERTICES, "position", shapeVertices);
+  topShape.addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
 
   // Here are the corresponding colors for the above vertices.
-  std::vector<glm::vec4> shapeColors;
-  shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  std::vector<glm::vec4> topShapeColors;
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
 
-  shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
-  shapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
-  shapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  shapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
-  shape.addData(bsg::GLDATA_COLORS, "color", shapeColors);
+  topShape.addData(bsg::GLDATA_COLORS, "color", topShapeColors);
 
   // The vertices above are arranged into a set of triangles.
-  shape.setDrawType(GL_TRIANGLES);  
+  topShape.setDrawType(GL_TRIANGLES);  
+
+  std::vector<glm::vec4> bottomShapeVertices;
+
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShape.addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
+
+  // Here are the corresponding colors for the above vertices.
+  std::vector<glm::vec4> bottomShapeColors;
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShape.addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
+
+  // The vertices above are arranged into a set of triangles.
+  bottomShape.setDrawType(GL_TRIANGLES);  
 
   // Now let's draw a set of axes.
   axes = bsg::drawableObj();
@@ -325,9 +380,10 @@ int main(int argc, char **argv) {
 
   // We could put the axes and the tetrahedron in the same compound
   // shape, but we leave them separate so they can be moved
-  // sseparately.
+  // separately.
   tetrahedron = new bsg::drawableCompound(shader);
-  tetrahedron->addObject(shape);
+  tetrahedron->addObject(topShape);
+  tetrahedron->addObject(bottomShape);
 
   scene.addCompound(tetrahedron);
 
