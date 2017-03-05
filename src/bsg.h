@@ -716,8 +716,21 @@ class scene {
   }
 
   void prepare();
+
+  /// \brief Generates a projection matrix and loads all the compound elements.
   void load();
+  /// \brief Loads all the compound elements.
+  ///
+  /// But you supply the projection matrix.
+  void load(glm::mat4& projMatrix);
+
+  /// \brief Generates a view matrix and draws all the compound elements.
   void draw();
+
+  /// \brief Draws all the compound elements.
+  ///
+  /// But you supply the view matrix.
+  void draw(glm::mat4& viewMatrix);
   
 };
 

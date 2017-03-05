@@ -557,20 +557,39 @@ void scene::prepare() {
 
 void scene::load() {
 
-  // TBD: Something's not right about this arrangement, since the load
-  // step will load a different model matrix for each compound object
-  // into the same place.
-
-  
   // Update the projection matrix.  In case of a stereo display, both
   // eyes will use the same projection matrix.
-  _projMatrix = glm::perspective(_fov, _aspect, _nearClip, _farClip);
+  glm::mat4 pm = glm::perspective(_fov, _aspect, _nearClip, _farClip);
 
+  load(pm);
+
+}
+
+void scene::load(glm::mat4& projMatrix) {
+
+  _projMatrix = projMatrix;
+  
   for (compoundList::iterator it =  _compoundObjects.begin();
        it != _compoundObjects.end(); it++) {
     (*it)->load();
   }
 }
+
+// void scene::draw() {
+
+//   // Update the view matrix.
+//   glm::vec3 dir = glm::normalize(_lookAtPosition - _cameraPosition);
+//   glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
+//   glm::vec3 up = glm::normalize(glm::cross(right, dir));
+
+//   _viewMatrix = glm::lookAt(_cameraPosition, _lookAtPosition, up);
+
+//   // Then draw all the objects.
+//   for (compoundList::iterator it =  _compoundObjects.begin();
+//        it != _compoundObjects.end(); it++) {
+//     (*it)->draw(_viewMatrix, _projMatrix);
+//   }
+// }
 
 void scene::draw() {
 
@@ -579,15 +598,21 @@ void scene::draw() {
   glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
   glm::vec3 up = glm::normalize(glm::cross(right, dir));
 
-  _viewMatrix = glm::lookAt(_cameraPosition, _lookAtPosition, up);
+  glm::mat4 vm = glm::lookAt(_cameraPosition, _lookAtPosition, up);
 
+  draw(vm);
+}
+
+void scene::draw(glm::mat4& viewMatrix) {
+
+  _viewMatrix = viewMatrix;
+  
   // Then draw all the objects.
   for (compoundList::iterator it =  _compoundObjects.begin();
        it != _compoundObjects.end(); it++) {
     (*it)->draw(_viewMatrix, _projMatrix);
   }
 }
-
 
 
   
