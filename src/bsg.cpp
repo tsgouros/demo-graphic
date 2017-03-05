@@ -396,7 +396,6 @@ void drawableObj::prepare(GLuint programID) {
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
   _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
-  //  _vertices.ID = _pShader->getAttribID(_vertices.name);
   
   if (!_colors.data.empty()) {
     glGenBuffers(1, &_colors.bufferID);

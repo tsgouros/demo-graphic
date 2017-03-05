@@ -2,23 +2,29 @@
 
 // The scene and the objects in it must be available from the main()
 // function where it is created and the renderScene() function where
-// it is drawn.
+// it is drawn.  The scene object contains all the drawable objects
+// that make up the scene.
 bsg::scene scene = bsg::scene();
-bsg::drawableObj axes;
-bsg::drawableObj topShape;
-bsg::drawableObj bottomShape;
+
+// These are the shapes that make up the scene.  They are out here in
+// the global variables so they can be available in both the main()
+// function and the renderScene() function.
 bsg::drawableCompound* tetrahedron;
 bsg::drawableCompound* axesSet;
+
+// These are part of the animation stuff, and again are out here with
+// the big boy global variables so they can be available to both the
+// interrupt handler and the render function.
 float oscillator = 0.0f;
 float oscillationStep = 0.03f;
 
+// Initialize the graphics display, in all the ways required.  You'll
+// often see this as "creating a graphics *context*".  The funny thing
+// about OpenGL is that its functions don't even exist if there is no
+// graphics context.  This means that glBufferData() doesn't merely
+// fail, it pretends not to exist.
 void init(int argc, char** argv) {
 
-  // Initialize the graphics display, in all the ways required.
-  // You'll often see this as "creating a graphics *context*".  The
-  // funny thing about OpenGL is that its functions don't even exist
-  // if there is no graphics context.  This means that glBufferData()
-  // doesn't merely fail, it pretends not to exist.
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 
@@ -31,28 +37,35 @@ void init(int argc, char** argv) {
 // was drawn.
 void renderScene() {
 
-  glm::mat4 viewMatrix, projMatrix;
-
   // If you want to adjust the positions of the various objects in
-  // your scene, this is where to do that.
+  // your scene, this is where to do that.  You could also animate the
+  // camera or lookat position here, or anything else you want to mess
+  // with in the scene.
   glm::vec3 pos = tetrahedron->getPosition();
   oscillator += oscillationStep;
   pos.x = sin(oscillator);
   pos.y = 1.0f - cos(oscillator);
   tetrahedron->setPosition(pos);
+
+  // Now the preliminaries are done, on to the actual drawing.
   
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  // First the load() step.  For a simple desktop display, it is a bit
-  // mysterious to have separate load and draw steps, but it makes
+  // Second the load() step.  For a simple desktop display, it is a
+  // bit mysterious to have separate load and draw steps, but it makes
   // sense when you have to render to a stereo display, where you only
   // need to load things once, but then draw it twice with slightly
-  // different view matrices.
+  // different view matrices.  The load step generates the projection
+  // matrix, and then loads all the subsidiary compound objects.
   scene.load();
-  
+
+  // The draw step loads a view matrix using the current camera
+  // position, and then calls the draw() method for each of the
+  // compound objects that make up the scene.
   scene.draw();
 
+  // Swap the graphics buffers.
   glutSwapBuffers();
 }
 
@@ -75,6 +88,8 @@ void resizeWindow(int width, int height) {
   // during the renderScene function.
 }
 
+// Just a little debug function so that a user can see what's going on
+// in a non-graphical sense.
 void showCameraPosition() {
 
   std::cout << "Camera is at ("
@@ -87,8 +102,13 @@ void showCameraPosition() {
             << scene.getLookAtPosition().z << ")." << std::endl; 
 }
 
+// This is an event handler, designed to handle events issued by the
+// user pressing a key on the keyboard.  (GLUT's version of "normal"
+// keys, which is most of them, except the arrow and control keys.)
 void processNormalKeys(unsigned char key, int x, int y) {
 
+  // Each press of a key changes a dimension by this amount. If you
+  // want things to go faster, increase this step.
   float step = 0.5f;
   
   // This function processes only the 'normal' keys.  The arrow keys
@@ -144,10 +164,13 @@ void processNormalKeys(unsigned char key, int x, int y) {
     }
   }
 
-  // Show where you are (where the camera is) and where you're looking.
+  // Print out where you are (where the camera is) and where you're
+  // looking.
   showCameraPosition();
 }
-    
+
+// This is also an event handler, but for events caused by pressing
+// the "special" keys.  These are the arrow keys, and some others.
 void processSpecialKeys(int key, int x, int y) {
 
   float stepAngle = 5.0f / 360.0f;
@@ -167,10 +190,13 @@ void processSpecialKeys(int key, int x, int y) {
     break;
   }
 
-  // Show where you are (where the camera is) and where you're looking.
+  // Print out where you are (where the camera is) and where you're
+  // looking.
   showCameraPosition();
 }
 
+// This function contains the basics of getting a window set up and
+// ready for drawing.
 void makeWindow(const int xOffset, const int yOffset,
                 const int xWidth, const int yWidth) {
 
@@ -236,27 +262,46 @@ void makeWindow(const int xOffset, const int yOffset,
 
 int main(int argc, char **argv) {
 
+  // Initialize the graphics context and...
   init(argc, argv);
+
+  // ... make a window for drawing things.
   makeWindow(100, 100, 400, 400);
-  
+
+  // Create a list of lights.  If the shader you're using doesn't use
+  // lighting, and the shapes don't have textures, this is irrelevant.
   bsg::lightList* lights = new bsg::lightList();
   lights->addLight(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 0.0f));
   lights->addLight(glm::vec3(10.0f,-10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 1.0f));
 
+  // Now we load the shaders.  First check to see if any have been
+  // specified on the command line.
   if (argc < 3) {
     throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../src/shader2.vp ../src/shader.fp\n'");
   }
 
+  // Create a shader manager and load the light list.
   bsg::bsgPtr<bsg::shaderMgr> shader = new bsg::shaderMgr();
   shader->addLights(lights);
-  
+
+  // Add the shaders to the manager, first the vertex shader...
   std::string vertexFile = std::string(argv[1]);
   shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
+
+  // ... then the fragment shader.  You could potentially add a
+  // geometry shader at this point.
   std::string fragmentFile = std::string(argv[2]);
   shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
+  // The shaders are loaded, now compile them.
   shader->compileShaders();
 
+  // Here are the drawable objects that make up the compound object
+  // that make up the scene.
+  bsg::drawableObj axes;
+  bsg::drawableObj topShape;
+  bsg::drawableObj bottomShape;
+  
   bottomShape = bsg::drawableObj();
 
   // Specify the vertices of the shapes we're drawing.  Note that the
@@ -266,6 +311,8 @@ int main(int argc, char **argv) {
   // glFrontFace().
   std::vector<glm::vec4> topShapeVertices;
 
+  // These would take many fewer vertices if they were specified as a
+  // triangle strip.
   topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
   topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
   topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
@@ -307,6 +354,7 @@ int main(int argc, char **argv) {
   // The vertices above are arranged into a set of triangles.
   topShape.setDrawType(GL_TRIANGLES);  
 
+  // Same thing for the other tetrahedron.
   std::vector<glm::vec4> bottomShapeVertices;
 
   bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
@@ -327,7 +375,7 @@ int main(int argc, char **argv) {
 
   bottomShape.addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
 
-  // Here are the corresponding colors for the above vertices.
+  // And the corresponding colors for the above vertices.
   std::vector<glm::vec4> bottomShapeColors;
   bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
   bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
@@ -350,7 +398,7 @@ int main(int argc, char **argv) {
   // The vertices above are arranged into a set of triangles.
   bottomShape.setDrawType(GL_TRIANGLES);  
 
-  // Now let's draw a set of axes.
+  // Now let's add a set of axes.
   axes = bsg::drawableObj();
   std::vector<glm::vec4> axesVertices;
   axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
@@ -364,7 +412,7 @@ int main(int argc, char **argv) {
 
   axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
 
-  // With colors.
+  // With colors. (X = red, Y = green, Z = blue)
   std::vector<glm::vec4> axesColors;
   axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
   axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
@@ -376,6 +424,8 @@ int main(int argc, char **argv) {
   axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
   axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
+
+  // The axes are not triangles, but lines.
   axes.setDrawType(GL_LINES);
 
   // We could put the axes and the tetrahedron in the same compound
@@ -392,10 +442,11 @@ int main(int argc, char **argv) {
 
   scene.addCompound(axesSet);
 
+  // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
   scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
   
-  // All the shapes are added to the scene.
+  // All the shapes are now added to the scene.
 
   // Do the one-time things.  The every-render operations are done
   // inside the renderScene function defined above, but executed

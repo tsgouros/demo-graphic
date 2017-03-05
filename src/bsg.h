@@ -61,7 +61,7 @@ typedef enum {
 /// things done.  If you run out of capacity here, consider using Open
 /// Scene Graph before extending this one.
 ///
-/// The member classes are these:
+/// The important member classes are these:
 ///
 ///   lightList -- A list of light positions and colors.
 ///
@@ -245,11 +245,12 @@ class lightList {
     _lightColors.name = colorName;
   };
     
-  /// Use this to add lights.  Since the shaders are compiled and
-  /// linked after the number of lights is set, this is pretty much a
-  /// one-way street.  Add lights, but don't subtract them.  If you
-  /// want to extinguish one, just move it far away, or dial its
-  /// intensity way down.
+  /// \brief Add lights to the list.
+  ///
+  /// Since the shaders are compiled and linked after the number of
+  /// lights is set, this is pretty much a one-way street.  Add
+  /// lights, but don't subtract them.  If you want to extinguish one,
+  /// just move it far away, or dial its intensity way down.
   int addLight(const glm::vec3& position, const glm::vec3& color) {
     _lightPositions.data.push_back(position);
     _lightColors.data.push_back(color);
@@ -279,7 +280,7 @@ class lightList {
   };
   glm::vec3 getPosition(const int& i) { return _lightPositions.data[i]; };
 
-  
+  /// \brief Change a light's color.
   void setColor(const int& i, const glm::vec3& color) {
     _lightColors.data[i] = color; };
   glm::vec3 getColor(const int& i) { return _lightColors.data[i]; };
@@ -289,8 +290,11 @@ class lightList {
   /// shader that uses them.
   void load(const GLuint programID);
 
-  /// Draw these lights.  This is mostly just for updating the position
-  /// and color if they have changed since the last scene render.
+  /// \brief "Draw" these lights.
+  ///
+  /// Obviously, we don't draw the lights, but we use this method to
+  /// update the positino and color of the lights, in case they have
+  /// changed since the last scene render.
   void draw(const GLuint programID);  
 };
 
@@ -385,11 +389,23 @@ class shaderMgr {
   /// \brief Add lights to the shader.
   ///
   /// This should be done before adding the shader code itself, unless
-  /// the shader does not depend on the number of lights.
+  /// the shader does not depend on the number of lights.  The shader
+  /// manager class will edit any 'XX' string in the shader and
+  /// replace it with the number of lights in this list.  If your
+  /// shader ignores lighting, as many do, this will not do anything
+  /// besides issue a polite warning that the shader doesn't care.
   void addLights(const bsgPtr<lightList> lightList);
-  
+
+  /// \brief Add a shader to the program.
+  ///
+  /// You must specify at least a vertex and fragment shader.  The
+  /// geometry shader is optional.
   void addShader(const GLSHADERTYPE type, const std::string& shaderFile);
 
+  /// \brief Compile and link the loaded shaders.
+  ///
+  /// You need to have specified at least a vertex and fragment
+  /// shader.  The geometry shader is optional.
   void compileShaders();
 
   /// Get the ID number for an attribute name that appears in a shader.
@@ -398,7 +414,15 @@ class shaderMgr {
   /// Get the ID number for a uniform name that appears in a shader.
   GLuint getUniformID(const std::string& unifName);
 
+  /// \brief Returns the program ID of the compiled shader.
   GLuint getProgram() { return _programID; };
+
+  /// \brief Use this to enable the shader program.
+  ///
+  /// This call should appear before any of the OpenGL calls that rely
+  /// on this shader program, like enabling a buffer or loading an
+  /// attribute's data.  OpenGL uses "state", and this call puts the
+  /// GPU in a state of being ready to use this shader.
   void useProgram() { glUseProgram(_programID); };
   
 };
@@ -434,33 +458,72 @@ class drawableObj {
   
  public:
   drawableObj() {};
-  
+
+  /// \brief Specify the draw type of the shape.
+  ///
+  /// This refers to the OpenGL primitive draw types.  You can read
+  /// about them here: https://www.khronos.org/opengl/wiki/Primitive
+  ///
+  /// This is a nice intro:
+  /// http://www.falloutsoftware.com/tutorials/gl/gl3.htm
   void setDrawType(const GLenum drawType) {
     _drawType = drawType;
     _count = _vertices.size();
   };
+
+  /// \brief Specify the draw type and the vertex count.
   void setDrawType(const GLenum drawType, const GLsizei count) {
     _drawType = drawType;
     _count = count;
   };
 
+  /// \brief Add some vec4 data.
+  ///
+  /// You can add vec4 data, including vertices, colors, and normal
+  /// vectors, with this method.  The name parameter is the name
+  /// you'll use in the shader for the corresponding attribute.
   void addData(const GLDATATYPE type,
                const std::string& name,
                const std::vector<glm::vec4>& data);
+
+  /// \brief Add some vec2 texture coordinates.
+  ///
+  /// You can add vec2 texture coordinates, with this method.  The
+  /// name parameter is the name you'll use in the shader for the
+  /// corresponding attribute.
   void addData(const GLDATATYPE type,
                const std::string& name,
                const std::vector<glm::vec2>& data);
 
+  /// \brief One-time-only draw preparation.
+  ///
+  /// This generates the proper number of buffers for the shape data
+  /// and arranges the correspondence between the attribute names used
+  /// in your shaders and the ID numbers used in the OpenGL calls that
+  /// load data to be used for those attributes.  For example, you'll
+  /// want to know that the buffer with some specific buffer ID is the
+  /// same as the attribute called "position" in the shader.  You
+  /// don't have to worry about this, except to the extent you have to
+  /// make sure that the names set in the addData method are the same
+  /// names you're using in the shader attributes.
+  ///
   /// Call this function after all the data is in place and we know
   /// whether we have colors or textures or normals to worry about.
   void prepare(GLuint programID);
-  
-  /// The load step is separate from the draw step because you might
-  /// want to draw several times, for example for a stereo display
-  /// where you have to draw twice.
+
+  /// \brief Loads the shape about to be drawn.
+  ///
+  /// This binds the OpenGL buffers for the shape data and loads that
+  /// data into those buffers.  The load step is separate from the
+  /// draw step because you might want to draw several times, for
+  /// example for a stereo display where you have to draw twice.
   void load();
 
-  /// This is the actual step of drawing the object.
+  /// \brief This is the actual step of drawing the object.
+  ///
+  /// The method binds each OpenGL buffer, then enables the arrays.
+  /// We assume the data we want to draw is already in the buffer, via
+  /// the load() method.
   void draw();
 };
 
@@ -471,30 +534,26 @@ class drawableObj {
 /// It might consist of just one object, but that's ok, since this is
 /// also where the objects are placed in model space.
 ///
-/// This is where the model matrix is handled.  That is, the component
-/// objects must specify their vertex coordinates in the same
-/// coordinate system.  The view matrix and the projection matrix are
-/// used here, though they are generated and managed at the scene
-/// level.
+/// This is to say that this class is where the model matrix is
+/// handled.  The component objects must specify their vertex
+/// coordinates in the same coordinate system as each other.  If you
+/// want to move objects independently of each other, use different
+/// drawableCompound objects.  (Or consider using a real scene graph
+/// API, or rewriting this one.)  The view matrix and the projection
+/// matrix are used here, though they are generated and managed at the
+/// scene level.
 ///
-/// The shaders themselves are not included in this object because many
-/// objects will use the same shader.  The shader code will have to be
-/// specifically referenced in the load() and draw() methods here.  I
-/// have not come up with a clever way to avoid this, only clunky ones.
-/// So the program that calls this should keep three separate lists:
-/// the objects in the scene, the shaders used to render them, and the
-/// lights used by those shaders.
-///
-/// All the objects in this compound object use the same shader and
-/// have the same model matrix.  If you want to move things relative
-/// to each other, or use multiple shaders, don't put them together in
-/// the same compound object.
+/// The shaders are included in this object as a pointer because many
+/// objects will use the same shader.  So the program that calls this
+/// should keep three separate lists: the objects in the scene, the
+/// shaders used to render them, and the lights used by those shaders.
 ///
 /// This class imposes a small number of restrictions on the shader
-/// code itself, mostly the names of things.  These are specified in
-/// the setupDefaultName() method.  Setting things up for the number
-/// of lights is also something that needs to be configured carefully.
-/// See the lightList documentation.
+/// code itself, mostly that the matrix names in the shader must match
+/// the matrix names here.  There is a setMatrixNames() method for
+/// that.  Setting things up for the number of lights is also
+/// something that needs to be configured carefully.  See the
+/// lightList documentation.
 ///
 class drawableCompound {
  private:
@@ -515,8 +574,15 @@ class drawableCompound {
   /// The orientation of the object in model space.
   glm::quat _orientation;
 
+  /// The model matrix, along with a flag to say whether it must be
+  /// recalculated.  The flag is set when the position, scale, or
+  /// orientation are changed.
   glm::mat4 _modelMatrix;
   bool _modelMatrixNeedsReset;
+
+  /// These are pairs of ways to reference the matrices that include
+  /// the matrix name (used in the shader) and the ID (used in the
+  /// OpenGL code).  
   std::string _modelMatrixName;
   GLuint _modelMatrixID;
   
@@ -526,22 +592,24 @@ class drawableCompound {
   std::string _projMatrixName;
   GLuint _projMatrixID;
   
-  void _init() {
-    _position = glm::vec3(0.0f, 0.0f, 0.0f);
-    _scale = glm::vec3(1.0f, 1.0f, 1.0f);
-    // The glm::quat constructor initializes orientation to be zero
-    // rotation by default.
-  }
-  
  public:
  drawableCompound(bsgPtr<shaderMgr> pShader) :
   _pShader(pShader),
+    // Set the default names for our matrices.
     _modelMatrixName("modelMatrix"),
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
-    _init(); };
+    _position = glm::vec3(0.0f, 0.0f, 0.0f);
+    _scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    // The glm::quat constructor initializes orientation to be zero
+    // rotation by default, so need not be mentioned here.
+  };
 
   /// \brief Set the name of one of the matrices.
+  ///
+  /// This is the name by which this matrix will be known inside your
+  /// shaders.  In other words, these strings must match the "uniform"
+  /// declarations in your shaders.
   void setMatrixName(GLMATRIXTYPE type, const std::string name) {
     switch(type) {
     case(GLMATRIX_MODEL):
@@ -559,9 +627,9 @@ class drawableCompound {
   /// \brief Adds an object to the compound object.
   ///
   /// We set the shader to each object to be the same shader for the
-  /// whole compound object.  If you find that objectionable, you can
-  /// change the shader on an individual component object after it's
-  /// added to the compound.
+  /// whole compound object.  If you find that objectionable, you are
+  /// probably ready for a more elaborate set of classes to do your
+  /// rendering with.
   void addObject(drawableObj obj) {
     _objects.push_back(obj);
   };    
@@ -636,8 +704,9 @@ class drawableCompound {
 /// \brief A collection of drawableCompound objects that make up a
 /// scene.
 ///
-/// A scene is a collection of objects to render.  
-/// This is where the view and projection matrices are handled.
+/// A scene is a collection of objects to render, and is also where
+/// the view and projection matrices are handled to turn the scene
+/// into an image.
 ///
 class scene {
  private:
@@ -653,15 +722,11 @@ class scene {
   // View matrix inputs.
   glm::vec3 _cameraPosition;
   glm::vec3 _lookAtPosition;
-  glm::vec3 _step;
 
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
   
-  // void _defaultKeyboardEventHandler();
-  // void _defaultRenderHandler();
-
   glm::mat4 _calculateViewMatrix();
   glm::mat4 _calculateProjMatrix();
   
@@ -673,7 +738,6 @@ class scene {
     _aspect = 1.0f;
     _nearClip = 0.1f;
     _farClip = 100.0f;
-    _step = glm::vec3(0.5f, 0.5f, 0.5f);
   }
 
   void setCameraPosition(const glm::vec3 cameraPosition) {
@@ -694,11 +758,20 @@ class scene {
 
   /// \brief Rotates the camera location around the lookat point.
   void addToCameraViewAngle(const float horizAngle, const float vertAngle);
-  
+
+  /// \brief Return the view matrix.
+  ///
+  /// This function recalculates the view matrix, based on the camera
+  /// position and lookat point.
   glm::mat4 getViewMatrix() {
     _viewMatrix = _calculateViewMatrix();
     return _viewMatrix;
   }
+
+  /// \brief Return a projection matrix.
+  ///
+  /// This function recalculates a projection matrix based on the
+  /// window size (aspect ratio) and clip parameters.
   glm::mat4 getProjMatrix() {
     _projMatrix = _calculateProjMatrix();
     return _projMatrix;
@@ -715,6 +788,10 @@ class scene {
       _compoundObjects.push_back( pCompoundObject);
   }
 
+  /// \brief Prepare the scene to be drawn.
+  ///
+  /// This does a bunch of one-time-only initializations for the
+  /// member compound elements.
   void prepare();
 
   /// \brief Generates a projection matrix and loads all the compound elements.
