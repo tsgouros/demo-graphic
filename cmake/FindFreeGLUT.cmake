@@ -31,16 +31,14 @@ FIND_LIBRARY(FREEGLUT_LIBRARY
   /usr/local/Cellar/freeglut/2.8.1/lib/libglut.3.dylib # Brew version.
 	)
 
-# Handle the QUIETLY and REQUIRED arguments and set FREEGLUT_FOUND to TRUE if all listed variables are TRUE.
+# Handle the QUIETLY and REQUIRED arguments and set FREEGLUT_FOUND to
+# TRUE if all listed variables are TRUE.
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(
   FREEGLUT 
   DEFAULT_MSG 
   FREEGLUT_LIBRARY 
   FREEGLUT_INCLUDE_DIR)
-
-message("FreeGLUT library: " ${FREEGLUT_LIBRARY})
-message("FreeGLUT include: " ${FREEGLUT_INCLUDE_DIR})
 
 # Copy the results to the output variables.
 IF(FREEGLUT_FOUND)

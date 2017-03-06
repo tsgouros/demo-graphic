@@ -3,35 +3,36 @@ project (demo-graphic)
 # This is the path where cmake will look for files like "FindPNG.cmake".
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(PNG 1.4 MODULE)
 find_package(FreeGLUT REQUIRED)
+message("-- FreeGLUT includes: " ${FREEGLUT_INCLUDE_DIR})
+message("-- FreeGLUT library:  " ${FREEGLUT_LIBRARY})
 
 set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-0.9.7.1)
 
 message("-- GLM includes:    " ${GLM_INCLUDE_DIR})
+
+find_package(OpenGL REQUIRED)
 message("-- OpenGL includes: " ${OPENGL_INCLUDE_DIR})
 message("-- OpenGL library:  " ${OPENGL_LIBRARY})
+
+find_package(GLEW REQUIRED)
 message("-- GLEW library:    " ${GLEW_LIBRARY})
 message("-- GLEW includes:   " ${GLEW_INCLUDE_DIRS})
+
+find_package(PNG 1.4 MODULE)
 message("-- PNG includes:    " ${PNG_INCLUDE_DIRS})
 message("-- PNG library:     " ${PNG_LIBRARIES})
 
-# ``PNG_LIBRARIES``
-#   the libraries to link against to use PNG.
-# ``PNG_DEFINITIONS``
-#   You should add_definitons(${PNG_DEFINITIONS}) before compiling code
-#   that includes png library files.
-# ``PNG_FOUND``
-#   If false, do not try to use PNG.
-
+find_package(MinVR MODULE)
+message("-- MinVR include files: " ${MINVR_INCLUDE_DIR})
+message("-- MinVR library: " ${MINVR_LIBRARY})
 
 include_directories(
   ${OPENGL_INCLUDE_DIR}
   ${FREEGLUT_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
   ${GLEW_INCLUDE_DIRS}
+  ${MINVR_INCLUDE_DIR}
   )
 
 # Source files go here.
@@ -45,12 +46,21 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
-add_executable(demo2 demo2.cpp bsg.h bsg.cpp)
+  add_executable(demo2 demo2.cpp bsg.h bsg.cpp)
 
-target_link_libraries(demo2
-  ${FREEGLUT_LIBRARY}
-  ${OPENGL_LIBRARY}
-  ${GLEW_LIBRARY}
-  ${PNG_LIBRARIES}
-  )
+  target_link_libraries(demo2
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+
+  add_executable(demo3 demo3.cpp bsg.h bsg.cpp)
+
+  target_link_libraries(demo3
+    ${MINVR_LIBRARY}
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+  
 endif()
