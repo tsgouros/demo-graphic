@@ -37,7 +37,7 @@
 find_path(GLEW_INCLUDE_DIR 
   NAMES GL/glew.h
   HINTS
-     ENV CPATH) # <- Modified for use on OSCAR.  Probably other places, too.
+    ENV CPATH) # <- Modified for use on OSCAR.  Probably other places, too.
 find_library(GLEW_LIBRARY 
   NAMES GLEW glew32 glew glew32s 
   PATH_SUFFIXES lib64

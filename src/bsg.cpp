@@ -2,7 +2,7 @@
 
 namespace bsg {
 
-void shaderUtils::printMat(const std::string& name, const glm::mat4& mat) {
+void bsgUtils::printMat(const std::string& name, const glm::mat4& mat) {
 
   std::cout << name << std::endl;  
   for (int i = 0; i < 4; i++) {
@@ -29,8 +29,8 @@ void lightList::load(GLuint programID) {
 void lightList::draw(GLuint programID) {
 
   glUseProgram(programID);
-  glUniform3fv(_lightPositions.ID, 2, &_lightPositions.data[0].x);
-  glUniform3fv(_lightColors.ID, 2, &_lightColors.data[0].x);
+  glUniform3fv(_lightPositions.ID, 2, &_lightPositions.getData()[0].x);
+  glUniform3fv(_lightColors.ID, 2, &_lightColors.getData()[0].x);
 }
 
 textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
@@ -256,7 +256,7 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
 
   // Edit the shader source to reflect the input number of lights.  If
   // there is no 'XX' in the shader code, this will cause an ugly
-  // error.
+  // error we have to catch.
   char numLightsAsString[5];
   sprintf(numLightsAsString, "%d", _lightList->getNumLights());
   try {
@@ -397,15 +397,15 @@ void drawableObj::prepare(GLuint programID) {
   glGenBuffers(1, &_vertices.bufferID);  
   _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
   
-  if (!_colors.data.empty()) {
+  if (!_colors.getData().empty()) {
     glGenBuffers(1, &_colors.bufferID);
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
   }
-  if (!_normals.data.empty()) {
+  if (!_normals.getData().empty()) {
     glGenBuffers(1, &_normals.bufferID);
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
   }
-  if (!_uvs.data.empty()) {
+  if (!_uvs.getData().empty()) {
     glGenBuffers(1, &_uvs.bufferID);
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
   }
@@ -418,19 +418,19 @@ void drawableObj::prepare(GLuint programID) {
 void drawableObj::load() {
 
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
-  glBufferData(GL_ARRAY_BUFFER, _vertices.size(), &_vertices.data[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, _vertices.size(), &_vertices.getData()[0], GL_STATIC_DRAW);
 
-  if (!_colors.data.empty()) {
+  if (!_colors.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _colors.size(), &_colors.data[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _colors.size(), &_colors.getData()[0], GL_STATIC_DRAW);
   }
-  if (!_normals.data.empty()) {
+  if (!_normals.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _normals.size(), &_normals.data[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _normals.size(), &_normals.getData()[0], GL_STATIC_DRAW);
   }
-  if (!_uvs.data.empty()) {
+  if (!_uvs.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _uvs.size(), &_uvs.data[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _uvs.size(), &_uvs.getData()[0], GL_STATIC_DRAW);
   }
 }
 
@@ -440,17 +440,17 @@ void drawableObj::draw() {
   glEnableVertexAttribArray(_vertices.ID);
   glVertexAttribPointer(_vertices.ID, _vertices.intSize(), GL_FLOAT, 0, 0, 0);
 
-  if (!_colors.data.empty()) {
+  if (!_colors.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
     glEnableVertexAttribArray(_colors.ID);
     glVertexAttribPointer(_colors.ID, _colors.intSize(), GL_FLOAT, 0, 0, 0);
   }
-  if (!_normals.data.empty()) {
+  if (!_normals.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
     glEnableVertexAttribArray(_normals.ID);
     glVertexAttribPointer(_normals.ID, _normals.intSize(), GL_FLOAT, 0, 0, 0);
   }
-  if (!_uvs.data.empty()) {
+  if (!_uvs.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
     glEnableVertexAttribArray(_uvs.ID);
     glVertexAttribPointer(_uvs.ID, _uvs.intSize(), GL_FLOAT, 0, 0, 0);
@@ -469,10 +469,10 @@ glm::mat4 drawableCompound::getModelMatrix() {
     _modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
     _modelMatrixNeedsReset = false;
 
-    // shaderUtils::printMat("trans:", translationMatrix);
-    // shaderUtils::printMat("rotat:", rotationMatrix);
-    // shaderUtils::printMat("scale:", scaleMatrix);
-    // shaderUtils::printMat("model:", _modelMatrix);
+    // bsgUtils::printMat("trans:", translationMatrix);
+    // bsgUtils::printMat("rotat:", rotationMatrix);
+    // bsgUtils::printMat("scale:", scaleMatrix);
+    // bsgUtils::printMat("model:", _modelMatrix);
   }
 
   return _modelMatrix;

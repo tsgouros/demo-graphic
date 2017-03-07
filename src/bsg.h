@@ -94,7 +94,7 @@ typedef enum {
 ///                up a scene.
 ///
 
-/// \brief A reference counter for a smart pointer to shader manager objects.
+/// \brief A reference counter for a smart pointer to bsg objects.
 class bsgPtrRC {
  private:
   int count; // Reference count
@@ -109,7 +109,7 @@ class bsgPtrRC {
   int release() { return --count; }
 };  
 
-/// \brief A smart pointer to a shader manager
+/// \brief A smart pointer to a bsg object.
 ///
 /// A smart pointer to the bsgPtr so that multiple objects can use
 /// the same shader object.
@@ -121,11 +121,13 @@ class bsgPtr {
   bsgPtrRC* _reference; // The reference count.
 
  public:
- bsgPtr() : _pData(0) { _reference = new bsgPtrRC(1); };
+ bsgPtr() : _pData(0) {
+
+    _reference = new bsgPtrRC(1); };
  bsgPtr(T* pValue) : _pData(pValue) { _reference = new bsgPtrRC(1); };
   
   /// Copy constructor
- bsgPtr(const bsgPtr& sp) : _pData(sp._pData), _reference(sp._reference) {
+ bsgPtr(const bsgPtr &sp) : _pData(sp._pData), _reference(sp._reference) {
     _reference->addRef();
   }
 
@@ -142,7 +144,7 @@ class bsgPtr {
   T* operator->() { return _pData; };
 
   /// Assignment operator.
-  T& operator=(const T& sp) {
+  bsgPtr<T>& operator=(const bsgPtr<T> &sp) {
     if (this != &sp) {
       // Decrement the old reference count.  If references become
       // zero, delete the data.
@@ -162,9 +164,9 @@ class bsgPtr {
 };
 
 /// \brief Just a place to park some random utilities.
-class shaderUtils {
+class bsgUtils {
  public:
-  static void printMat(const std::string& name, const glm::mat4& mat);
+  static void printMat(const std::string &name, const glm::mat4 &mat);
 };
 
 /// \brief Some data for an object.
@@ -175,17 +177,28 @@ class shaderUtils {
 /// refer to that buffer in the C++ code.
 template <class T>
 class drawableObjData {
- public:
-  drawableObjData() {};
- drawableObjData(const std::string inName, const std::vector<T> inData) :
-  name(inName), data(inData) {}
-
-  /// Some data.
-  std::vector<T> data;
+ private:
+  std::vector<T> _data;
   
+ public:
+ drawableObjData(): name("") {
+    _data.reserve(50); 
+    ID = 0; bufferID = 0;
+  };
+ drawableObjData(const std::string inName, const std::vector<T> inData) :
+  name(inName), _data(inData) {}
+
+  // Copy constructor
+ drawableObjData(const drawableObjData &objData) :
+  _data(objData.getData()), name(objData.name), ID(objData.ID),
+    bufferID(objData.bufferID) {};
+    
   /// The name of that data inside a shader.
   std::string name;
 
+  std::vector<T> getData() const { return _data; };
+  void addData(T d) { _data.push_back(d); };
+  
   // The ID that goes with that name.
   GLuint ID;
   
@@ -193,7 +206,7 @@ class drawableObjData {
   GLuint bufferID;
 
   /// A size calculator.
-  size_t size() { return data.size() * sizeof(T); };
+  size_t size() { return _data.size() * sizeof(T); };
 
   /// Another size calculator.
   int intSize() { return sizeof(T) / sizeof(float); };
@@ -240,7 +253,7 @@ class lightList {
 
   /// Set the names of the light positions and colors to be used inside
   /// the shaders.
-  void setNames(const std::string& positionName, const std::string& colorName) {
+  void setNames(const std::string &positionName, const std::string &colorName) {
     _lightPositions.name = positionName;
     _lightColors.name = colorName;
   };
@@ -251,39 +264,39 @@ class lightList {
   /// lights is set, this is pretty much a one-way street.  Add
   /// lights, but don't subtract them.  If you want to extinguish one,
   /// just move it far away, or dial its intensity way down.
-  int addLight(const glm::vec3& position, const glm::vec3& color) {
-    _lightPositions.data.push_back(position);
-    _lightColors.data.push_back(color);
-    return _lightPositions.data.size();
+  int addLight(const glm::vec3 &position, const glm::vec3 &color) {
+    _lightPositions.addData(position);
+    _lightColors.addData(color);
+    return _lightPositions.size();
   };
-  int addLight(const glm::vec3& position) {
+  int addLight(const glm::vec3 &position) {
     glm::vec3 white = glm::vec3(1.0f, 1.0f, 1.0f);
     return addLight(position, white);
   };
   
-  int getNumLights() { return _lightPositions.data.size(); };
+  int getNumLights() { return _lightPositions.getData().size(); };
 
   // We have mutators and accessors for all the pieces...
-  std::vector<glm::vec3> getPositions() { return _lightPositions.data; };
+  std::vector<glm::vec3> getPositions() { return _lightPositions.getData(); };
   void setPositions(const std::vector<glm::vec3> positions) {
-    _lightPositions.data = positions;
+    _lightPositions.getData() = positions;
   };
   GLuint getPositionID() { return _lightPositions.ID; };
 
-  std::vector<glm::vec3> getColors() { return _lightColors.data; };
-  void setColors(const std::vector<glm::vec3>& colors) { _lightColors.data = colors; };
+  std::vector<glm::vec3> getColors() { return _lightColors.getData(); };
+  void setColors(const std::vector<glm::vec3> &colors) { _lightColors.getData() = colors; };
   GLuint getColorID() { return _lightColors.ID; };
 
   /// ... and also for individual lights.
-  void setPosition(const int& i, const glm::vec3& position) {
-    _lightPositions.data[i] = position;
+  void setPosition(const int &i, const glm::vec3 &position) {
+    _lightPositions.getData()[i] = position;
   };
-  glm::vec3 getPosition(const int& i) { return _lightPositions.data[i]; };
+  glm::vec3 getPosition(const int &i) { return _lightPositions.getData()[i]; };
 
   /// \brief Change a light's color.
-  void setColor(const int& i, const glm::vec3& color) {
-    _lightColors.data[i] = color; };
-  glm::vec3 getColor(const int& i) { return _lightColors.data[i]; };
+  void setColor(const int &i, const glm::vec3 &color) {
+    _lightColors.getData()[i] = color; };
+  glm::vec3 getColor(const int &i) { return _lightColors.getData()[i]; };
 
   /// Load these lights for use with this program.  This should be
   /// called inside the load() method of the manager object of the
@@ -326,7 +339,7 @@ class textureMgr {
   GLuint loadPNG(const std::string imagePath);
   
  public:
-  textureMgr(const textureType& type, const std::string& fileName);
+  textureMgr(const textureType &type, const std::string &fileName);
   textureMgr() {};
 
   void load(const GLuint programID);
@@ -400,7 +413,7 @@ class shaderMgr {
   ///
   /// You must specify at least a vertex and fragment shader.  The
   /// geometry shader is optional.
-  void addShader(const GLSHADERTYPE type, const std::string& shaderFile);
+  void addShader(const GLSHADERTYPE type, const std::string &shaderFile);
 
   /// \brief Compile and link the loaded shaders.
   ///
@@ -409,10 +422,10 @@ class shaderMgr {
   void compileShaders();
 
   /// Get the ID number for an attribute name that appears in a shader.
-  GLuint getAttribID(const std::string& attribName);
+  GLuint getAttribID(const std::string &attribName);
 
   /// Get the ID number for a uniform name that appears in a shader.
-  GLuint getUniformID(const std::string& unifName);
+  GLuint getUniformID(const std::string &unifName);
 
   /// \brief Returns the program ID of the compiled shader.
   GLuint getProgram() { return _programID; };
@@ -454,7 +467,7 @@ class drawableObj {
   drawableObjData<glm::vec2> _uvs;
   
   std::string print() const { return std::string("drawableObj"); };
-  friend std::ostream& operator<<(std::ostream &os, const drawableObj& obj);
+  friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
   
  public:
   drawableObj() {};
@@ -483,8 +496,8 @@ class drawableObj {
   /// vectors, with this method.  The name parameter is the name
   /// you'll use in the shader for the corresponding attribute.
   void addData(const GLDATATYPE type,
-               const std::string& name,
-               const std::vector<glm::vec4>& data);
+               const std::string &name,
+               const std::vector<glm::vec4> &data);
 
   /// \brief Add some vec2 texture coordinates.
   ///
@@ -492,8 +505,8 @@ class drawableObj {
   /// name parameter is the name you'll use in the shader for the
   /// corresponding attribute.
   void addData(const GLDATATYPE type,
-               const std::string& name,
-               const std::vector<glm::vec2>& data);
+               const std::string &name,
+               const std::vector<glm::vec2> &data);
 
   /// \brief One-time-only draw preparation.
   ///
@@ -696,8 +709,8 @@ class drawableCompound {
   /// \brief Draws a compound object.
   ///
   /// Just executes draw() for all the component objects.
-  void draw(const glm::mat4& viewMatrix,
-            const glm::mat4& projMatrix);
+  void draw(const glm::mat4 &viewMatrix,
+            const glm::mat4 &projMatrix);
 
 };
 
@@ -799,7 +812,7 @@ class scene {
   /// \brief Loads all the compound elements.
   ///
   /// But you supply the projection matrix.
-  void load(glm::mat4& projMatrix);
+  void load(glm::mat4 &projMatrix);
 
   /// \brief Generates a view matrix and draws all the compound elements.
   void draw();
@@ -807,7 +820,7 @@ class scene {
   /// \brief Draws all the compound elements.
   ///
   /// But you supply the view matrix.
-  void draw(glm::mat4& viewMatrix);
+  void draw(glm::mat4 &viewMatrix);
   
 };
 

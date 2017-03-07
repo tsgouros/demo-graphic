@@ -1,462 +1,477 @@
 #include "bsg.h"
 
-// The scene and the objects in it must be available from the main()
-// function where it is created and the renderScene() function where
-// it is drawn.  The scene object contains all the drawable objects
-// that make up the scene.
-bsg::scene scene = bsg::scene();
+#include <api/MinVR.h>
 
-// These are the shapes that make up the scene.  They are out here in
-// the global variables so they can be available in both the main()
-// function and the renderScene() function.
-bsg::drawableCompound* tetrahedron;
-bsg::drawableCompound* axesSet;
+class DemoVRApp: public MinVR::VRApp {
 
-// These are part of the animation stuff, and again are out here with
-// the big boy global variables so they can be available to both the
-// interrupt handler and the render function.
-float oscillator = 0.0f;
-float oscillationStep = 0.03f;
+  // Data values that were global in the demo2.cpp file are defined as
+  // private members of the VRApp.
+private:
 
-// Initialize the graphics display, in all the ways required.  You'll
-// often see this as "creating a graphics *context*".  The funny thing
-// about OpenGL is that its functions don't even exist if there is no
-// graphics context.  This means that glBufferData() doesn't merely
-// fail, it pretends not to exist.
-void init(int argc, char** argv) {
+  // The scene and the objects in it must be available from the main()
+  // function where it is created and the renderScene() function where
+  // it is drawn.  The scene object contains all the drawable objects
+  // that make up the scene.
+  bsg::scene _scene;
 
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+  // These are the shapes that make up the scene.  They are out here in
+  // the global variables so they can be available in both the main()
+  // function and the renderScene() function.
+  bsg::drawableCompound* _tetrahedron;
+  bsg::drawableCompound* _axesSet;
 
-  std::cout << "Initialize GLUT display mode." << std::endl;
-}
+  // These are part of the animation stuff, and again are out here with
+  // the big boy global variables so they can be available to both the
+  // interrupt handler and the render function.
+  float _oscillator;
+  float _oscillationStep;
 
-// This is the heart of any graphics program, the render function.  It
-// is called each time through the main graphics loop, and re-draws
-// the scene according to whatever has changed since the last time it
-// was drawn.
-void renderScene() {
+  // These variables were not global before, but their scope has been
+  // divided into several functions here, so they are class-wide
+  // private data objects.
+  bsg::bsgPtr<bsg::shaderMgr> _shader;
+  bsg::bsgPtr<bsg::lightList> _lights;
 
-  // If you want to adjust the positions of the various objects in
-  // your scene, this is where to do that.  You could also animate the
-  // camera or lookat position here, or anything else you want to mess
-  // with in the scene.
-  glm::vec3 pos = tetrahedron->getPosition();
-  oscillator += oscillationStep;
-  pos.x = sin(oscillator);
-  pos.y = 1.0f - cos(oscillator);
-  tetrahedron->setPosition(pos);
+  // Here are the drawable objects that make up the compound object
+  // that make up the scene.
+  bsg::drawableObj _axes;
+  bsg::drawableObj _topShape;
+  bsg::drawableObj _bottomShape;
 
-  // Now the preliminaries are done, on to the actual drawing.
+  std::string _vertexFile;
+  std::string _fragmentFile;
+
   
-  // First clear the display.
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
-  // Second the load() step.  For a simple desktop display, it is a
-  // bit mysterious to have separate load and draw steps, but it makes
-  // sense when you have to render to a stereo display, where you only
-  // need to load things once, but then draw it twice with slightly
-  // different view matrices.  The load step generates the projection
-  // matrix, and then loads all the subsidiary compound objects.
-  scene.load();
+  // These functions from demo2.cpp are not needed here:
+  //
+  //    init()
+  //    makeWindow()
+  //    resizeWindow()
+  //
+  // The functionality of these methods is assumed by the MinVR apparatus.
 
-  // The draw step loads a view matrix using the current camera
-  // position, and then calls the draw() method for each of the
-  // compound objects that make up the scene.
-  scene.draw();
+  // This contains a bunch of sanity checks from the graphics
+  // initialization of demo2.cpp.  They are still useful with MinVR.
+  void _checkContext() {
+    
+    // There is one more graphics library used here, called GLEW.  This
+    // library sorts through the various OpenGL updates and changes and
+    // allows a user to pretend that it's all a consistent and simple
+    // system.  The 'core profile' refers to some modern OpenGL
+    // enhancements that are not so modern as of 2017.  Set this to true
+    // to get those enhancements.
+    glewExperimental = true; // Needed for core profile
+    if (glewInit() != GLEW_OK) {
+      throw std::runtime_error("Failed to initialize GLEW");
+    }
 
-  // Swap the graphics buffers.
-  glutSwapBuffers();
-}
+    // Now that we have a graphics context, let's look at what's inside.
+    std::cout << "Hardware check: "
+              << glGetString(GL_RENDERER)  // e.g. Intel 3000 OpenGL Engine
+              << " / "
+              << glGetString(GL_VERSION)    // e.g. 3.2 INTEL-8.0.61
+              << std::endl;
 
-// This function is called when the window changes size.  It
-// adjusts the projection matrix, and resets an OpenGL value for
-// the size of the viewport.
-void resizeWindow(int width, int height) {
-
-  // Prevent a divide by zero, when window is too short (you cant make
-  // a window of zero width).
-  if(height == 0) height = 1;
- 
-  // Set the viewport to be the entire window
-  glViewport(0, 0, width, height);
-
-  // We reset the aspect ratio and leave _fov, _nearClip, _farClip unchanged.
-  scene.setAspect( (1.0f * width) / height );
-
-  // The projection matrix will be recalculated on the next load()
-  // during the renderScene function.
-}
-
-// Just a little debug function so that a user can see what's going on
-// in a non-graphical sense.
-void showCameraPosition() {
-
-  std::cout << "Camera is at ("
-            << scene.getCameraPosition().x << ", "
-            << scene.getCameraPosition().y << ", "
-            << scene.getCameraPosition().z << ")... ";
-  std::cout << "looking at ("
-            << scene.getLookAtPosition().x << ", "
-            << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")." << std::endl; 
-}
-
-// This is an event handler, designed to handle events issued by the
-// user pressing a key on the keyboard.  (GLUT's version of "normal"
-// keys, which is most of them, except the arrow and control keys.)
-void processNormalKeys(unsigned char key, int x, int y) {
-
-  // Each press of a key changes a dimension by this amount. If you
-  // want things to go faster, increase this step.
-  float step = 0.5f;
-  
-  // This function processes only the 'normal' keys.  The arrow keys
-  // don't appear here, nor mouse events.
-  switch (key) {
-  case 27:
-    exit(0);
-
-    // These next few are for steering the position of the viewer.
-  case 'a':
-    scene.addToCameraPosition(glm::vec3(-step, 0.0f, 0.0f));
-    break;
-  case 'q':
-    scene.addToCameraPosition(glm::vec3( step, 0.0f, 0.0f));
-    break;
-  case 's':
-    scene.addToCameraPosition(glm::vec3( 0.0f,-step, 0.0f));
-    break;
-  case 'w':
-    scene.addToCameraPosition(glm::vec3( 0.0f, step, 0.0f));
-    break;
-  case 'd':
-    scene.addToCameraPosition(glm::vec3( 0.0f, 0.0f, -step));
-    break;
-  case 'e':
-    scene.addToCameraPosition(glm::vec3( 0.0f, 0.0f,  step));
-    break;
-
-    // These next are for steering the position of where you're looking.
-  case 'j':
-    scene.addToLookAtPosition(glm::vec3(-step, 0.0f, 0.0f));
-    break;
-  case 'u':
-    scene.addToLookAtPosition(glm::vec3( step, 0.0f, 0.0f));
-    break;
-  case 'k':
-    scene.addToLookAtPosition(glm::vec3( 0.0f,-step, 0.0f));
-    break;
-  case 'i':
-    scene.addToLookAtPosition(glm::vec3( 0.0f, step, 0.0f));
-    break;
-  case 'l':
-    scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f, -step));
-    break;
-  case 'o':
-    scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f,  step));
-    break;
-  default:
-    if (oscillationStep == 0.0f) {
-      oscillationStep = 0.03f;
+    if (glewIsSupported("GL_VERSION_2_1")) {
+      std::cout << "Software check: Ready for OpenGL 2.1." << std::endl;
     } else {
-      oscillationStep = 0.0f;
+      throw std::runtime_error("Software check: OpenGL 2.1 not supported.");
+    }
+
+    // This is the background color of the viewport.
+    glClearColor(0.1 , 0.0, 0.4, 1.0);
+
+    // Now we're ready to start issuing OpenGL calls.  Start by enabling
+    // the modes we want.  The DEPTH_TEST is how you get hidden faces.
+    glEnable(GL_DEPTH_TEST);
+
+    if (glIsEnabled(GL_DEPTH_TEST)) {
+      std::cout << "Depth test enabled" << std::endl;
+    } else {
+      std::cout << "No depth test enabled" << std::endl;
+    }
+
+    // This is just a performance enhancement that allows OpenGL to
+    // ignore faces that are facing away from the camera.
+    glEnable(GL_CULL_FACE);
+
+  }
+
+  // Just a little debug function so that a user can see what's going on
+  // in a non-graphical sense.
+  void _showCameraPosition() {
+
+    std::cout << "Camera is at ("
+              << _scene.getCameraPosition().x << ", "
+              << _scene.getCameraPosition().y << ", "
+              << _scene.getCameraPosition().z << ")... ";
+    std::cout << "looking at ("
+              << _scene.getLookAtPosition().x << ", "
+              << _scene.getLookAtPosition().y << ", "
+              << _scene.getLookAtPosition().z << ")." << std::endl; 
+  }
+
+  void _initializeScene() {
+
+    // Create a list of lights.  If the shader you're using doesn't use
+    // lighting, and the shapes don't have textures, this is irrelevant.
+    _lights->addLight(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+    _lights->addLight(glm::vec3(10.0f,-10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 1.0f));
+
+    // Create a shader manager and load the light list.
+    _shader->addLights(_lights);
+
+    // Add the shaders to the manager, first the vertex shader...
+    _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
+
+    // ... then the fragment shader.  You could potentially add a
+    // geometry shader at this point.
+    _shader->addShader(bsg::GLSHADER_FRAGMENT, _fragmentFile);
+
+    // The shaders are loaded, now compile them.
+    _shader->compileShaders();
+  
+    _bottomShape = bsg::drawableObj();
+
+    // Specify the vertices of the shapes we're drawing.  Note that the
+    // faces are specified with a *counter-clockwise* winding order, the
+    // OpenGL default.  You can make your faces wind the other
+    // direction, but have to adjust the OpenGL expectations with
+    // glFrontFace().
+    std::vector<glm::vec4> topShapeVertices;
+
+    // These would take many fewer vertices if they were specified as a
+    // triangle strip.
+    topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+
+    topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
+ 
+    topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
+
+    topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+    topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
+
+    _topShape.addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
+
+    // Here are the corresponding colors for the above vertices.
+    std::vector<glm::vec4> topShapeColors;
+    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+    topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    _topShape.addData(bsg::GLDATA_COLORS, "color", topShapeColors);
+
+    // The vertices above are arranged into a set of triangles.
+    _topShape.setDrawType(GL_TRIANGLES);  
+
+    // Same thing for the other tetrahedron.
+    std::vector<glm::vec4> bottomShapeVertices;
+
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+
+    bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+    bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+
+    _bottomShape.addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
+
+    // And the corresponding colors for the above vertices.
+    std::vector<glm::vec4> bottomShapeColors;
+    bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+    bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+
+    bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+    bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+    _bottomShape.addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
+
+    // The vertices above are arranged into a set of triangles.
+    _bottomShape.setDrawType(GL_TRIANGLES);  
+
+    // Now let's add a set of axes.
+    _axes = bsg::drawableObj();
+    std::vector<glm::vec4> axesVertices;
+    axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
+    axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
+  
+    axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
+    axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
+
+    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
+    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
+
+    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
+
+    // With colors. (X = red, Y = green, Z = blue)
+    std::vector<glm::vec4> axesColors;
+    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
+
+    // The axes are not triangles, but lines.
+    _axes.setDrawType(GL_LINES);
+
+    // We could put the axes and the tetrahedron in the same compound
+    // shape, but we leave them separate so they can be moved
+    // separately.
+    _tetrahedron = new bsg::drawableCompound(_shader);
+    _tetrahedron->addObject(_topShape);
+    _tetrahedron->addObject(_bottomShape);
+
+    _scene.addCompound(_tetrahedron);
+
+    _axesSet = new bsg::drawableCompound(_shader);
+    _axesSet->addObject(_axes);
+
+    _scene.addCompound(_axesSet);
+
+    // Set some initial positions for the camera and where it's looking.
+    _scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    _scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
+  
+    // All the shapes are now added to the scene.
+  }
+
+  
+public:
+	DemoVRApp(int argc, char** argv, const std::string& configFile) :
+    MinVR::VRApp(argc, argv, configFile) {
+
+    bsg::scene _scene = bsg::scene();
+    _shader = new bsg::shaderMgr();
+    _lights = new bsg::lightList();
+
+    _oscillator = 0.0f;
+    _oscillationStep = 0.03f;
+    
+    std::cout << "argc:" << std::endl;
+
+    for (int i = 0; i < argc ; i++) {
+      std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
+    }
+
+    // Now we load the shaders.  First check to see if any have been
+    // specified on the command line.
+    if (argc < 4) {
+      throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-glfw.xml ../src/shader2.vp ../src/shader.fp\n'");
+    }
+    
+    _vertexFile = std::string("../src/shader2.vp");
+    _fragmentFile = std::string("../src/shader.fp");
+
+  }
+
+	/// onVREvent is called when a new intput event happens.
+	void onVREvent(const MinVR::VREvent &event) {
+        
+    //event.print();
+        
+		// Set time since application began
+		if (event.getName() == "FrameStart") {
+      const double time = event.getDataAsDouble("ElapsedSeconds");
+      // You could do the model matrix changes here.
+      return;
+		}
+
+    float step = 0.5f;
+    float stepAngle = 5.0f / 360.0f;
+
+		// Quit if the escape button is pressed
+		if (event.getName() == "KbdEsc_Down") {
+			shutdown();
+		} else if ((event.getName() == "Kbda_Down") ||
+               (event.getName() == "KbdA_Down") ||
+               (event.getName() == "KbdA_Repeat")) {
+      _scene.addToCameraPosition(glm::vec3(-step, 0.0f, 0.0f));
+		} else if ((event.getName() == "Kbdq_Down") ||
+               (event.getName() == "KbdQ_Down") ||
+               (event.getName() == "KbdQ_Repeat")) {
+      _scene.addToCameraPosition(glm::vec3( step, 0.0f, 0.0f));
+		} else if ((event.getName() == "Kbds_Down") ||
+               (event.getName() == "KbdS_Down") ||
+               (event.getName() == "KbdS_Repeat")) {
+      _scene.addToCameraPosition(glm::vec3(0.0f,-step, 0.0f));
+		} else if ((event.getName() == "Kbdw_Down") ||
+               (event.getName() == "KbdW_Down") ||
+               (event.getName() == "KbdW_Repeat")) {
+      _scene.addToCameraPosition(glm::vec3(0.0f, step, 0.0f));
+		} else if ((event.getName() == "Kbdd_Down") ||
+               (event.getName() == "KbdD_Down") ||
+               (event.getName() == "KbdD_Repeat")) {
+      _scene.addToCameraPosition(glm::vec3( 0.0f, 0.0f,-step));
+		} else if ((event.getName() == "Kbde_Down") ||
+               (event.getName() == "KbdE_Down") ||
+               (event.getName() == "KbdE_Repeat")) {
+      _scene.addToCameraPosition(glm::vec3( 0.0f, 0.0f,-step));
+		} else if ((event.getName() == "Kbdj_Down") ||
+               (event.getName() == "KbdJ_Down") ||
+               (event.getName() == "KbdJ_Repeat")) {
+      _scene.addToLookAtPosition(glm::vec3(-step, 0.0f, 0.0f));
+		} else if ((event.getName() == "Kbdu_Down") ||
+               (event.getName() == "KbdU_Down") ||
+               (event.getName() == "KbdU_Repeat")) {
+      _scene.addToLookAtPosition(glm::vec3( step, 0.0f, 0.0f));
+		} else if ((event.getName() == "Kbdk_Down") ||
+               (event.getName() == "KbdK_Down") ||
+               (event.getName() == "KbdK_Repeat")) {
+      _scene.addToLookAtPosition(glm::vec3(0.0f,-step, 0.0f));
+		} else if ((event.getName() == "Kbdi_Down") ||
+               (event.getName() == "KbdI_Down") ||
+               (event.getName() == "KbdI_Repeat")) {
+      _scene.addToLookAtPosition(glm::vec3(0.0f, step, 0.0f));
+		} else if ((event.getName() == "Kbdl_Down") ||
+               (event.getName() == "KbdL_Down") ||
+               (event.getName() == "KbdL_Repeat")) {
+      _scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f,-step));
+		} else if ((event.getName() == "Kbdo_Down") ||
+               (event.getName() == "KbdO_Down") ||
+               (event.getName() == "KbdO_Repeat")) {
+      _scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f,-step));
+    } else if ((event.getName() == "KbdUp_Down") ||
+               (event.getName() == "KbdUp_Repeat") ||
+               (event.getName() == "KbdUp_Repeat")) {
+      _scene.addToCameraViewAngle(0.0f,  stepAngle);
+    } else if ((event.getName() == "KbdDown_Down") ||
+               (event.getName() == "KbdDown_Repeat")) {
+      _scene.addToCameraViewAngle(0.0f, -stepAngle);
+    } else if ((event.getName() == "KbdLeft_Down") ||
+              (event.getName() == "KbdLeft_Repeat")) {
+      _scene.addToCameraViewAngle( stepAngle, 0.0f);
+    } else if ((event.getName() == "KbdRight_Down") ||
+              (event.getName() == "KbdRight_Repeat")) {
+      _scene.addToCameraViewAngle(-stepAngle, 0.0f);
+    } else if ((event.getName().compare("Kbd") == 0) &&
+               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
+      if (_oscillationStep == 0.0f) {
+        _oscillationStep = 0.03f;
+      } else {
+        _oscillationStep = 0.0f;
+      }
+    }
+
+    // Print out where you are (where the camera is) and where you're
+    // looking.
+    _showCameraPosition();
+    
+	}
+
+  void onVRRenderGraphicsContext(const MinVR::VRGraphicsState &renderState) {
+
+    // Check if this is the first call. 
+    if (renderState.isInitialRenderCall()) {
+      _checkContext();
+      _initializeScene();
+      _scene.prepare();
     }
   }
 
-  // Print out where you are (where the camera is) and where you're
-  // looking.
-  showCameraPosition();
-}
+  // This is the heart of any graphics program, the render function.  It
+  // is called each time through the main graphics loop, and re-draws
+  // the scene according to whatever has changed since the last time it
+  // was drawn.
+	void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
+		// Only draw if the application is still running.
+		if (isRunning()) {
 
-// This is also an event handler, but for events caused by pressing
-// the "special" keys.  These are the arrow keys, and some others.
-void processSpecialKeys(int key, int x, int y) {
+      // If you want to adjust the positions of the various objects in
+      // your scene, this is where to do that.  You could also animate the
+      // camera or lookat position here, or anything else you want to mess
+      // with in the scene.
+      glm::vec3 pos = _tetrahedron->getPosition();
+      _oscillator += _oscillationStep;
+      pos.x = sin(_oscillator);
+      pos.y = 1.0f - cos(_oscillator);
+      _tetrahedron->setPosition(pos);
 
-  float stepAngle = 5.0f / 360.0f;
+      // Now the preliminaries are done, on to the actual drawing.
+  
+      // First clear the display.
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+  
+      // Second the load() step.  We let MinVR give us the projection
+      // matrix from the render context.
+      const float* pm = renderState.getProjectionMatrix();
+      glm::mat4 projMatrix = glm::mat4( pm[0],  pm[1], pm[2], pm[3],
+                                        pm[4],  pm[5], pm[6], pm[7],
+                                        pm[8],  pm[9],pm[10],pm[11],
+                                        pm[12],pm[13],pm[14],pm[15]);
+      //bsg::bsgUtils::printMat("proj", projMatrix);
+      _scene.load(projMatrix);
 
-  switch(key) {    
-  case GLUT_KEY_UP:
-    scene.addToCameraViewAngle(0.0f,  stepAngle);
-    break;
-  case GLUT_KEY_DOWN:
-    scene.addToCameraViewAngle(0.0f, -stepAngle);
-    break;
-  case GLUT_KEY_LEFT:
-    scene.addToCameraViewAngle( stepAngle, 0.0f);
-    break;
-  case GLUT_KEY_RIGHT:
-    scene.addToCameraViewAngle(-stepAngle, 0.0f);
-    break;
+      // The draw step.  We let MinVR give us the view matrix.
+      const float* vm = renderState.getViewMatrix();
+      glm::mat4 viewMatrix = glm::mat4( vm[0],  vm[1], vm[2], vm[3],
+                                        vm[4],  vm[5], vm[6], vm[7],
+                                        vm[8],  vm[9],vm[10],vm[11],
+                                        vm[12],vm[13],vm[14],vm[15]);
+
+      //bsg::bsgUtils::printMat("view", viewMatrix);
+      _scene.draw(viewMatrix);
+
+      // We let MinVR swap the graphics buffers.
+      // glutSwapBuffers();
+    }
   }
-
-  // Print out where you are (where the camera is) and where you're
-  // looking.
-  showCameraPosition();
-}
-
-// This function contains the basics of getting a window set up and
-// ready for drawing.
-void makeWindow(const int xOffset, const int yOffset,
-                const int xWidth, const int yWidth) {
-
-  // Create the window, at this position and with this size, and heading.
-  glutInitWindowPosition(xOffset, yOffset);
-  glutInitWindowSize(xWidth, yWidth);
-  glutCreateWindow("OpenGL Demo");
-
-  // These next few functions tell glut what to do under certain
-  // conditions.  This is where the render function (it's called
-  // renderScene) is nominated, and where the keyboard handler
-  // (processNormalKeys) is, too.
-  glutDisplayFunc(renderScene);
-  glutIdleFunc(renderScene);
-  glutKeyboardFunc(processNormalKeys);
-  glutSpecialFunc(processSpecialKeys);
-  // This function is called when the user changes the size of the window.
-  glutReshapeFunc(resizeWindow);
-
-  // Now that we have a graphics context, let's look at what's inside.
-  std::cout << "Hardware check: "
-            << glGetString(GL_RENDERER)  // e.g. Intel 3000 OpenGL Engine
-            << " / "
-            << glGetString(GL_VERSION)    // e.g. 3.2 INTEL-8.0.61
-            << std::endl;
-
-  // There is one more graphics library used here, called GLEW.  This
-  // library sorts through the various OpenGL updates and changes and
-  // allows a user to pretend that it's all a consistent and simple
-  // system.  The 'core profile' refers to some modern OpenGL
-  // enhancements that are not so modern as of 2017.  Set this to true
-  // to get those enhancements.
-  glewExperimental = true; // Needed for core profile
-  if (glewInit() != GLEW_OK) {
-    throw std::runtime_error("Failed to initialize GLEW");
-  }
-
-  if (glewIsSupported("GL_VERSION_2_1")) {
-    std::cout << "Software check: Ready for OpenGL 2.1." << std::endl;
-  } else {
-    throw std::runtime_error("Software check: OpenGL 2.1 not supported.");
-  }
-
-  // This is the background color of the viewport.
-  glClearColor(0.1 , 0.0, 0.4, 1.0);
-
-  // Now we're ready to start issuing OpenGL calls.  Start by enabling
-  // the modes we want.  The DEPTH_TEST is how you get hidden faces.
-  glEnable(GL_DEPTH_TEST);
-
-  if (glIsEnabled(GL_DEPTH_TEST)) {
-    std::cout << "Depth test enabled" << std::endl;
-  } else {
-    std::cout << "No depth test enabled" << std::endl;
-  }
-
-  // This is just a performance enhancement that allows OpenGL to
-  // ignore faces that are facing away.
-  glEnable(GL_CULL_FACE);
-
-}
+};
 
 
 int main(int argc, char **argv) {
 
-  // Initialize the graphics context and...
-  init(argc, argv);
+  // Initialize the app.
+	DemoVRApp app(argc, argv, argv[1]);
 
-  // ... make a window for drawing things.
-  makeWindow(100, 100, 400, 400);
+  // Run it.
+	app.run();
 
-  // Create a list of lights.  If the shader you're using doesn't use
-  // lighting, and the shapes don't have textures, this is irrelevant.
-  bsg::lightList* lights = new bsg::lightList();
-  lights->addLight(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 0.0f));
-  lights->addLight(glm::vec3(10.0f,-10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 1.0f));
-
-  // Now we load the shaders.  First check to see if any have been
-  // specified on the command line.
-  if (argc < 3) {
-    throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../src/shader2.vp ../src/shader.fp\n'");
-  }
-
-  // Create a shader manager and load the light list.
-  bsg::bsgPtr<bsg::shaderMgr> shader = new bsg::shaderMgr();
-  shader->addLights(lights);
-
-  // Add the shaders to the manager, first the vertex shader...
-  std::string vertexFile = std::string(argv[1]);
-  shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
-
-  // ... then the fragment shader.  You could potentially add a
-  // geometry shader at this point.
-  std::string fragmentFile = std::string(argv[2]);
-  shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
-
-  // The shaders are loaded, now compile them.
-  shader->compileShaders();
-
-  // Here are the drawable objects that make up the compound object
-  // that make up the scene.
-  bsg::drawableObj axes;
-  bsg::drawableObj topShape;
-  bsg::drawableObj bottomShape;
-  
-  bottomShape = bsg::drawableObj();
-
-  // Specify the vertices of the shapes we're drawing.  Note that the
-  // faces are specified with a *counter-clockwise* winding order, the
-  // OpenGL default.  You can make your faces wind the other
-  // direction, but have to adjust the OpenGL expectations with
-  // glFrontFace().
-  std::vector<glm::vec4> topShapeVertices;
-
-  // These would take many fewer vertices if they were specified as a
-  // triangle strip.
-  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
-
-  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
-
-  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
-
-  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
-  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
-
-  topShape.addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
-
-  // Here are the corresponding colors for the above vertices.
-  std::vector<glm::vec4> topShapeColors;
-  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-  topShape.addData(bsg::GLDATA_COLORS, "color", topShapeColors);
-
-  // The vertices above are arranged into a set of triangles.
-  topShape.setDrawType(GL_TRIANGLES);  
-
-  // Same thing for the other tetrahedron.
-  std::vector<glm::vec4> bottomShapeVertices;
-
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-
-  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-
-  bottomShape.addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
-
-  // And the corresponding colors for the above vertices.
-  std::vector<glm::vec4> bottomShapeColors;
-  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-
-  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-  bottomShape.addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
-
-  // The vertices above are arranged into a set of triangles.
-  bottomShape.setDrawType(GL_TRIANGLES);  
-
-  // Now let's add a set of axes.
-  axes = bsg::drawableObj();
-  std::vector<glm::vec4> axesVertices;
-  axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
-  axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
-  
-  axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
-  axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
-
-  axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
-  axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
-
-  axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
-
-  // With colors. (X = red, Y = green, Z = blue)
-  std::vector<glm::vec4> axesColors;
-  axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-  axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-  axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-  axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-  axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-  axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-  axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
-
-  // The axes are not triangles, but lines.
-  axes.setDrawType(GL_LINES);
-
-  // We could put the axes and the tetrahedron in the same compound
-  // shape, but we leave them separate so they can be moved
-  // separately.
-  tetrahedron = new bsg::drawableCompound(shader);
-  tetrahedron->addObject(topShape);
-  tetrahedron->addObject(bottomShape);
-
-  scene.addCompound(tetrahedron);
-
-  axesSet = new bsg::drawableCompound(shader);
-  axesSet->addObject(axes);
-
-  scene.addCompound(axesSet);
-
-  // Set some initial positions for the camera and where it's looking.
-  scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-  scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
-  
-  // All the shapes are now added to the scene.
-
-  // Do the one-time things.  The every-render operations are done
-  // inside the renderScene function defined above, but executed
-  // within the mainloop, below.
-  scene.prepare();
-
-  // This loop never exits.
-  glutMainLoop();
-
-  // We never get here, but the compiler is annoyed when you don't
-  // exit from a function.
-  return(0); 
+	return 0;
 }
+
+
+
+  
