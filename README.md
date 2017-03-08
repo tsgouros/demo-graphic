@@ -47,7 +47,7 @@ to it.
     $ git checkout beta  #<-- tested with commit 376569e
     $ mkdir build
     $ cd build
- *  $ cmake .. -DBASE_PLUGINS=OFF -DMINVR_OPENGL_PLUGIN=ON -DMINVR_FREEGLUT_PLUGIN=ON
+    $ cmake .. -DBASE_PLUGINS=OFF -DMINVR_OPENGL_PLUGIN=ON -DMINVR_FREEGLUT_PLUGIN=ON
     $ make
     $ make install       #<-- don't forget this step.  You'll get a
                               "can't find MinVR/api.h" error if you do.
@@ -56,31 +56,37 @@ This will install MinVR in an "install" directory inside the "build"
 directory you just created.  You can put it somewhere else by adding
 "-DCMAKE_INSTALL_PREFIX=/my/path/to/install" to the cmake line above.
 
-    Note: Use the "master" branch on MinVR.  This is the default when
-          you clone the repo, so you shouldn't have to worry about it.
+    Note: The commands above are to use the "beta" branch on MinVR.
+          This is NOT the default when you clone the repo, so the 'git
+          checkout' line is important.  If something goes awry, try
+          doing git checkout to the specific commit listed above.
 
 * If this fails and the cmake command reports that it cannot find
-  FreeGLUT, try this hack.  The cmake program uses a file with hints
-  in it to try to figure out where to find your freeglut installation.
-  The hints in the demo-graphic FindFreeGLUT file are better than in
-  the MinVR version.  While we wait for the better version to become
-  part of the MinVR release, go to your MinVR repo and do this:
+  FreeGLUT while building MinVR, try this hack.  The cmake program
+  uses a file with hints in it to try to figure out where to find your
+  freeglut installation.  The hints in the demo-graphic FindFreeGLUT
+  file are better than in the MinVR version.  While we wait for the
+  better version to become part of the MinVR release, go to your MinVR
+  repo and do this:
 
     $ cd MinVR   # <-- you are at the root of the MinVR tree.
     $ cp /path/to/my/demo-graphic/cmake/FindFreeGLUT.cmake plugins/FREEGLUT/cmake/
 
-  Then try the build again from the cmake step above.
+  This should copy the FindFreeGLUT file from the demo-graphic
+  directory to the correct location in the MinVR directory.  Then try
+  the build again from the cmake step above.
 
 After successfully building the MinVR package and getting past the
-"make install" step, you will need to rebuild the demo-graphic repo,
-by going over to its build directory and issuing a command like this:
+"make install" step (don't forget that part), you will need to rebuild
+the demo-graphic repo, by going over to its build directory and
+issuing a command like this:
 
     $ cmake .. -DMINVR_INSTALL_DIR=/my/path/to/MinVR/build/install
     $ make
 
 The "make" command will only rebuild programs it perceives to have
 changed since the last time you built them.  In this case, since what
-has changed is something outside the demo-graphic repo, you might have
+has changed is something outside the demo-graphic realm, you might have
 to go edit some of the files to let make know they need to be rebuilt.
 Add a space and remove it or something like that.  Dumb, but
 effective, like a lot of computing practice.
