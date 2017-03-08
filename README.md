@@ -75,3 +75,4 @@ On the yurt, you'll have to do these:
     $ module load freeglut
     $ module load libpng
 
+Use the "master" branch on MinVR.
