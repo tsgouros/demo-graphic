@@ -65,5 +65,13 @@ environment variable, and specify a configuration file.
     $ cd /path/to/my/demo-graphic/build
     $ bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp
 
+On the yurt, you'll have to do these:
 
+    $ module load centos-updates
+    $ module load centos-libs
+    $ module load nvidia-driiver
+    $ module load vrpn
+    $ module load cave
+    $ module load freeglut
+    $ module load libpng
 
