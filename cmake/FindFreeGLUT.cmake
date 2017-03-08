@@ -21,6 +21,7 @@ FIND_PATH(FREEGLUT_INCLUDE_DIR
 	HINTS 
 	ENV CPATH # For OSCAR modules at Brown/CCV
   /usr/local/Cellar/freeglut/2.8.1/include # This is how it comes with Brew.
+  /usr/local/Cellar/freeglut/3.0.0/include # This is how it comes with Brew.
 	)
 
 # Look for the library.
@@ -29,6 +30,7 @@ FIND_LIBRARY(FREEGLUT_LIBRARY
 	HINTS
 	ENV LD_LIBRARY_PATH # For OSCAR modules at Brown/CCV
   /usr/local/Cellar/freeglut/2.8.1/lib/libglut.3.dylib # Brew version.
+  /usr/local/Cellar/freeglut/3.0.0/lib/libglut.3.dylib # Brew version.
 	)
 
 # Handle the QUIETLY and REQUIRED arguments and set FREEGLUT_FOUND to

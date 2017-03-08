@@ -11,6 +11,9 @@ To install FreeGLUT, if needed, using Homebrew:
 
     $ brew install freeglut
 
+I am using 2.8.1. Version 3.0.0 should work, but I haven't tested
+that.  The older (2.8.1) version is the one supported in the yurt.
+
 To install GLEW, if needed, using Homebrew:
 
     $ brew install glew
@@ -51,8 +54,24 @@ This will install MinVR in an "install" directory inside the "build"
 directory you just created.  You can put it somewhere else by adding
 "-DCMAKE_INSTALL_PREFIX=/my/path/to/install" to the cmake line above.
 
-You will need to rebuild the demo-graphic repo, by going over to its
-build directory and issuing a command like this:
+    Note: Use the "master" branch on MinVR.  This is the default when
+          you clone the repo, so you shouldn't have to worry about it.
+
+If this fails and the cmake command reports that it cannot find
+FreeGLUT, try this hack.  The cmake program uses a file with hints in
+it to try to figure out where to find your freeglut installation.  The
+hints in the demo-graphic FindFreeGLUT file are better than in the
+MinVR version.  While we wait for the better version to become part of
+the MinVR release, go to your MinVR repo and do this:
+
+    $ cd MinVR   # <-- you are at the root of the MinVR tree.
+    $ cp /path/to/my/demo-graphic/cmake/FindFreeGLUT.cmake plugins/FREEGLUT/cmake/
+
+Then try the build again from the cmake step above.
+
+After successfully building the MinVR package and getting past the
+"make install" step, you will need to rebuild the demo-graphic repo,
+by going over to its build directory and issuing a command like this:
 
     $ cmake .. -DMINVR_INSTALL_DIR=/my/path/to/install
     $ make
@@ -65,6 +84,9 @@ environment variable, and specify a configuration file.
     $ cd /path/to/my/demo-graphic/build
     $ bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp
 
+
+### Running on the yurt.
+
 On the yurt, you'll have to do these:
 
     $ module load centos-updates
@@ -75,4 +97,4 @@ On the yurt, you'll have to do these:
     $ module load freeglut
     $ module load libpng
 
-Use the "master" branch on MinVR.
+
