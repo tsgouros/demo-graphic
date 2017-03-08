@@ -44,11 +44,13 @@ to it.
 
     $ git clone http://github.com/MinVR/MinVR.git
     $ cd MinVR
+    $ git checkout beta  #<-- tested with commit 376569e
     $ mkdir build
     $ cd build
-    $ cmake .. -DBASE_PLUGINS=OFF -DMINVR_OPENGL_PLUGIN=ON -DMINVR_FREEGLUT_PLUGIN=ON
+ *  $ cmake .. -DBASE_PLUGINS=OFF -DMINVR_OPENGL_PLUGIN=ON -DMINVR_FREEGLUT_PLUGIN=ON
     $ make
-    $ make install
+    $ make install       #<-- don't forget this step.  You'll get a
+                              "can't find MinVR/api.h" error if you do.
 
 This will install MinVR in an "install" directory inside the "build"
 directory you just created.  You can put it somewhere else by adding
@@ -57,24 +59,31 @@ directory you just created.  You can put it somewhere else by adding
     Note: Use the "master" branch on MinVR.  This is the default when
           you clone the repo, so you shouldn't have to worry about it.
 
-If this fails and the cmake command reports that it cannot find
-FreeGLUT, try this hack.  The cmake program uses a file with hints in
-it to try to figure out where to find your freeglut installation.  The
-hints in the demo-graphic FindFreeGLUT file are better than in the
-MinVR version.  While we wait for the better version to become part of
-the MinVR release, go to your MinVR repo and do this:
+* If this fails and the cmake command reports that it cannot find
+  FreeGLUT, try this hack.  The cmake program uses a file with hints
+  in it to try to figure out where to find your freeglut installation.
+  The hints in the demo-graphic FindFreeGLUT file are better than in
+  the MinVR version.  While we wait for the better version to become
+  part of the MinVR release, go to your MinVR repo and do this:
 
     $ cd MinVR   # <-- you are at the root of the MinVR tree.
     $ cp /path/to/my/demo-graphic/cmake/FindFreeGLUT.cmake plugins/FREEGLUT/cmake/
 
-Then try the build again from the cmake step above.
+  Then try the build again from the cmake step above.
 
 After successfully building the MinVR package and getting past the
 "make install" step, you will need to rebuild the demo-graphic repo,
 by going over to its build directory and issuing a command like this:
 
-    $ cmake .. -DMINVR_INSTALL_DIR=/my/path/to/install
+    $ cmake .. -DMINVR_INSTALL_DIR=/my/path/to/MinVR/build/install
     $ make
+
+The "make" command will only rebuild programs it perceives to have
+changed since the last time you built them.  In this case, since what
+has changed is something outside the demo-graphic repo, you might have
+to go edit some of the files to let make know they need to be rebuilt.
+Add a space and remove it or something like that.  Dumb, but
+effective, like a lot of computing practice.
 
 To run a MinVR application, you'll need to set the MINVR_ROOT
 environment variable, and specify a configuration file.
@@ -96,5 +105,10 @@ On the yurt, you'll have to do these:
     $ module load cave
     $ module load freeglut
     $ module load libpng
+
+These commands can be put in a file called ~/.modules.
+
+More to come...
+
 
 
