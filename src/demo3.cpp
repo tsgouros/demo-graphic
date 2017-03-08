@@ -47,6 +47,7 @@ private:
   //    init()
   //    makeWindow()
   //    resizeWindow()
+  //    ... also most of the processKeys() methods.
   //
   // The functionality of these methods is assumed by the MinVR apparatus.
 
@@ -264,17 +265,15 @@ private:
     _tetrahedron->addObject(_topShape);
     _tetrahedron->addObject(_bottomShape);
 
+    // Now add our tetrahedron to the scene.
     _scene.addCompound(_tetrahedron);
 
     _axesSet = new bsg::drawableCompound(_shader);
     _axesSet->addObject(_axes);
 
+    // Now add the axes.
     _scene.addCompound(_axesSet);
 
-    // Set some initial positions for the camera and where it's looking.
-    _scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    _scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
-  
     // All the shapes are now added to the scene.
   }
 
@@ -283,14 +282,18 @@ public:
 	DemoVRApp(int argc, char** argv, const std::string& configFile) :
     MinVR::VRApp(argc, argv, configFile) {
 
+    // This is the root of the scene graph.
     bsg::scene _scene = bsg::scene();
+
+    // These are tracked separately because multiple objects might use
+    // them.
     _shader = new bsg::shaderMgr();
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
     
-    std::cout << "Invoked with argc:" << argc << " arguments." << std::endl;
+    std::cout << "Invoked with argc=" << argc << " arguments." << std::endl;
 
     for (int i = 0; i < argc ; i++) {
       std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
@@ -302,23 +305,24 @@ public:
       throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-glfw.xml ../src/shader2.vp ../src/shader.fp\n'");
     }
     
-    _vertexFile = std::string("../src/shader2.vp");
-    _fragmentFile = std::string("../src/shader.fp");
+    _vertexFile = std::string(argv[2]);
+    _fragmentFile = std::string(argv[3]);
 
   }
 
-	/// onVREvent is called when a new intput event happens.
+	/// The MinVR apparatus invokes this method whenever there is a new
+	/// event to process.
 	void onVREvent(const MinVR::VREvent &event) {
         
     event.print();
         
     // This heartbeat event recurs at regular intervals, so you can do
     // animation with the model matrix here, as well as in the render
-    // function.
-		if (event.getName() == "FrameStart") {
-      const double time = event.getDataAsDouble("ElapsedSeconds");
-      return;
-		}
+    // function.  
+		// if (event.getName() == "FrameStart") {
+    //   const double time = event.getDataAsDouble("ElapsedSeconds");
+    //   return;
+		// }
 
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
@@ -328,6 +332,7 @@ public:
 			shutdown();
     } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
                (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
+      // Turn on and off the animation.
       if (_oscillationStep == 0.0f) {
         _oscillationStep = 0.03f;
       } else {
@@ -341,9 +346,15 @@ public:
     
 	}
 
+  /// \brief Set the render context.
+  ///
+  /// The onVRRender methods are the heart of the MinVR rendering
+  /// apparatus.  Some render calls are shared among multiple views,
+  /// for example a stereo view has two renders, with the same render
+  /// context.
   void onVRRenderGraphicsContext(const MinVR::VRGraphicsState &renderState) {
 
-    // Check if this is the first call. 
+    // Check if this is the first call.  If so, do some initialization. 
     if (renderState.isInitialRenderCall()) {
       _checkContext();
       _initializeScene();
@@ -351,10 +362,10 @@ public:
     }
   }
 
-  // This is the heart of any graphics program, the render function.  It
-  // is called each time through the main graphics loop, and re-draws
-  // the scene according to whatever has changed since the last time it
-  // was drawn.
+  /// This is the heart of any graphics program, the render function.
+  /// It is called each time through the main graphics loop, and
+  /// re-draws the scene according to whatever has changed since the
+  /// last time it was drawn.
 	void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
 		// Only draw if the application is still running.
 		if (isRunning()) {
@@ -373,7 +384,7 @@ public:
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
   
       // Second the load() step.  We let MinVR give us the projection
-      // matrix from the render context.
+      // matrix from the render state argument to this method.
       const float* pm = renderState.getProjectionMatrix();
       glm::mat4 projMatrix = glm::mat4( pm[0],  pm[1], pm[2], pm[3],
                                         pm[4],  pm[5], pm[6], pm[7],
@@ -398,7 +409,8 @@ public:
   }
 };
 
-
+// The main function is just a shell of its former self.  Just
+// initializes a MinVR graphics object and runs it.
 int main(int argc, char **argv) {
 
   // Initialize the app.
@@ -407,6 +419,7 @@ int main(int argc, char **argv) {
   // Run it.
 	app.run();
 
+  // We never get here.
 	return 0;
 }
 
