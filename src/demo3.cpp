@@ -290,7 +290,7 @@ public:
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
     
-    std::cout << "argc:" << std::endl;
+    std::cout << "Invoked with argc:" << argc << " arguments." << std::endl;
 
     for (int i = 0; i < argc ; i++) {
       std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
@@ -310,12 +310,13 @@ public:
 	/// onVREvent is called when a new intput event happens.
 	void onVREvent(const MinVR::VREvent &event) {
         
-    //event.print();
+    event.print();
         
-		// Set time since application began
+    // This heartbeat event recurs at regular intervals, so you can do
+    // animation with the model matrix here, as well as in the render
+    // function.
 		if (event.getName() == "FrameStart") {
       const double time = event.getDataAsDouble("ElapsedSeconds");
-      // You could do the model matrix changes here.
       return;
 		}
 
@@ -325,68 +326,7 @@ public:
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
 			shutdown();
-		} else if ((event.getName() == "Kbda_Down") ||
-               (event.getName() == "KbdA_Down") ||
-               (event.getName() == "KbdA_Repeat")) {
-      _scene.addToCameraPosition(glm::vec3(-step, 0.0f, 0.0f));
-		} else if ((event.getName() == "Kbdq_Down") ||
-               (event.getName() == "KbdQ_Down") ||
-               (event.getName() == "KbdQ_Repeat")) {
-      _scene.addToCameraPosition(glm::vec3( step, 0.0f, 0.0f));
-		} else if ((event.getName() == "Kbds_Down") ||
-               (event.getName() == "KbdS_Down") ||
-               (event.getName() == "KbdS_Repeat")) {
-      _scene.addToCameraPosition(glm::vec3(0.0f,-step, 0.0f));
-		} else if ((event.getName() == "Kbdw_Down") ||
-               (event.getName() == "KbdW_Down") ||
-               (event.getName() == "KbdW_Repeat")) {
-      _scene.addToCameraPosition(glm::vec3(0.0f, step, 0.0f));
-		} else if ((event.getName() == "Kbdd_Down") ||
-               (event.getName() == "KbdD_Down") ||
-               (event.getName() == "KbdD_Repeat")) {
-      _scene.addToCameraPosition(glm::vec3( 0.0f, 0.0f,-step));
-		} else if ((event.getName() == "Kbde_Down") ||
-               (event.getName() == "KbdE_Down") ||
-               (event.getName() == "KbdE_Repeat")) {
-      _scene.addToCameraPosition(glm::vec3( 0.0f, 0.0f,-step));
-		} else if ((event.getName() == "Kbdj_Down") ||
-               (event.getName() == "KbdJ_Down") ||
-               (event.getName() == "KbdJ_Repeat")) {
-      _scene.addToLookAtPosition(glm::vec3(-step, 0.0f, 0.0f));
-		} else if ((event.getName() == "Kbdu_Down") ||
-               (event.getName() == "KbdU_Down") ||
-               (event.getName() == "KbdU_Repeat")) {
-      _scene.addToLookAtPosition(glm::vec3( step, 0.0f, 0.0f));
-		} else if ((event.getName() == "Kbdk_Down") ||
-               (event.getName() == "KbdK_Down") ||
-               (event.getName() == "KbdK_Repeat")) {
-      _scene.addToLookAtPosition(glm::vec3(0.0f,-step, 0.0f));
-		} else if ((event.getName() == "Kbdi_Down") ||
-               (event.getName() == "KbdI_Down") ||
-               (event.getName() == "KbdI_Repeat")) {
-      _scene.addToLookAtPosition(glm::vec3(0.0f, step, 0.0f));
-		} else if ((event.getName() == "Kbdl_Down") ||
-               (event.getName() == "KbdL_Down") ||
-               (event.getName() == "KbdL_Repeat")) {
-      _scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f,-step));
-		} else if ((event.getName() == "Kbdo_Down") ||
-               (event.getName() == "KbdO_Down") ||
-               (event.getName() == "KbdO_Repeat")) {
-      _scene.addToLookAtPosition(glm::vec3( 0.0f, 0.0f,-step));
-    } else if ((event.getName() == "KbdUp_Down") ||
-               (event.getName() == "KbdUp_Repeat") ||
-               (event.getName() == "KbdUp_Repeat")) {
-      _scene.addToCameraViewAngle(0.0f,  stepAngle);
-    } else if ((event.getName() == "KbdDown_Down") ||
-               (event.getName() == "KbdDown_Repeat")) {
-      _scene.addToCameraViewAngle(0.0f, -stepAngle);
-    } else if ((event.getName() == "KbdLeft_Down") ||
-              (event.getName() == "KbdLeft_Repeat")) {
-      _scene.addToCameraViewAngle( stepAngle, 0.0f);
-    } else if ((event.getName() == "KbdRight_Down") ||
-              (event.getName() == "KbdRight_Repeat")) {
-      _scene.addToCameraViewAngle(-stepAngle, 0.0f);
-    } else if ((event.getName().compare("Kbd") == 0) &&
+    } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
                (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
       if (_oscillationStep == 0.0f) {
         _oscillationStep = 0.03f;
@@ -397,7 +337,7 @@ public:
 
     // Print out where you are (where the camera is) and where you're
     // looking.
-    _showCameraPosition();
+    // _showCameraPosition();
     
 	}
 
@@ -420,9 +360,7 @@ public:
 		if (isRunning()) {
 
       // If you want to adjust the positions of the various objects in
-      // your scene, this is where to do that.  You could also animate the
-      // camera or lookat position here, or anything else you want to mess
-      // with in the scene.
+      // your scene, you can do that here.
       glm::vec3 pos = _tetrahedron->getPosition();
       _oscillator += _oscillationStep;
       pos.x = sin(_oscillator);

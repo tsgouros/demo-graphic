@@ -20,7 +20,7 @@
 	<QuadBuffered>0</QuadBuffered>
 	  
   <LookAtUp type="doublearray">0,1,0</LookAtUp>
-  <LookAtEye type="doublearray">1,2,7.5</LookAtEye>
+  <LookAtEye type="doublearray">-5,2,17.5</LookAtEye>
   <LookAtCenter type="doublearray">0,0,0</LookAtCenter>
  
   <HeadTrackingEvent>Head_Move</HeadTrackingEvent>
@@ -42,10 +42,10 @@
 				<Height>640</Height>
 				<LookAtNode displaynodeType="VRLookAtNode">
 					<ProjectionNode displaynodeType="VROffAxisProjectionNode">
-						<TopLeft type="doublearray">-2,2,-3</TopLeft>
-				    <TopRight type="doublearray">-2,2,-3</TopRight>
-				    <BottomLeft type="doublearray">-2,-2,-3</BottomLeft>
-				    <BottomRight type="doublearray">2,-2,-3</BottomRight>
+						<TopLeft type="doublearray">-10,10,-3</TopLeft>
+				    <TopRight type="doublearray">-10,10,-3</TopRight>
+				    <BottomLeft type="doublearray">-10,-10,-3</BottomLeft>
+				    <BottomRight type="doublearray">10,-10,-3</BottomRight>
 			    </ProjectionNode>
         </LookAtNode>
 			</RootNode>

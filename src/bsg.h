@@ -697,6 +697,7 @@ class drawableCompound {
   glm::vec3 getPitchYawRoll() { return glm::eulerAngles(_orientation); };
 
   /// \brief Gets ready for the drawing sequence.
+  ///
   void prepare();
   
   /// \brief Load a compound object.

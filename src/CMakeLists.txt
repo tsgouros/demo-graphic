@@ -4,28 +4,28 @@ project (demo-graphic)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 find_package(FreeGLUT REQUIRED)
-message("-- FreeGLUT includes: " ${FREEGLUT_INCLUDE_DIR})
-message("-- FreeGLUT library:  " ${FREEGLUT_LIBRARY})
+message("-- FreeGLUT includes:" ${FREEGLUT_INCLUDE_DIR})
+message("-- FreeGLUT library: " ${FREEGLUT_LIBRARY})
 
 set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-0.9.7.1)
 
-message("-- GLM includes:    " ${GLM_INCLUDE_DIR})
+message("-- GLM includes:     " ${GLM_INCLUDE_DIR})
 
 find_package(OpenGL REQUIRED)
-message("-- OpenGL includes: " ${OPENGL_INCLUDE_DIR})
-message("-- OpenGL library:  " ${OPENGL_LIBRARY})
+message("-- OpenGL includes:  " ${OPENGL_INCLUDE_DIR})
+message("-- OpenGL library:   " ${OPENGL_LIBRARY})
 
 find_package(GLEW REQUIRED)
-message("-- GLEW library:    " ${GLEW_LIBRARY})
-message("-- GLEW includes:   " ${GLEW_INCLUDE_DIRS})
+message("-- GLEW library:     " ${GLEW_LIBRARY})
+message("-- GLEW includes:    " ${GLEW_INCLUDE_DIRS})
 
 find_package(PNG 1.4 MODULE)
-message("-- PNG includes:    " ${PNG_INCLUDE_DIRS})
-message("-- PNG library:     " ${PNG_LIBRARIES})
+message("-- PNG includes:     " ${PNG_INCLUDE_DIRS})
+message("-- PNG library:      " ${PNG_LIBRARIES})
 
 find_package(MinVR MODULE)
-message("-- MinVR include files: " ${MINVR_INCLUDE_DIR})
-message("-- MinVR library: " ${MINVR_LIBRARY})
+message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
+message("-- MinVR library:    " ${MINVR_LIBRARY})
 
 include_directories(
   ${OPENGL_INCLUDE_DIR}
@@ -54,6 +54,7 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
 
+  if(MINVR_FOUND)
   add_executable(demo3 demo3.cpp bsg.h bsg.cpp)
 
   target_link_libraries(demo3
@@ -62,5 +63,6 @@ if(PNG_FOUND)
     ${OPENGL_LIBRARY}
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
-  
-endif()
+
+  endif(MINVR_FOUND)
+endif(PNG_FOUND)
