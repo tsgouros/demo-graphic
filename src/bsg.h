@@ -1,4 +1,6 @@
- 
+#ifndef BSGHEADER
+#define BSGHEADER
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdexcept>
@@ -569,7 +571,7 @@ class drawableObj {
 /// lightList documentation.
 ///
 class drawableCompound {
- private:
+ protected:
 
   /// The list of objects that make up this compound object.
   std::list<drawableObj> _objects;
@@ -827,3 +829,5 @@ class scene {
 
 
 }
+
+#endif //BSGHEADER

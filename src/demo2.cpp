@@ -1,4 +1,5 @@
 #include "bsg.h"
+#include "bsgMenagerie.h"
 
 // The scene and the objects in it must be available from the main()
 // function where it is created and the renderScene() function where
@@ -437,6 +438,13 @@ int main(int argc, char **argv) {
 
   scene.addCompound(tetrahedron);
 
+  // You can also use the new bsgMenagerie for some simple shapes.
+  // Refer to the bsgMenagerie.h file for more information about the
+  // available shapes.  Try commenting out the above addCompound()
+  // call and replacing it with the following.
+  // bsg::drawableRectangle* rect = new bsg::drawableRectangle(shader, 3.0f, 5.0f);
+  // scene.addCompound(rect);
+  
   axesSet = new bsg::drawableCompound(shader);
   axesSet->addObject(axes);
 

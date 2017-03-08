@@ -35,9 +35,14 @@ include_directories(
   ${MINVR_INCLUDE_DIR}
   )
 
+set(bsg_headers bsg.h bsgMenagerie.h)
+set(bsg_sources bsg.cpp bsgMenagerie.cpp)
+set(bsg_files ${bsg_headers} ${bsg_sources})
+
+add_library(bsg ${bsg_files})
+
 # Source files go here.
 add_executable (demo demo.cpp)
-
 
 target_link_libraries(demo
   ${FREEGLUT_LIBRARY}
@@ -46,7 +51,7 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
-  add_executable(demo2 demo2.cpp bsg.h bsg.cpp)
+  add_executable(demo2 demo2.cpp ${bsg_files})
 
   target_link_libraries(demo2
     ${FREEGLUT_LIBRARY}
@@ -55,7 +60,7 @@ if(PNG_FOUND)
     ${PNG_LIBRARIES})
 
   if(MINVR_FOUND)
-  add_executable(demo3 demo3.cpp bsg.h bsg.cpp)
+  add_executable(demo3 demo3.cpp ${bsg_files})
 
   target_link_libraries(demo3
     ${MINVR_LIBRARY}
@@ -64,5 +69,22 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
 
+  add_executable(demo4 demo4.cpp ${bsg_files})
+
+  target_link_libraries(demo4
+    ${MINVR_LIBRARY}
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+
   endif(MINVR_FOUND)
 endif(PNG_FOUND)
+
+install(TARGETS bsg
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
+install(FILES ${bsg_headers}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+

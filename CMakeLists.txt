@@ -6,6 +6,7 @@ cmake_minimum_required (VERSION 2.8.2)
 make_directory(${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# If you don't set one of these build types on the command line, with 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE 
       Debug CACHE STRING
@@ -30,4 +31,10 @@ endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 set(img_src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_subdirectory(src)
+
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set (CMAKE_INSTALL_PREFIX "${${PROJECT_NAME}_SOURCE_DIR}/build/install"
+    CACHE PATH "default install path" FORCE )
+endif()
+
 
