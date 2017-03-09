@@ -32,7 +32,6 @@ include_directories(
   ${FREEGLUT_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
   ${GLEW_INCLUDE_DIRS}
-  ${MINVR_INCLUDE_DIR}
   )
 
 set(bsg_headers bsg.h bsgMenagerie.h)
@@ -60,24 +59,39 @@ if(PNG_FOUND)
     ${PNG_LIBRARIES})
 
   if(MINVR_FOUND)
-  add_executable(demo3 demo3.cpp ${bsg_files})
 
-  target_link_libraries(demo3
-    ${MINVR_LIBRARY}
-    ${FREEGLUT_LIBRARY}
-    ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY}
-    ${PNG_LIBRARIES})
+    # Redefine the include directories to include MinVR.
+    include_directories(
+      ${OPENGL_INCLUDE_DIR}
+      ${FREEGLUT_INCLUDE_DIR}
+      ${GLM_INCLUDE_DIR}
+      ${GLEW_INCLUDE_DIRS}
+      ${MINVR_INCLUDE_DIR}
+      )
 
-  add_executable(demo4 demo4.cpp ${bsg_files})
+    add_executable(demo3 demo3.cpp ${bsg_files})
+  
+    target_link_libraries(demo3
+      ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY}
+      ${PNG_LIBRARIES})
 
-  target_link_libraries(demo4
-    ${MINVR_LIBRARY}
-    ${FREEGLUT_LIBRARY}
-    ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY}
-    ${PNG_LIBRARIES})
+    add_executable(demo4 demo4.cpp ${bsg_files})
 
+    target_link_libraries(demo4
+      ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY}
+      ${PNG_LIBRARIES})
+
+  else(MINVR_FOUND)
+
+    message("** No MinVR for you!")
+    message("** See instructions and advice on the topic above.")
+    
   endif(MINVR_FOUND)
 endif(PNG_FOUND)
 
