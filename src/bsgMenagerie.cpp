@@ -24,6 +24,24 @@ namespace bsg {
 
     _frontFace.addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
 
+    std::vector<glm::vec4> frontFaceNormals;
+
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
+
+    std::vector<glm::vec2> frontFaceUVs;
+
+    frontFaceUVs.push_back(glm::vec2( 0.0f, 0.0f));
+    frontFaceUVs.push_back(glm::vec2( 1.0f, 0.0f));
+    frontFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
+    frontFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
+
+    _frontFace.addData(bsg::GLDATA_UVS, "texture", frontFaceUVs);
+    
     // The vertices above are arranged into a set of triangles.
     _frontFace.setDrawType(GL_TRIANGLE_STRIP);  
 
@@ -46,6 +64,24 @@ namespace bsg {
 
     _backFace.addData(bsg::GLDATA_COLORS, "color", backFaceColors);
 
+    std::vector<glm::vec4> backFaceNormals;
+
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    _backFace.addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
+
+    std::vector<glm::vec2> backFaceUVs;
+
+    backFaceUVs.push_back(glm::vec2( 0.0f, 0.0f));
+    backFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
+    backFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
+    backFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
+
+    _backFace.addData(bsg::GLDATA_UVS, "texture", backFaceUVs);
+    
     // The vertices above are arranged into a set of triangles.
     _backFace.setDrawType(GL_TRIANGLE_STRIP);  
 
