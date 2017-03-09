@@ -293,18 +293,6 @@ public:
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
     
-    std::cout << "Invoked with argc=" << argc << " arguments." << std::endl;
-
-    for (int i = 0; i < argc ; i++) {
-      std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
-    }
-
-    // Now we load the shaders.  First check to see if any have been
-    // specified on the command line.
-    if (argc < 4) {
-      throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-glfw.xml ../src/shader2.vp ../src/shader.fp\n'");
-    }
-    
     _vertexFile = std::string(argv[2]);
     _fragmentFile = std::string(argv[3]);
 
@@ -413,6 +401,24 @@ public:
 // initializes a MinVR graphics object and runs it.
 int main(int argc, char **argv) {
 
+  std::cout << "Invoked with argc=" << argc << " arguments." << std::endl;
+
+  for (int i = 0; i < argc ; i++) {
+    std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
+  }
+
+  std::string arg1 = std::string(argv[1]);
+  
+  if (arg1.find("xml") == std::string::npos) {
+    throw std::runtime_error("\n** First arg should be a config file.  Try desktop-freeglut.xml.");
+  }
+
+  // Now we load the shaders.  First check to see if any have been
+  // specified on the command line.
+  if (argc < 4) {
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-glfw.xml ../src/shader2.vp ../src/shader.fp'\n");
+  }
+    
   // Initialize the app.
 	DemoVRApp app(argc, argv, argv[1]);
 
