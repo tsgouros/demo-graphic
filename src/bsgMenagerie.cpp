@@ -26,10 +26,10 @@ namespace bsg {
 
     std::vector<glm::vec4> frontFaceNormals;
 
-    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
 
     _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
 
@@ -40,7 +40,7 @@ namespace bsg {
     frontFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
     frontFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
-    _frontFace.addData(bsg::GLDATA_UVS, "texture", frontFaceUVs);
+    _frontFace.addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
     
     // The vertices above are arranged into a set of triangles.
     _frontFace.setDrawType(GL_TRIANGLE_STRIP);  
@@ -66,10 +66,10 @@ namespace bsg {
 
     std::vector<glm::vec4> backFaceNormals;
 
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
 
     _backFace.addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
 
@@ -80,7 +80,7 @@ namespace bsg {
     backFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
     backFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
-    _backFace.addData(bsg::GLDATA_UVS, "texture", backFaceUVs);
+    _backFace.addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
     
     // The vertices above are arranged into a set of triangles.
     _backFace.setDrawType(GL_TRIANGLE_STRIP);  
