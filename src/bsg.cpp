@@ -300,13 +300,13 @@ void shaderMgr::compileShaders() {
   glCompileShader(_shaderIDs[GLSHADER_FRAGMENT]);
   errorLog = _getShaderInfoLog(_shaderIDs[GLSHADER_FRAGMENT]);
   if (errorLog.size() > 1)
-    std::cerr << "** Fragment compile error: " << errorLog << std::endl;
+    std::cerr << "** Fragment compile error **" << std::endl << errorLog << std::endl;
 
   if (geom) {
     glCompileShader(_shaderIDs[GLSHADER_GEOMETRY]);
     errorLog = _getShaderInfoLog(_shaderIDs[GLSHADER_GEOMETRY]);
     if (errorLog.size() > 1)
-      std::cerr << "** Geometry compile error: " << errorLog << std::endl;
+      std::cerr << "** Geometry compile error **" << std::endl << errorLog << std::endl;
   }
 
   // Now create a program to contain our two (or three) shaders, and
@@ -322,7 +322,7 @@ void shaderMgr::compileShaders() {
   glLinkProgram(_programID);
   errorLog = _getProgramInfoLog(_programID);
   if (errorLog.size() > 1) {
-      std::cerr << "** Shader link error: " << errorLog << std::endl;
+    std::cerr << "** Shader link error **" << std::endl << errorLog << std::endl;
   } 
 
   // The shaders are linked into the program, so we can delete the raw
@@ -393,23 +393,51 @@ void drawableObj::addData(const GLDATATYPE type,
   
 void drawableObj::prepare(GLuint programID) {
 
+  bool badID = false;
+  
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
   _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
+
+  // Check to make sure the ID awarded is sane.  If not, probably the
+  // name does not match the name in the shader.
+  if (_vertices.ID < 0) {
+    std::cerr << "** Caution: Bad ID for attribute '" << _vertices.name << "'" << std::endl;
+    badID = true;
+  }
   
   if (!_colors.getData().empty()) {
     glGenBuffers(1, &_colors.bufferID);
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
+    
+    if (_colors.ID < 0) {
+      std::cerr << "** Caution: Bad ID for attribute '" << _colors.name << "'" << std::endl;
+      badID = true;
+    }
   }
   if (!_normals.getData().empty()) {
     glGenBuffers(1, &_normals.bufferID);
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
+    
+    if (_normals.ID < 0) {
+      std::cerr << "** Caution: Bad ID for attribute '" << _normals.name << "'" << std::endl;
+      badID = true;
+    }
   }
   if (!_uvs.getData().empty()) {
     glGenBuffers(1, &_uvs.bufferID);
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
+    
+    if (_uvs.ID < 0) {
+      std::cerr << "** Caution: Bad ID for attribute '" << _uvs.name << "'" << std::endl;
+      badID = true;
+    }
   }
 
+  if (badID) {
+    std::cerr << "This can be caused either by a spelling error, or by not using the" << std::endl << "attribute within the shader code." << std::endl;
+  }
+  
   // Put the data in its buffers, for practice.
   load();
 
@@ -467,6 +495,7 @@ glm::mat4 drawableCompound::getModelMatrix() {
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), _scale);
 
     _modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+    _invModelMatrix = glm::transpose(glm::inverse(_modelMatrix));
     _modelMatrixNeedsReset = false;
 
     // bsgUtils::printMat("trans:", translationMatrix);
@@ -483,6 +512,7 @@ void drawableCompound::prepare() {
   _pShader->useProgram();
 
   _modelMatrixID = _pShader->getUniformID(_modelMatrixName);
+  _invModelMatrixID = _pShader->getUniformID(_invModelMatrixName);
   _viewMatrixID = _pShader->getUniformID(_viewMatrixName);
   _projMatrixID = _pShader->getUniformID(_projMatrixName);
 
@@ -513,7 +543,8 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   // Remember that all the objects in a compound object use the same
   // shader and the same model matrix.
   glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
-
+  glUniformMatrix4fv(_invModelMatrixID, 1, false, &_invModelMatrix[0][0]);
+  
   // The view and projection matrices come from the scene object, above us.
   glUniformMatrix4fv(_viewMatrixID, 1, false, &viewMatrix[0][0]);
   glUniformMatrix4fv(_projMatrixID, 1, false, &projMatrix[0][0]);

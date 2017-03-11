@@ -42,7 +42,8 @@ typedef enum {
 typedef enum {
   GLMATRIX_MODEL    = 0,
   GLMATRIX_VIEW     = 1,
-  GLMATRIX_PROJECTION = 2
+  GLMATRIX_PROJECTION = 2,
+  GLMATRIX_INVMODEL = 3
 } GLMATRIXTYPE;
    
 
@@ -202,7 +203,7 @@ class drawableObjData {
   void addData(T d) { _data.push_back(d); };
   
   // The ID that goes with that name.
-  GLuint ID;
+  GLint ID;
   
   /// The ID of the buffer containing that data.
   GLuint bufferID;
@@ -235,9 +236,9 @@ class lightList {
  private:
 
   /// The positions of the lights in the list.
-  drawableObjData<glm::vec3> _lightPositions;
+  drawableObjData<glm::vec4> _lightPositions;
   /// The colors of the lights in the list.
-  drawableObjData<glm::vec3> _lightColors;
+  drawableObjData<glm::vec4> _lightColors;
 
   /// The default names of things in the shaders, put here for easy
   /// comparison or editing.  If you're mucking around with the
@@ -266,39 +267,39 @@ class lightList {
   /// lights is set, this is pretty much a one-way street.  Add
   /// lights, but don't subtract them.  If you want to extinguish one,
   /// just move it far away, or dial its intensity way down.
-  int addLight(const glm::vec3 &position, const glm::vec3 &color) {
+  int addLight(const glm::vec4 &position, const glm::vec4 &color) {
     _lightPositions.addData(position);
     _lightColors.addData(color);
     return _lightPositions.size();
   };
-  int addLight(const glm::vec3 &position) {
-    glm::vec3 white = glm::vec3(1.0f, 1.0f, 1.0f);
+  int addLight(const glm::vec4 &position) {
+    glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
     return addLight(position, white);
   };
   
   int getNumLights() { return _lightPositions.getData().size(); };
 
   // We have mutators and accessors for all the pieces...
-  std::vector<glm::vec3> getPositions() { return _lightPositions.getData(); };
-  void setPositions(const std::vector<glm::vec3> positions) {
+  std::vector<glm::vec4> getPositions() { return _lightPositions.getData(); };
+  void setPositions(const std::vector<glm::vec4> positions) {
     _lightPositions.getData() = positions;
   };
   GLuint getPositionID() { return _lightPositions.ID; };
 
-  std::vector<glm::vec3> getColors() { return _lightColors.getData(); };
-  void setColors(const std::vector<glm::vec3> &colors) { _lightColors.getData() = colors; };
+  std::vector<glm::vec4> getColors() { return _lightColors.getData(); };
+  void setColors(const std::vector<glm::vec4> &colors) { _lightColors.getData() = colors; };
   GLuint getColorID() { return _lightColors.ID; };
 
   /// ... and also for individual lights.
-  void setPosition(const int &i, const glm::vec3 &position) {
+  void setPosition(const int &i, const glm::vec4 &position) {
     _lightPositions.getData()[i] = position;
   };
-  glm::vec3 getPosition(const int &i) { return _lightPositions.getData()[i]; };
+  glm::vec4 getPosition(const int &i) { return _lightPositions.getData()[i]; };
 
   /// \brief Change a light's color.
-  void setColor(const int &i, const glm::vec3 &color) {
+  void setColor(const int &i, const glm::vec4 &color) {
     _lightColors.getData()[i] = color; };
-  glm::vec3 getColor(const int &i) { return _lightColors.getData()[i]; };
+  glm::vec4 getColor(const int &i) { return _lightColors.getData()[i]; };
 
   /// Load these lights for use with this program.  This should be
   /// called inside the load() method of the manager object of the
@@ -595,11 +596,18 @@ class drawableCompound {
   glm::mat4 _modelMatrix;
   bool _modelMatrixNeedsReset;
 
+  /// We also keep around the inverse transpose model matrix, for
+  /// texture processing.
+  glm::mat4 _invModelMatrix;
+  
   /// These are pairs of ways to reference the matrices that include
   /// the matrix name (used in the shader) and the ID (used in the
   /// OpenGL code).  
   std::string _modelMatrixName;
   GLuint _modelMatrixID;
+
+  std::string _invModelMatrixName;
+  GLuint _invModelMatrixID;
   
   std::string _viewMatrixName;
   GLuint _viewMatrixID;
@@ -612,6 +620,7 @@ class drawableCompound {
   _pShader(pShader),
     // Set the default names for our matrices.
     _modelMatrixName("modelMatrix"),
+    _invModelMatrixName("invModelMatrix"),
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
     _position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -629,6 +638,9 @@ class drawableCompound {
     switch(type) {
     case(GLMATRIX_MODEL):
       _modelMatrixName = name;
+      break;
+    case(GLMATRIX_INVMODEL):
+      _invModelMatrixName = name;
       break;
     case(GLMATRIX_VIEW):
       _viewMatrixName = name;
