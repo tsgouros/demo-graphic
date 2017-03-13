@@ -8,10 +8,13 @@ namespace bsg {
 
     std::vector<glm::vec4> frontFaceVertices;
 
-    frontFaceVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    frontFaceVertices.push_back(glm::vec4( _width, 0.0f, 0.0f, 1.0f));
-    frontFaceVertices.push_back(glm::vec4( 0.0f, _height, 0.0f, 1.0f));
-    frontFaceVertices.push_back(glm::vec4( _width, _height, 0.0f, 1.0f));
+    float w = _width/2.0f;
+    float h = _height/2.0f;
+
+    frontFaceVertices.push_back(glm::vec4( -w, -h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(  w, -h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4( -w,  h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(  w,  h, 0.0f, 1.0f));
 
     _frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
 
@@ -48,10 +51,10 @@ namespace bsg {
     // Same thing for the other rectangle.
     std::vector<glm::vec4> backFaceVertices;
 
-    backFaceVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    backFaceVertices.push_back(glm::vec4( 0.0f, _height, 0.0f, 1.0f));
-    backFaceVertices.push_back(glm::vec4( _width, 0.0f, 0.0f, 1.0f));
-    backFaceVertices.push_back(glm::vec4( _width, _height, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4( -w, -h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4( -w,  h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(  w, -h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(  w,  h, 0.0f, 1.0f));
 
     _backFace.addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
 
@@ -66,10 +69,10 @@ namespace bsg {
 
     std::vector<glm::vec4> backFaceNormals;
 
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
-    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f,-1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f,-1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f,-1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f,-1.0f, 0.0f));
 
     _backFace.addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
 
