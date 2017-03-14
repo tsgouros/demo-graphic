@@ -157,4 +157,37 @@ namespace bsg {
     addObject(_backFace);
   }
 
+  drawableAxes::drawableAxes(bsgPtr<shaderMgr> pShader, const float length) :
+    drawableCompound(pShader), _length(length) {
+    
+    std::vector<glm::vec4> axesVertices;
+    axesVertices.push_back(glm::vec4( -_length, 0.0f, 0.0f, 1.0f));
+    axesVertices.push_back(glm::vec4(  _length, 0.0f, 0.0f, 1.0f));
+  
+    axesVertices.push_back(glm::vec4( 0.0f, -_length, 0.0f, 1.0f));
+    axesVertices.push_back(glm::vec4( 0.0f,  _length, 0.0f, 1.0f));
+
+    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -_length, 1.0f));
+    axesVertices.push_back(glm::vec4( 0.0f, 0.0f,  _length, 1.0f));
+
+    // With colors. (X = red, Y = green, Z = blue)
+    std::vector<glm::vec4> axesColors;
+    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+ 
+    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
+    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
+
+    // The axes are not triangles, but lines.
+    _axes.setDrawType(GL_LINES);
+
+    addObject(_axes);
+  }
+  
 }

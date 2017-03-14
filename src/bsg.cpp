@@ -590,6 +590,7 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   // std::cout << "view" << glm::to_string(viewMatrix) << std::endl;
   // std::cout << "normal" << glm::to_string(_normalMatrix) << std::endl;
   // std::cout << "model" << glm::to_string(_modelMatrix) << std::endl;
+  // std::cout << "proj" << glm::to_string(projMatrix) << std::endl;
   
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
