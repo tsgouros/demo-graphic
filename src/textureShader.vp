@@ -9,7 +9,7 @@ const int NUM_LIGHTS = XX;
 // thus called 'uniforms', which might seem odd, but there are odder
 // things in this crazy world.  These names are connected to data in
 // the main program using the glGetUniformLocation() function, which
-// connects these names with an ID over there.  Then the ID is used to
+// connects these names with an ID over there.  That ID is then used to
 // load the actual matrix data, making it available over here.
 uniform mat4 projMatrix;
 uniform mat4 viewMatrix;

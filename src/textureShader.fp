@@ -21,19 +21,20 @@ uniform vec4 lightColor[NUM_LIGHTS];
 
 void main() {
 
-  vec4 materialColor = 0.5 * vec4(1.0, 1.0, 1.0, 1.0);
-  float ambientCoefficient = 0.1;
-  vec4 materialSpecularColor = vec4(1.0, 1.0, 1.0, 0.0);
+  vec4 materialColor = 0.6 * vec4(1.0, 1.0, 1.0, 1.0);
+  float ambientCoefficient = 0.6;
+  vec4 materialSpecularColor = 0.5 * vec4(1.0, 1.0, 1.0, 0.0);
 
-  vec4 color = 0.02 * colorFrag;
-
+  vec4 color = 0.05 * colorFrag;
+  //vec4 color = vec4(0,0,0,0);
+  
   // The lighting effects are additive, so we run through the lights,
   // and add their effects.
   for (int i = 0; i < NUM_LIGHTS; i++) {
 
     // Ambient : simulates indirect lighting
     vec4 ambient = ambientCoefficient * lightColor[i] * materialColor;
-    ambient = vec4(0,0,0,0);
+    //    ambient = vec4(0,0,0,0);
     
     // Distance to the light
     float distanceToLight = length(lightPositionWS[i] - positionWS);
@@ -46,28 +47,24 @@ void main() {
     float cosAngleFromNormal = max(0.0, dot(normalCS, lightDirectionCS[i]));
 
     // Diffuse : "color" of the object
-    //vec4 diffuse = materialColor * lightColor[i] * cosAngleFromNormal;
-    vec4 diffuse = vec4(cosAngleFromNormal, 0,0,1);
-    //diffuse = normalCS; //vec4(10*lightPositionCS.z, 0, 0, 1);
-    //diffuse = lightDirectionCS[i];
-    //diffuse = vec4(0,0, abs(eyeDirectionCS.z),1);
+    vec4 diffuse = materialColor * lightColor[i] * cosAngleFromNormal;
     
     // Direction in which the triangle reflects the light
     vec4 reflectDir = reflect(-lightDirectionCS[i], normalCS);
 
     // Cosine of the angle between the Eye vector and the Reflect vector,
     // clamped to remain above 0.
-    float cosAlpha = clamp(dot(-eyeDirectionCS, reflectDir), 0.0, 1.0);
+    float cosAlpha = clamp(dot(eyeDirectionCS, reflectDir), 0.0, 1.0);
 
     // Specular : reflective highlight, like a mirror. Adjust the
     // exponent to adjust the size of the highlight.
-    vec4 specular = materialSpecularColor * lightColor[i] * pow(cosAlpha, 13);
-    specular = vec4(0,0,0,0);
+    vec4 specular = materialSpecularColor * lightColor[i] * pow(cosAlpha, 5);
+    //specular = materialSpecularColor * pow(cosAlpha, 9);
     
-    float attenuation = 1.0 / (1.0 + 0.0001 * pow(distanceToLight, 2));
-    attenuation = 1.0;
+    float attenuation = 1.0 / (1.0 + 0.01 * pow(distanceToLight, 2));
+    //attenuation = 1.0;
     
-    color += ambient + attenuation * (diffuse + specular);
+    color += ambient + attenuation * (diffuse + 0*specular);
   }
   
   gl_FragColor = color; // normalize(normalCS) ;//+ materialColor;
