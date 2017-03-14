@@ -59,6 +59,14 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
 
+  add_executable(textureDemo textureDemo.cpp ${bsg_files})
+
+  target_link_libraries(textureDemo
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+  
   if(MINVR_FOUND)
   add_executable(demo3 demo3.cpp ${bsg_files})
 
@@ -78,9 +86,9 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
 
-  add_executable(textureDemo textureDemo.cpp ${bsg_files})
+  add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
 
-  target_link_libraries(textureDemo
+  target_link_libraries(textureDemoMinVR
     ${MINVR_LIBRARY}
     ${FREEGLUT_LIBRARY}
     ${OPENGL_LIBRARY}
