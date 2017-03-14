@@ -287,16 +287,21 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
   }
 
   _shaderFiles[type] = shaderFile;
-  
-  // Edit the shader source to reflect the input number of lights.  If
-  // there is no 'XX' in the shader code, this will cause an ugly
-  // error we have to catch.
-  char numLightsAsString[5];
-  sprintf(numLightsAsString, "%d", _lightList->getNumLights());
-  try {
-    _shaderText[type].replace(_shaderText[type].find("XX"), 2, numLightsAsString);
-  } catch (...) {
-    std::cerr << "Caution: Shader (" << shaderFile << ") does not care about number of lights." << std::endl;
+
+  if (_lightList->getNumLights() > 0) {
+    // Edit the shader source to reflect the input number of lights.  If
+    // there is no 'XX' in the shader code, this will cause an ugly
+    // error we have to catch.
+    char numLightsAsString[5];
+    sprintf(numLightsAsString, "%d", _lightList->getNumLights());
+    try {
+      _shaderText[type].replace(_shaderText[type].find("XX"), 2,
+                                numLightsAsString);
+    } catch (...) {
+      std::cerr << "Caution: Shader ("
+                << shaderFile
+                << ") does not care about number of lights." << std::endl;
+    }
   }
 }
 
