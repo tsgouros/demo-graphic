@@ -117,8 +117,10 @@ private:
 
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
-    _lights->addLight(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 0.0f));
-    _lights->addLight(glm::vec3(10.0f,-10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 1.0f));
+    _lights->addLight(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+                      glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+    // _lights->addLight(glm::vec4(0.0f, 0.0f,-1.0f, 1.0f),
+    //                   glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
@@ -196,7 +198,7 @@ public:
 
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
-    
+
     _vertexFile = std::string(argv[2]);
     _fragmentFile = std::string(argv[3]);
 
@@ -206,7 +208,7 @@ public:
 	/// event to process.
 	void onVREvent(const MinVR::VREvent &event) {
         
-    event.print();
+    //event.print();
         
     // This heartbeat event recurs at regular intervals, so you can do
     // animation with the model matrix here, as well as in the render
@@ -320,7 +322,7 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-glfw.xml ../src/shader2.vp ../src/shader.fp'\n");
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo4 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp'\n");
   }
     
   // Initialize the app.

@@ -1,0 +1,82 @@
+#version 120
+// This is a little indicator line to say that this is a version 1.2
+// OpenGL Shader Language (GLSL) program.
+
+// This shader and the accompanying textureShader.fp are simple
+// examples of using textures and lighting inside a shader.  In
+// addition to defining the shapes and colors of the objects to be
+// rendered with these shaders, you will also need to define the
+// normal vectors and texture coordinates.  The shapes in the
+// bsgMenagerie have this automatically, but if you don't use the
+// menagerie, you will have to define them yourself.
+
+// This will be edited on the fly by the shader compile code.
+const int NUM_LIGHTS = XX;
+
+// These values are uniform over all the vertices to be drawn, and are
+// thus called 'uniforms', which might seem odd, but there are odder
+// things in this crazy world.  These names are connected to data in
+// the main program using the glGetUniformLocation() function, which
+// connects these names with an ID over there.  That ID is then used to
+// load the actual matrix data, making it available over here.
+uniform mat4 projMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 modelMatrix;
+uniform mat4 normalMatrix;
+uniform vec4 lightPositionWS[NUM_LIGHTS];
+
+// The 'attributes' of a vertex shader are the inputs to the shader.
+// Each vertex of the object to be drawn has a set of attributes.
+// They could be position, or color.  Also popular are the normal
+// vector (perpendicular to a face) and texture coordinates.
+//
+// Like the uniforms above, these names are connected to the main
+// program with the glGetAttribLocation() function, which creates an
+// ID over there used to point a buffer over there to one of these
+// values over here.
+attribute vec4 position;
+attribute vec4 color;
+attribute vec4 normal;
+attribute vec2 texture;
+
+// The 'varying' keyword indicates one of the outputs of the vertex
+// shader, made available to the fragment shader down the processing
+// line.
+varying vec4 colorFrag;
+varying vec2 uvFrag;
+varying vec4 positionWS;
+varying vec4 eyeDirectionCS;
+varying vec4 lightDirectionCS[NUM_LIGHTS];
+varying vec4 normalCS;
+
+void main()
+{
+  // We copy the input color and texture coordinates to the outputs and...
+  colorFrag = color;
+  uvFrag = texture;
+  // ... use our matrices to transform the position (in model space)
+  // to a position in the world space (using the model matrix), and
+  // then into the camera space.  The gl_Position name is a predefined
+  // output name for a vertex shader of this vintage.
+  positionWS = modelMatrix * position;
+  gl_Position = projMatrix * viewMatrix * positionWS;
+
+  // Calculate the direction (x,y,z,0) from the camera to the vertex,
+  // in camera space.  In camera space, the eye is at the origin so
+  // the direction of gaze is the same as the position in camera
+  // space.
+  eyeDirectionCS = -vec4((viewMatrix * positionWS).xyz, 0);
+
+  // Now calculate the directions of the lights in camera space.  This
+  // will be used in the fragment shader to come up with an intensity
+  // for this light source.
+  vec4 lightPositionCS;
+  for (int i = 0; i < NUM_LIGHTS; i++) {
+    lightPositionCS = viewMatrix * lightPositionWS[i];
+    lightDirectionCS[i] = normalize(lightPositionCS + eyeDirectionCS);
+  }
+  
+  // We'll also need the normal direction, in camera space.
+  normalCS = normalize(vec4((normalMatrix * normal).xyz, 0));
+}
+

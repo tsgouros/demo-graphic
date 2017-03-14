@@ -31,12 +31,12 @@ attribute vec3 color;
 // The 'varying' keyword indicates one of the outputs of the vertex
 // shader, made available to the fragment shader down the processing
 // line.
-varying vec3 Color;
+varying vec4 colorFrag;
  
 void main()
 {
   // We copy the input color to the output Color and...
-  Color = color;
+  colorFrag = vec4(color, 1.0);
   // ... use our matrices to transform the position (in model
   // space) to a position in the world space.  The gl_Position name is
   // a predefined output name for a vertex shader.

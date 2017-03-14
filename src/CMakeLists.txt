@@ -58,6 +58,14 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
 
+  add_executable(textureDemo textureDemo.cpp ${bsg_files})
+
+  target_link_libraries(textureDemo
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+  
   if(MINVR_FOUND)
 
     # Redefine the include directories to include MinVR.
@@ -86,12 +94,21 @@ if(PNG_FOUND)
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY}
       ${PNG_LIBRARIES})
+    
+    add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
+
+    target_link_libraries(textureDemoMinVR
+      ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY}
+      ${PNG_LIBRARIES})
 
   else(MINVR_FOUND)
 
     message("** No MinVR for you!")
     message("** See instructions and advice on the topic above.")
-    
+
   endif(MINVR_FOUND)
 endif(PNG_FOUND)
 

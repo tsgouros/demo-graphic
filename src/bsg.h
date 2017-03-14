@@ -20,6 +20,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 // Some miscellaneous dependencies.
 #include <png.h>
@@ -42,7 +43,8 @@ typedef enum {
 typedef enum {
   GLMATRIX_MODEL    = 0,
   GLMATRIX_VIEW     = 1,
-  GLMATRIX_PROJECTION = 2
+  GLMATRIX_PROJECTION = 2,
+  GLMATRIX_INVMODEL = 3
 } GLMATRIXTYPE;
    
 
@@ -202,7 +204,7 @@ class drawableObjData {
   void addData(T d) { _data.push_back(d); };
   
   // The ID that goes with that name.
-  GLuint ID;
+  GLint ID;
   
   /// The ID of the buffer containing that data.
   GLuint bufferID;
@@ -235,22 +237,22 @@ class lightList {
  private:
 
   /// The positions of the lights in the list.
-  drawableObjData<glm::vec3> _lightPositions;
+  drawableObjData<glm::vec4> _lightPositions;
   /// The colors of the lights in the list.
-  drawableObjData<glm::vec3> _lightColors;
+  drawableObjData<glm::vec4> _lightColors;
 
   /// The default names of things in the shaders, put here for easy
   /// comparison or editing.  If you're mucking around with the
   /// shaders, don't forget that these are names of arrays inside the
   /// shader, and that the size of the arrays is set with 'XX', see
   /// the shader constructors below.
-  void setupDefaultNames() {
-    setNames("lightPosition", "lightColor");
+  void _setupDefaultNames() {
+    setNames("lightPositionWS", "lightColor");
   }
 
  public:
   lightList() {
-    setupDefaultNames();
+    _setupDefaultNames();
   };
 
   /// Set the names of the light positions and colors to be used inside
@@ -266,51 +268,58 @@ class lightList {
   /// lights is set, this is pretty much a one-way street.  Add
   /// lights, but don't subtract them.  If you want to extinguish one,
   /// just move it far away, or dial its intensity way down.
-  int addLight(const glm::vec3 &position, const glm::vec3 &color) {
+  int addLight(const glm::vec4 &position, const glm::vec4 &color) {
     _lightPositions.addData(position);
     _lightColors.addData(color);
     return _lightPositions.size();
   };
-  int addLight(const glm::vec3 &position) {
-    glm::vec3 white = glm::vec3(1.0f, 1.0f, 1.0f);
+  int addLight(const glm::vec4 &position) {
+    glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
     return addLight(position, white);
   };
   
   int getNumLights() { return _lightPositions.getData().size(); };
 
   // We have mutators and accessors for all the pieces...
-  std::vector<glm::vec3> getPositions() { return _lightPositions.getData(); };
-  void setPositions(const std::vector<glm::vec3> positions) {
+  std::vector<glm::vec4> getPositions() { return _lightPositions.getData(); };
+  void setPositions(const std::vector<glm::vec4> positions) {
     _lightPositions.getData() = positions;
   };
   GLuint getPositionID() { return _lightPositions.ID; };
 
-  std::vector<glm::vec3> getColors() { return _lightColors.getData(); };
-  void setColors(const std::vector<glm::vec3> &colors) { _lightColors.getData() = colors; };
+  std::vector<glm::vec4> getColors() { return _lightColors.getData(); };
+  void setColors(const std::vector<glm::vec4> &colors) { _lightColors.getData() = colors; };
   GLuint getColorID() { return _lightColors.ID; };
 
   /// ... and also for individual lights.
-  void setPosition(const int &i, const glm::vec3 &position) {
+  void setPosition(const int &i, const glm::vec4 &position) {
     _lightPositions.getData()[i] = position;
   };
-  glm::vec3 getPosition(const int &i) { return _lightPositions.getData()[i]; };
+  glm::vec4 getPosition(const int &i) { return _lightPositions.getData()[i]; };
 
   /// \brief Change a light's color.
-  void setColor(const int &i, const glm::vec3 &color) {
+  void setColor(const int &i, const glm::vec4 &color) {
     _lightColors.getData()[i] = color; };
-  glm::vec3 getColor(const int &i) { return _lightColors.getData()[i]; };
+  glm::vec4 getColor(const int &i) { return _lightColors.getData()[i]; };
 
+  /// \brief Link the light data with whatever shader is in use.
+  ///
   /// Load these lights for use with this program.  This should be
   /// called inside the load() method of the manager object of the
   /// shader that uses them.
-  void load(const GLuint programID);
+  //
+  // This must be preceded by a glUseProgram(programID) call.
+  void load(const GLint programID);
 
   /// \brief "Draw" these lights.
   ///
   /// Obviously, we don't draw the lights, but we use this method to
-  /// update the positino and color of the lights, in case they have
-  /// changed since the last scene render.
-  void draw(const GLuint programID);  
+  /// update the position and color of the lights, in case they have
+  /// changed since the last scene render, and this is where the light
+  /// positions and colors are loaded into the shader's uniforms.
+  //
+  // This must be preceded by a glUseProgram(programID) call.
+  void draw();  
 };
 
 typedef enum {
@@ -332,20 +341,21 @@ class textureMgr {
   GLuint _textureAttribID;
   std::string _textureAttribName;
 
-  void setupDefaultNames() {
-    _textureAttribName = std::string("textureSampler");
+  void _setupDefaultNames() {
+    _textureAttribName = std::string("textureImage");
   };
 
   GLuint _textureBufferID;
 
-  GLuint loadPNG(const std::string imagePath);
+  GLuint _loadPNG(const std::string imagePath);
   
  public:
-  textureMgr(const textureType &type, const std::string &fileName);
-  textureMgr() {};
+  textureMgr() { _setupDefaultNames(); };
 
+  void readFile(const textureType &type, const std::string &fileName);
+  
   void load(const GLuint programID);
-  void draw(const GLuint programID);
+  void draw();
 
   GLuint getTextureID() { return _textureBufferID; };
 
@@ -366,8 +376,9 @@ class shaderMgr {
   /// The shader text and compilation log together are stored here, 
   /// using the GLSHADERTYPE as an index to keep them straight.
   std::vector<std::string> _shaderText;
+  std::vector<std::string> _shaderFiles;
   std::vector<std::string> _shaderLog;
-  std::vector<GLuint> _shaderIDs;
+  std::vector<GLint> _shaderIDs;
   
   std::string _linkLog;
   
@@ -378,6 +389,9 @@ class shaderMgr {
   
   bsgPtr<lightList> _lightList;
 
+  bsgPtr<textureMgr> _texture;
+  bool _textureLoaded;
+  
   std::string _getShaderInfoLog(GLuint obj);
   std::string _getProgramInfoLog(GLuint obj);
 
@@ -385,16 +399,21 @@ class shaderMgr {
   shaderMgr() {
     // Easiest way to initialize a non-static three-element
     // std::vector.  Dumb, but simple and it works.
-    _shaderIDs.push_back(999);
-    _shaderIDs.push_back(999);
-    _shaderIDs.push_back(999);
+    _shaderIDs.push_back(-1);
+    _shaderIDs.push_back(-1);
+    _shaderIDs.push_back(-1);
     _shaderText.push_back("");
     _shaderText.push_back("");
     _shaderText.push_back("");
     _shaderLog.push_back("");
     _shaderLog.push_back("");
     _shaderLog.push_back("");
+    _shaderFiles.push_back("");
+    _shaderFiles.push_back("");
+    _shaderFiles.push_back("");
+    _lightList = new lightList();
     _compiled = false;
+    _textureLoaded = false;
   };
   ~shaderMgr() {
     if (_compiled) glDeleteProgram(_programID);
@@ -411,6 +430,16 @@ class shaderMgr {
   /// besides issue a polite warning that the shader doesn't care.
   void addLights(const bsgPtr<lightList> lightList);
 
+  /// \brief Add a texture to the shader.
+  ///
+  /// This will make a single 2D texture available as an option to the
+  /// fragment shader.  If you want something more elaborate, you
+  /// probably don't want to be using this package.
+  void addTexture(const bsgPtr<textureMgr> texture) {
+    _texture = texture;
+    _textureLoaded = true;
+  };
+  
   /// \brief Add a shader to the program.
   ///
   /// You must specify at least a vertex and fragment shader.  The
@@ -439,7 +468,23 @@ class shaderMgr {
   /// attribute's data.  OpenGL uses "state", and this call puts the
   /// GPU in a state of being ready to use this shader.
   void useProgram() { glUseProgram(_programID); };
+
+  /// \brief Sanity check could go here.
+  ///
+  /// It would be nice to have a real sanity check of a shader --
+  /// comparing its text to the data in the object to be drawn --
+  /// before it is used.  That could be done here.
+  void prepare() {};
   
+  /// \brief Prepare shader data to be used in a draw.
+  ///
+  /// Gets things like the light list ready to be used in a shader.  
+  void load();
+
+  /// \brief Use shader data in a render.
+  ///
+  /// Actually loads data like the light list to be used in the shader.
+  void draw();
 };
 
 /// \brief The information necessary to draw an object.
@@ -595,11 +640,18 @@ class drawableCompound {
   glm::mat4 _modelMatrix;
   bool _modelMatrixNeedsReset;
 
+  /// We also keep around the inverse transpose model matrix, for
+  /// texture processing.
+  glm::mat4 _normalMatrix;
+  
   /// These are pairs of ways to reference the matrices that include
   /// the matrix name (used in the shader) and the ID (used in the
   /// OpenGL code).  
   std::string _modelMatrixName;
   GLuint _modelMatrixID;
+
+  std::string _normalMatrixName;
+  GLuint _normalMatrixID;
   
   std::string _viewMatrixName;
   GLuint _viewMatrixID;
@@ -612,6 +664,7 @@ class drawableCompound {
   _pShader(pShader),
     // Set the default names for our matrices.
     _modelMatrixName("modelMatrix"),
+    _normalMatrixName("normalMatrix"),
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
     _position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -629,6 +682,9 @@ class drawableCompound {
     switch(type) {
     case(GLMATRIX_MODEL):
       _modelMatrixName = name;
+      break;
+    case(GLMATRIX_INVMODEL):
+      _normalMatrixName = name;
       break;
     case(GLMATRIX_VIEW):
       _viewMatrixName = name;

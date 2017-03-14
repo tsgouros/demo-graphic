@@ -18,7 +18,7 @@
 # Hack: On OSX, this makes sure *not* to use the Glut files that come
 # with the system.  These appear not to be the same freeglut that we
 # are counting on.
-set(CMAKE_FIND_FRAMEWORK "NEVER")
+set(CMAKE_FIND_FRAMEWORK NEVER)
 
 # Look for the header file.
 FIND_PATH(FREEGLUT_INCLUDE_DIR 

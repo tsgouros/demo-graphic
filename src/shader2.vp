@@ -27,17 +27,17 @@ uniform mat4 modelMatrix;
 // ID over there used to point a buffer over there to one of these
 // values over here.
 attribute vec4 position;
-attribute vec3 color;
+attribute vec4 color;
 
 // The 'varying' keyword indicates one of the outputs of the vertex
 // shader, made available to the fragment shader down the processing
 // line.
-varying vec3 Color;
+varying vec4 colorFrag;
  
 void main()
 {
   // We copy the input color to the output Color and...
-  Color = color;
+  colorFrag = color;
   // ... use our matrices to transform the position (in model
   // space) to a position in the world space.  The gl_Position name is
   // a predefined output name for a vertex shader.

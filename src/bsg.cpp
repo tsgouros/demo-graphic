@@ -13,27 +13,40 @@ void bsgUtils::printMat(const std::string& name, const glm::mat4& mat) {
   }
 }
   
-void lightList::load(GLuint programID) {
+// Get a handle for our lighting uniforms.  We are not binding the
+// attribute to a known location, just asking politely for it.  Note
+// that what is going on here is that OpenGL is actually matching
+// the _lightPositionName string to a variable in the shader.
+//
+// This must be preceded by a glUseProgram(programID) call.
+void lightList::load(const GLint programID) {
 
-  // Get a handle for our lighting uniforms.  We are not binding the
-  // attribute to a known location, just asking politely for it.  Note
-  // that what is going on here is that OpenGL is actually matching
-  // the _lightPositionName string to a variable in the shader.
-  glUseProgram(programID);
-  _lightPositions.ID = glGetUniformLocation(programID, _lightPositions.name.c_str());
-  _lightColors.ID = glGetUniformLocation(programID, _lightColors.name.c_str());
-
+  // If there aren't any lights, don't bother.
+  if (_lightPositions.size() > 0) {
+  
+    _lightPositions.ID = glGetUniformLocation(programID,
+                                              _lightPositions.name.c_str());
+    _lightColors.ID = glGetUniformLocation(programID,
+                                           _lightColors.name.c_str());
+  }
 }
 
-// Update any changes to the light's position and color.
-void lightList::draw(GLuint programID) {
+// Update any changes to the light's position and color.  This must be
+// preceded by a glUseProgram(programID) call.
+void lightList::draw() {
 
-  glUseProgram(programID);
-  glUniform3fv(_lightPositions.ID, 2, &_lightPositions.getData()[0].x);
-  glUniform3fv(_lightColors.ID, 2, &_lightColors.getData()[0].x);
+  // If there aren't any lights, don't bother.
+  if (_lightPositions.size() > 0) {
+    glUniform4fv(_lightPositions.ID,
+                 _lightPositions.getData().size(),
+                 &_lightPositions.getData()[0].x);
+    glUniform4fv(_lightColors.ID,
+                 _lightColors.getData().size(),
+                 &_lightColors.getData()[0].x);
+  }
 }
 
-textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
+void textureMgr::readFile(const textureType& type, const std::string& fileName) {
 
   switch(type) {
   case textureDDS:
@@ -45,7 +58,7 @@ textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
     break;
 
   case texturePNG:
-    _textureBufferID = loadPNG(fileName);
+    _textureBufferID = _loadPNG(fileName);
     break;
     
   default:
@@ -53,7 +66,7 @@ textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
   }
 }
 
-GLuint textureMgr::loadPNG(const std::string imagePath) {
+GLuint textureMgr::_loadPNG(const std::string imagePath) {
   
   // This function was originally written by David Grayson for
   // https://github.com/DavidEGrayson/ahrs-visualizer
@@ -190,7 +203,8 @@ GLuint textureMgr::loadPNG(const std::string imagePath) {
   GLuint texture;
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height, 0, format, GL_UNSIGNED_BYTE, image_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height,
+               0, format, GL_UNSIGNED_BYTE, image_data);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -202,6 +216,24 @@ GLuint textureMgr::loadPNG(const std::string imagePath) {
   return texture;
 }
 
+void textureMgr::load(const GLuint programID) {
+
+  // Get a handle for the texture uniform.
+  _textureAttribID = glGetUniformLocation(programID,
+                                          _textureAttribName.c_str());
+}
+
+void textureMgr::draw() {
+
+  // Bind the texture in Texture Unit 0
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, _textureBufferID);
+  
+  // Set our "myTextureSampler" sampler to user Texture Unit 0
+  glUniform1i(_textureAttribID, 0);
+
+  // The data is actually loaded into the buffer in the loadXX() method.
+}
   
 std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
   int infoLogLength = 0;
@@ -254,15 +286,22 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
     throw std::runtime_error("Cannot open: " + shaderFile);
   }
 
-  // Edit the shader source to reflect the input number of lights.  If
-  // there is no 'XX' in the shader code, this will cause an ugly
-  // error we have to catch.
-  char numLightsAsString[5];
-  sprintf(numLightsAsString, "%d", _lightList->getNumLights());
-  try {
-    _shaderText[type].replace(_shaderText[type].find("XX"), 2, numLightsAsString);
-  } catch (...) {
-    std::cerr << "Caution: Shader does not care about number of lights." << std::endl;
+  _shaderFiles[type] = shaderFile;
+
+  if (_lightList->getNumLights() > 0) {
+    // Edit the shader source to reflect the input number of lights.  If
+    // there is no 'XX' in the shader code, this will cause an ugly
+    // error we have to catch.
+    char numLightsAsString[5];
+    sprintf(numLightsAsString, "%d", _lightList->getNumLights());
+    try {
+      _shaderText[type].replace(_shaderText[type].find("XX"), 2,
+                                numLightsAsString);
+    } catch (...) {
+      std::cerr << "Caution: Shader ("
+                << shaderFile
+                << ") does not care about number of lights." << std::endl;
+    }
   }
 }
 
@@ -292,7 +331,9 @@ void shaderMgr::compileShaders() {
   glCompileShader(_shaderIDs[GLSHADER_VERTEX]);
   errorLog = _getShaderInfoLog(_shaderIDs[GLSHADER_VERTEX]);
   if (errorLog.size() > 1) {
-    std::cerr << "** Vertex compile error: " << errorLog << std::endl;
+    std::cerr << "** Vertex compile error in "
+              << _shaderFiles[GLSHADER_VERTEX]
+              << std::endl << errorLog << std::endl;
     //std::cerr << _shaderText[GLSHADER_VERTEX] << std::endl;
   }
   
@@ -300,13 +341,17 @@ void shaderMgr::compileShaders() {
   glCompileShader(_shaderIDs[GLSHADER_FRAGMENT]);
   errorLog = _getShaderInfoLog(_shaderIDs[GLSHADER_FRAGMENT]);
   if (errorLog.size() > 1)
-    std::cerr << "** Fragment compile error: " << errorLog << std::endl;
+    std::cerr << "** Fragment compile error in "
+              << _shaderFiles[GLSHADER_FRAGMENT]
+              << std::endl << errorLog << std::endl;
 
   if (geom) {
     glCompileShader(_shaderIDs[GLSHADER_GEOMETRY]);
     errorLog = _getShaderInfoLog(_shaderIDs[GLSHADER_GEOMETRY]);
     if (errorLog.size() > 1)
-      std::cerr << "** Geometry compile error: " << errorLog << std::endl;
+      std::cerr << "** Geometry compile error in "
+                << _shaderFiles[GLSHADER_GEOMETRY]
+                << std::endl << errorLog << std::endl;
   }
 
   // Now create a program to contain our two (or three) shaders, and
@@ -322,7 +367,11 @@ void shaderMgr::compileShaders() {
   glLinkProgram(_programID);
   errorLog = _getProgramInfoLog(_programID);
   if (errorLog.size() > 1) {
-      std::cerr << "** Shader link error: " << errorLog << std::endl;
+    std::cerr << "** Shader link error in"
+              << _shaderFiles[GLSHADER_VERTEX] << ", "
+              << _shaderFiles[GLSHADER_FRAGMENT] << ", "
+              << _shaderFiles[GLSHADER_GEOMETRY]
+              << std::endl << errorLog << std::endl;
   } 
 
   // The shaders are linked into the program, so we can delete the raw
@@ -345,13 +394,22 @@ GLuint shaderMgr::getUniformID(const std::string& unifName) {
 }
 
 void shaderMgr::addLights(const bsgPtr<lightList> lightList) {
-    if (_compiled) {
-      throw std::runtime_error("Must load lights before compiling shader.");
-    } else {
-      _lightList = lightList;
-    }
+  if (_compiled) {
+    throw std::runtime_error("Must load lights before compiling shader.");
+  } else {
+    _lightList = lightList;
   }
+}
 
+void shaderMgr::load() {
+  _lightList->load(_programID);
+  if (_textureLoaded) _texture->load(_programID);
+}
+
+void shaderMgr::draw() {
+  _lightList->draw();
+  if (_textureLoaded) _texture->draw();
+}
 
 void drawableObj::addData(const GLDATATYPE type,
                           const std::string& name,
@@ -393,23 +451,51 @@ void drawableObj::addData(const GLDATATYPE type,
   
 void drawableObj::prepare(GLuint programID) {
 
+  bool badID = false;
+  
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
   _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
+
+  // Check to make sure the ID awarded is sane.  If not, probably the
+  // name does not match the name in the shader.
+  if (_vertices.ID < 0) {
+    std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
+    badID = true;
+  }
   
   if (!_colors.getData().empty()) {
     glGenBuffers(1, &_colors.bufferID);
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
+    
+    if (_colors.ID < 0) {
+      std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
+      badID = true;
+    }
   }
   if (!_normals.getData().empty()) {
     glGenBuffers(1, &_normals.bufferID);
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
+    
+    if (_normals.ID < 0) {
+      std::cerr << "** Caution: Bad ID for normals attribute '" << _normals.name << "'" << std::endl;
+      badID = true;
+    }
   }
   if (!_uvs.getData().empty()) {
     glGenBuffers(1, &_uvs.bufferID);
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
+    
+    if (_uvs.ID < 0) {
+      std::cerr << "** Caution: Bad ID for texture attribute '" << _uvs.name << "'" << std::endl;
+      badID = true;
+    }
   }
 
+  if (badID) {
+    std::cerr << "This can be caused either by a spelling error, or by not using the" << std::endl << "attribute within the shader code." << std::endl;
+  }
+  
   // Put the data in its buffers, for practice.
   load();
 
@@ -469,6 +555,8 @@ glm::mat4 drawableCompound::getModelMatrix() {
     _modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
     _modelMatrixNeedsReset = false;
 
+    //    std::cout << glm::to_string(_modelMatrix) << std::endl;
+    
     // bsgUtils::printMat("trans:", translationMatrix);
     // bsgUtils::printMat("rotat:", rotationMatrix);
     // bsgUtils::printMat("scale:", scaleMatrix);
@@ -481,8 +569,10 @@ glm::mat4 drawableCompound::getModelMatrix() {
 void drawableCompound::prepare() {
 
   _pShader->useProgram();
+  _pShader->prepare();
 
   _modelMatrixID = _pShader->getUniformID(_modelMatrixName);
+  _normalMatrixID = _pShader->getUniformID(_normalMatrixName);
   _viewMatrixID = _pShader->getUniformID(_viewMatrixName);
   _projMatrixID = _pShader->getUniformID(_projMatrixName);
 
@@ -496,7 +586,8 @@ void drawableCompound::prepare() {
 void drawableCompound::load() {
 
   _pShader->useProgram();
-
+  _pShader->load();
+  
   // Load each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
@@ -508,16 +599,26 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
                             const glm::mat4& projMatrix) {
 
   _pShader->useProgram();
-
+  _pShader->draw();
+  
   // Load the model matrix.  This adjusts the position of each object.
   // Remember that all the objects in a compound object use the same
   // shader and the same model matrix.
   glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
 
+  // Calculate the normal matrix to use for lighting.
+  _normalMatrix = glm::transpose(glm::inverse(viewMatrix * _modelMatrix));
+  glUniformMatrix4fv(_normalMatrixID, 1, false, &_normalMatrix[0][0]);
+
   // The view and projection matrices come from the scene object, above us.
   glUniformMatrix4fv(_viewMatrixID, 1, false, &viewMatrix[0][0]);
   glUniformMatrix4fv(_projMatrixID, 1, false, &projMatrix[0][0]);
 
+  // std::cout << "view" << glm::to_string(viewMatrix) << std::endl;
+  // std::cout << "normal" << glm::to_string(_normalMatrix) << std::endl;
+  // std::cout << "model" << glm::to_string(_modelMatrix) << std::endl;
+  // std::cout << "proj" << glm::to_string(projMatrix) << std::endl;
+  
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
     it->draw();
