@@ -152,7 +152,6 @@ private:
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
-    _axesSet->addObject(_axes);
 
     // Now add the axes.
     _scene.addCompound(_axesSet);

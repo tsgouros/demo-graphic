@@ -455,7 +455,7 @@ void drawableObj::prepare(GLuint programID) {
   // Check to make sure the ID awarded is sane.  If not, probably the
   // name does not match the name in the shader.
   if (_vertices.ID < 0) {
-    std::cerr << "** Caution: Bad ID for attribute '" << _vertices.name << "'" << std::endl;
+    std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
     badID = true;
   }
   
@@ -464,7 +464,7 @@ void drawableObj::prepare(GLuint programID) {
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
     
     if (_colors.ID < 0) {
-      std::cerr << "** Caution: Bad ID for attribute '" << _colors.name << "'" << std::endl;
+      std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
       badID = true;
     }
   }
@@ -473,7 +473,7 @@ void drawableObj::prepare(GLuint programID) {
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
     
     if (_normals.ID < 0) {
-      std::cerr << "** Caution: Bad ID for attribute '" << _normals.name << "'" << std::endl;
+      std::cerr << "** Caution: Bad ID for normals attribute '" << _normals.name << "'" << std::endl;
       badID = true;
     }
   }
@@ -482,7 +482,7 @@ void drawableObj::prepare(GLuint programID) {
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
     
     if (_uvs.ID < 0) {
-      std::cerr << "** Caution: Bad ID for attribute '" << _uvs.name << "'" << std::endl;
+      std::cerr << "** Caution: Bad ID for texture attribute '" << _uvs.name << "'" << std::endl;
       badID = true;
     }
   }
