@@ -12,6 +12,9 @@ class drawableRectangle : public drawableCompound {
  public:
   drawableRectangle(bsgPtr<shaderMgr> pShader,
                     const float width, const float height);
+  drawableRectangle(bsgPtr<shaderMgr> pShader,
+                    const float width, const float height,
+                    const int nDivs);
 
 };
 
