@@ -22,7 +22,7 @@ uniform vec4 lightColor[NUM_LIGHTS];
 void main() {
 
   vec4 materialColor = 0.6 * vec4(1.0, 1.0, 1.0, 1.0);
-  float ambientCoefficient = 0.6;
+  float ambientCoefficient = 0.3;
   vec4 materialSpecularColor = 0.5 * vec4(1.0, 1.0, 1.0, 0.0);
 
   vec4 color = 0.05 * colorFrag;
@@ -34,7 +34,6 @@ void main() {
 
     // Ambient : simulates indirect lighting
     vec4 ambient = ambientCoefficient * lightColor[i] * materialColor;
-    //    ambient = vec4(0,0,0,0);
     
     // Distance to the light
     float distanceToLight = length(lightPositionWS[i] - positionWS);
@@ -64,7 +63,7 @@ void main() {
     float attenuation = 1.0 / (1.0 + 0.01 * pow(distanceToLight, 2));
     //attenuation = 1.0;
     
-    color += ambient + attenuation * (diffuse + 0*specular);
+    color += ambient + attenuation * (diffuse + 0.0 * specular);
   }
   
   gl_FragColor = color; // normalize(normalCS) ;//+ materialColor;

@@ -2,6 +2,14 @@
 // This is a little indicator line to say that this is a version 1.2
 // OpenGL Shader Language (GLSL) program.
 
+// This shader and the accompanying textureShader.fp are simple
+// examples of using textures and lighting inside a shader.  In
+// addition to defining the shapes and colors of the objects to be
+// rendered with these shaders, you will also need to define the
+// normal vectors and texture coordinates.  The shapes in the
+// bsgMenagerie have this automatically, but if you don't use the
+// menagerie, you will have to define them yourself.
+
 // This will be edited on the fly by the shader compile code.
 const int NUM_LIGHTS = XX;
 
