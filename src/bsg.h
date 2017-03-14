@@ -341,20 +341,21 @@ class textureMgr {
   GLuint _textureAttribID;
   std::string _textureAttribName;
 
-  void setupDefaultNames() {
-    _textureAttribName = std::string("textureSampler");
+  void _setupDefaultNames() {
+    _textureAttribName = std::string("textureImage");
   };
 
   GLuint _textureBufferID;
 
-  GLuint loadPNG(const std::string imagePath);
+  GLuint _loadPNG(const std::string imagePath);
   
  public:
-  textureMgr(const textureType &type, const std::string &fileName);
-  textureMgr() {};
+  textureMgr() { _setupDefaultNames(); };
 
+  void readFile(const textureType &type, const std::string &fileName);
+  
   void load(const GLuint programID);
-  void draw(const GLuint programID);
+  void draw();
 
   GLuint getTextureID() { return _textureBufferID; };
 
@@ -388,6 +389,9 @@ class shaderMgr {
   
   bsgPtr<lightList> _lightList;
 
+  bsgPtr<textureMgr> _texture;
+  bool _textureLoaded;
+  
   std::string _getShaderInfoLog(GLuint obj);
   std::string _getProgramInfoLog(GLuint obj);
 
@@ -409,6 +413,7 @@ class shaderMgr {
     _shaderFiles.push_back("");
     _lightList = new lightList();
     _compiled = false;
+    _textureLoaded = false;
   };
   ~shaderMgr() {
     if (_compiled) glDeleteProgram(_programID);
@@ -425,6 +430,16 @@ class shaderMgr {
   /// besides issue a polite warning that the shader doesn't care.
   void addLights(const bsgPtr<lightList> lightList);
 
+  /// \brief Add a texture to the shader.
+  ///
+  /// This will make a single 2D texture available as an option to the
+  /// fragment shader.  If you want something more elaborate, you
+  /// probably don't want to be using this package.
+  void addTexture(const bsgPtr<textureMgr> texture) {
+    _texture = texture;
+    _textureLoaded = true;
+  };
+  
   /// \brief Add a shader to the program.
   ///
   /// You must specify at least a vertex and fragment shader.  The

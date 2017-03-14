@@ -46,7 +46,7 @@ void lightList::draw() {
   }
 }
 
-textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
+void textureMgr::readFile(const textureType& type, const std::string& fileName) {
 
   switch(type) {
   case textureDDS:
@@ -58,7 +58,7 @@ textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
     break;
 
   case texturePNG:
-    _textureBufferID = loadPNG(fileName);
+    _textureBufferID = _loadPNG(fileName);
     break;
     
   default:
@@ -66,7 +66,7 @@ textureMgr::textureMgr(const textureType& type, const std::string& fileName) {
   }
 }
 
-GLuint textureMgr::loadPNG(const std::string imagePath) {
+GLuint textureMgr::_loadPNG(const std::string imagePath) {
   
   // This function was originally written by David Grayson for
   // https://github.com/DavidEGrayson/ahrs-visualizer
@@ -203,7 +203,8 @@ GLuint textureMgr::loadPNG(const std::string imagePath) {
   GLuint texture;
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height, 0, format, GL_UNSIGNED_BYTE, image_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height,
+               0, format, GL_UNSIGNED_BYTE, image_data);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -215,6 +216,25 @@ GLuint textureMgr::loadPNG(const std::string imagePath) {
   return texture;
 }
 
+void textureMgr::load(const GLuint programID) {
+
+  // Get a handle for the texture uniform.
+  _textureAttribID = glGetUniformLocation(programID,
+                                          _textureAttribName.c_str());
+}
+
+void textureMgr::draw() {
+
+  // Bind the texture in Texture Unit 0
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, _textureBufferID);
+  
+  // Set our "myTextureSampler" sampler to user Texture Unit 0
+  glUniform1i(_textureAttribID, 0);
+
+  // The data is actually loaded into the buffer in the loadXX() method.
+}
+  
 std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
   int infoLogLength = 0;
   int charsWritten  = 0;
@@ -378,10 +398,12 @@ void shaderMgr::addLights(const bsgPtr<lightList> lightList) {
 
 void shaderMgr::load() {
   _lightList->load(_programID);
+  if (_textureLoaded) _texture->load(_programID);
 }
 
 void shaderMgr::draw() {
   _lightList->draw();
+  if (_textureLoaded) _texture->draw();
 }
 
 void drawableObj::addData(const GLDATATYPE type,
