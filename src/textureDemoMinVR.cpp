@@ -119,11 +119,7 @@ private:
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
     _lights->addLight(glm::vec4(0.0f, 0.0f, 3.0f, 1.0f),
-                      glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-    // _lights->addLight(glm::vec4(0.0f, 0.0f,-1.0f, 1.0f),
-    //                   glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
-    //    _lights->addLight(glm::vec4(10.0f,-10.0f, 10.0f, 1.0f),
-    //                      glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
+                      glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
@@ -138,49 +134,24 @@ private:
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
 
-    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
-    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
-    _axesShader->compileShaders();
-
-    // Now let's add a set of axes.
-    _axes = bsg::drawableObj();
-    std::vector<glm::vec4> axesVertices;
-    axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
-  
-    axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
-
-    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
-
-    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
-
-    // With colors. (X = red, Y = green, Z = blue)
-    std::vector<glm::vec4> axesColors;
-    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
-
-    // The axes are not triangles, but lines.
-    _axes.setDrawType(GL_LINES);
-
+    // Add a texture to our shader manager object.
+    bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
+    texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    _shader->addTexture(texture);
+    
     // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
-    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 100);
+    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 20);
 
     // Now add our rectangle to the scene.
     _scene.addCompound(_rectangle);
 
-    _axesSet = new bsg::drawableCompound(_axesShader);
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+    _axesShader->compileShaders();
+
+    _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
     _axesSet->addObject(_axes);
 
     // Now add the axes.

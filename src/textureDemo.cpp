@@ -297,6 +297,7 @@ int main(int argc, char **argv) {
   // The shaders are loaded, now compile them.
   shader->compileShaders();
 
+  // Add a texture to our shader manager object.
   bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
   texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
   shader->addTexture(texture);
