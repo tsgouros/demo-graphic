@@ -15,13 +15,14 @@ varying vec4 normalCS;
 varying vec4 lightPositionCS;
 
 // Values that stay constant for the whole mesh.
-//uniform sampler2D textureSampler;
+uniform sampler2D textureImage;
 uniform vec4 lightPositionWS[NUM_LIGHTS];
 uniform vec4 lightColor[NUM_LIGHTS];
 
 void main() {
 
-  vec4 materialColor = 0.6 * vec4(1.0, 1.0, 1.0, 1.0);
+  vec4 materialColor = texture2D(textureImage, uvFrag);
+  //0.6 * vec4(1.0, 1.0, 1.0, 1.0);
   float ambientCoefficient = 0.3;
   vec4 materialSpecularColor = 0.5 * vec4(1.0, 1.0, 1.0, 0.0);
 

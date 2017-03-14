@@ -297,6 +297,10 @@ int main(int argc, char **argv) {
   // The shaders are loaded, now compile them.
   shader->compileShaders();
 
+  bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
+  texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+  shader->addTexture(texture);
+
   // Do the same for the axes shader:
   bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
   axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
@@ -309,7 +313,7 @@ int main(int argc, char **argv) {
   // We could put the axes and the rectangle in the same compound
   // shape, but we leave them separate so they can be moved
   // separately.
-  rectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f, 100);
+  rectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f,3);
 
   scene.addCompound(rectangle);
 
