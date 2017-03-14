@@ -27,12 +27,12 @@ uniform mat4 modelMatrix;
 // ID over there used to point a buffer over there to one of these
 // values over here.
 attribute vec4 position;
-attribute vec3 color;
+attribute vec4 color;
 
 // The 'varying' keyword indicates one of the outputs of the vertex
 // shader, made available to the fragment shader down the processing
 // line.
-varying vec3 Color;
+varying vec4 Color;
  
 void main()
 {

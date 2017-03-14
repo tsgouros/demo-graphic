@@ -7,7 +7,7 @@
 // assigning it to the pre-defined output name.
 
 // Here's our input from the output of the vertex shader.
-varying vec3 Color;
+varying vec4 Color;
  
 void main()
 {
@@ -15,5 +15,5 @@ void main()
   // -- to be the color assigned to the given vertex.  All we're doing
   // here is taking the RGB value in Color and making it into an RGBA
   // value.
-  gl_FragColor = vec4(Color, 1.0);
+  gl_FragColor = Color;
 }
