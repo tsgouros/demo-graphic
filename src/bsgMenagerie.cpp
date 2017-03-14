@@ -34,9 +34,11 @@ namespace bsg {
         frontFaceColors[k + 1] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         frontFaceNormals[k] = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
         frontFaceNormals[k + 1] = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
-        frontFaceUVs[k] = glm::vec2(0.0, 0.0 + (i * 1.0/nDivs));
-        frontFaceUVs[k + 1] = glm::vec2(1.0, 0.0 + (i * 1.0/nDivs));
-
+        frontFaceUVs[k] = glm::vec2(0.0 + (j * 1.0/nDivs),
+                                    0.0 + (i * 1.0/nDivs));
+        frontFaceUVs[k + 1] = glm::vec2(((j + 1) * 1.0/nDivs),
+                                        0.0 + (i * 1.0/nDivs));
+        
         backFaceVertices[k] = glm::vec4(-w + ((j + 1) * wdiv),
                                         -h + (i * hdiv), 0.0f, 1.0f);
         backFaceVertices[k + 1] = glm::vec4(-w + (j * wdiv),
@@ -45,8 +47,10 @@ namespace bsg {
         backFaceColors[k + 1] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         backFaceNormals[k] = glm::vec4(0.0f, 0.0f,-1.0f, 0.0f);
         backFaceNormals[k + 1] = glm::vec4(0.0f, 0.0f,-1.0f, 0.0f);
-        backFaceUVs[k] = glm::vec2(1.0, 0.0 + (i * 1.0/nDivs));
-        backFaceUVs[k + 1] = glm::vec2(0.0, 0.0 + (i * 1.0/nDivs));
+        backFaceUVs[k] = glm::vec2(((j + 1) * 1.0/nDivs),
+                                   0.0 + (i * 1.0/nDivs));
+        backFaceUVs[k + 1] = glm::vec2(0.0 + (j * 1.0/nDivs),
+                                       0.0 + (i * 1.0/nDivs));
 
       }
       
@@ -145,7 +149,7 @@ namespace bsg {
 
     backFaceUVs.push_back(glm::vec2( 0.0f, 0.0f));
     backFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
-    backFaceUVs.push_back(glm::vec2( 0.0f, 1.0f));
+    backFaceUVs.push_back(glm::vec2( 1.0f, 0.0f));
     backFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
     _backFace.addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
