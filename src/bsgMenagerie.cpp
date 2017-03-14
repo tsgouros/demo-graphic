@@ -43,8 +43,8 @@ namespace bsg {
                                             -h + (i * hdiv), 0.0f, 1.0f);
         backFaceColors[k] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         backFaceColors[k + 1] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        backFaceNormals[k] = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
-        backFaceNormals[k + 1] = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
+        backFaceNormals[k] = glm::vec4(0.0f, 0.0f,-1.0f, 0.0f);
+        backFaceNormals[k + 1] = glm::vec4(0.0f, 0.0f,-1.0f, 0.0f);
         backFaceUVs[k] = glm::vec2(1.0, 0.0 + (i * 1.0/nDivs));
         backFaceUVs[k + 1] = glm::vec2(0.0, 0.0 + (i * 1.0/nDivs));
 
