@@ -78,6 +78,15 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
 
+  add_executable(textureDemo textureDemo.cpp ${bsg_files})
+
+  target_link_libraries(textureDemo
+    ${MINVR_LIBRARY}
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+
   endif(MINVR_FOUND)
 endif(PNG_FOUND)
 
