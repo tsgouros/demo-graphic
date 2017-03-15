@@ -313,18 +313,18 @@ int main(int argc, char **argv) {
     std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
   }
 
+  // Now we load the shaders.  First check to see if any have been
+  // specified on the command line.
+  if (argc < 4) {
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo4 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp'");
+  }
+    
   std::string arg1 = std::string(argv[1]);
   
   if (arg1.find("xml") == std::string::npos) {
     throw std::runtime_error("\n** First arg should be a config file.  Try desktop-freeglut.xml.");
   }
 
-  // Now we load the shaders.  First check to see if any have been
-  // specified on the command line.
-  if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo4 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp'\n");
-  }
-    
   // Initialize the app.
 	DemoVRApp app(argc, argv, argv[1]);
 

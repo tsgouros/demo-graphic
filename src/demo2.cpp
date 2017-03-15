@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 3) {
-    throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../src/shader2.vp ../src/shader.fp\n'");
+    throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../src/shader2.vp ../src/shader.fp'.");
   }
 
   // Create a shader manager and load the light list.
