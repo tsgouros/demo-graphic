@@ -115,12 +115,12 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
   }
 
   // the code in this if statement gets called if libpng encounters an error
-  if (setjmp(png_jmpbuf(png_ptr))) {
-    fprintf(stderr, "error from libpng\n");
-    png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    fclose(fp);
-    return 0;
-  }
+  // if (setjmp(png_jmpbuf(png_ptr))) {
+  //   fprintf(stderr, "error from libpng\n");
+  //   png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
+  //   fclose(fp);
+  //   return 0;
+  // }
 
   // init png reading
   png_init_io(png_ptr, fp);

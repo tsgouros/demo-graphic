@@ -97,6 +97,8 @@ private:
     // This is just a performance enhancement that allows OpenGL to
     // ignore faces that are facing away from the camera.
     glEnable(GL_CULL_FACE);
+    glLineWidth(4);
+    glEnable(GL_LINE_SMOOTH);
 
   }
 
@@ -142,7 +144,7 @@ private:
     // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
-    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 20);
+    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
     // Now add our rectangle to the scene.
     _scene.addCompound(_rectangle);
@@ -247,6 +249,7 @@ public:
       _oscillator += _oscillationStep;
       pos.x = 2.0f * sin(_oscillator);
       pos.y = 2.0f * cos(_oscillator);
+      pos.z = -4.0f;
       _rectangle->setPosition(pos);
 
       // Now the preliminaries are done, on to the actual drawing.

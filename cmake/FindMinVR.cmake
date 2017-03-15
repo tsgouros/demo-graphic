@@ -10,26 +10,31 @@
 ### Look for MinVR
 if(MINVR_INSTALL_DIR)
   message("-- Looking for MinVR in: " ${MINVR_INSTALL_DIR})
+
+  set(MINVR_INCLUDE_DIR ${MINVR_INSTALL_DIR}/include)
+  set(MINVR_LIBRARY ${MINVR_INSTALL_DIR}/lib/libMinVR.a)
+
 else(MINVR_INSTALL_DIR)
   message("MinVR install location not specified.  But we'll still look for it.")
   message("Use  -DMINVR_INSTALL_DIR=/my/location/of/MinVR/install to specify it.")
+
+  find_path(MINVR_INCLUDE_DIR
+    NAMES api/MinVR.h
+    HINTS
+    /usr/local/include
+    ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/include   # This is just a guess.
+    ${MINVR_INSTALL_DIR}/include
+    ENV CPATH)
+
+  find_library(MINVR_LIBRARY
+    NAMES MinVR
+    HINTS
+    /usr/local/lib
+    ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/lib   # This is just a guess.
+    ${MINVR_INSTALL_DIR}/lib
+    ENV LD_LIBRARY_PATH)
 endif(MINVR_INSTALL_DIR)
 
-find_path(MINVR_INCLUDE_DIR
-  NAMES api/MinVR.h
-	HINTS
-  ${MINVR_INSTALL_DIR}/include
-  /usr/local/include
-  ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/include   # This is just a guess.
-  ENV CPATH)
-
-find_library(MINVR_LIBRARY
-  NAMES MinVR
-	HINTS
-  ${MINVR_INSTALL_DIR}/lib
-  /usr/local/lib
-  ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/lib   # This is just a guess.
-  ENV LD_LIBRARY_PATH)
 
 # Handle the QUIETLY and REQUIRED arguments and set MINVR_FOUND to
 # TRUE if all listed variables are TRUE.

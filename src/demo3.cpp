@@ -366,6 +366,7 @@ public:
       _oscillator += _oscillationStep;
       pos.x = sin(_oscillator);
       pos.y = 1.0f - cos(_oscillator);
+      pos.z = -5.0f;
       _tetrahedron->setPosition(pos);
 
       // Now the preliminaries are done, on to the actual drawing.
