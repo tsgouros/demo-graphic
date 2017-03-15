@@ -1,4 +1,3 @@
-project (demo-graphic)
 
 # This is the path where cmake will look for files like "FindPNG.cmake".
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
