@@ -545,7 +545,7 @@ void drawableObj::draw() {
   glDrawArrays(_drawType, 0, _count);
 }
 
-glm::mat4 drawableCompound::getModelMatrix() {
+glm::mat4 drawableMulti::getModelMatrix() {
 
   if (_modelMatrixNeedsReset) {
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), _position);
@@ -563,7 +563,12 @@ glm::mat4 drawableCompound::getModelMatrix() {
     // bsgUtils::printMat("model:", _modelMatrix);
   }
 
-  return _modelMatrix;
+  // If there is a parent, get the parent transformation (model)
+  // matrix and use it with this one.
+  if (_parent) 
+    return _parent->getModelMatrix() * _modelMatrix;
+  else
+    return _modelMatrix;
 }
 
 void drawableCompound::prepare() {
@@ -587,6 +592,8 @@ void drawableCompound::load() {
 
   _pShader->useProgram();
   _pShader->load();
+
+  _totalModelMatrix = getModelMatrix();
   
   // Load each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
@@ -604,10 +611,10 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   // Load the model matrix.  This adjusts the position of each object.
   // Remember that all the objects in a compound object use the same
   // shader and the same model matrix.
-  glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
+  glUniformMatrix4fv(_modelMatrixID, 1, false, &_totalModelMatrix[0][0]);
 
   // Calculate the normal matrix to use for lighting.
-  _normalMatrix = glm::transpose(glm::inverse(viewMatrix * _modelMatrix));
+  _normalMatrix = glm::transpose(glm::inverse(viewMatrix * _totalModelMatrix));
   glUniformMatrix4fv(_normalMatrixID, 1, false, &_normalMatrix[0][0]);
 
   // The view and projection matrices come from the scene object, above us.

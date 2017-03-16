@@ -33,7 +33,7 @@ if(BUILD_DOCUMENTATION)
     message(FATAL_ERROR "Doxygen is needed to build the documentation.")
   endif()
 
-  message("-- Configured to build documentation.")
+  message("-- Configured to build documentation.  Use 'make doc'.")
   
   # Process the config file and put it in the build directory.
   set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/doc/demo-graphic.doxygen.in)
