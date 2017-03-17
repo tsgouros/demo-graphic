@@ -1,4 +1,5 @@
 #include "bsg.h"
+#include "bsgMenagerie.h"
 #include "bsgObjModel.h"
 
 #include <api/MinVR.h>
@@ -18,11 +19,9 @@ private:
   // These are the shapes that make up the scene.  They are out here in
   // the global variables so they can be available in both the main()
   // function and the renderScene() function.
-  bsg::drawableCompound* _tetrahedron;
+  bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
   bsg::drawableObjModel* _box;
-
-
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
@@ -33,6 +32,7 @@ private:
   // divided into several functions here, so they are class-wide
   // private data objects.
   bsg::bsgPtr<bsg::shaderMgr> _shader;
+  bsg::bsgPtr<bsg::shaderMgr> _axesShader;
   bsg::bsgPtr<bsg::lightList> _lights;
 
   // Here are the drawable objects that make up the compound object
@@ -98,6 +98,8 @@ private:
     // This is just a performance enhancement that allows OpenGL to
     // ignore faces that are facing away from the camera.
     glEnable(GL_CULL_FACE);
+    glLineWidth(4);
+    glEnable(GL_LINE_SMOOTH);
 
   }
 
@@ -119,10 +121,8 @@ private:
 
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
-    _lights->addLight(glm::vec4(10.0f, 10.0f, 10.0f, 1.0f),
+    _lights->addLight(glm::vec4(0.0f, 0.0f, 3.0f, 1.0f),
                       glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-    _lights->addLight(glm::vec4(10.0f,-10.0f, 10.0f, 1.0f),
-                      glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
@@ -136,148 +136,28 @@ private:
 
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
-  
-    _bottomShape = bsg::drawableObj();
 
-    // Specify the vertices of the shapes we're drawing.  Note that the
-    // faces are specified with a *counter-clockwise* winding order, the
-    // OpenGL default.  You can make your faces wind the other
-    // direction, but have to adjust the OpenGL expectations with
-    // glFrontFace().
-    std::vector<glm::vec4> topShapeVertices;
-
-    // These would take many fewer vertices if they were specified as a
-    // triangle strip.
-    topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
-
-    topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
- 
-    topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
-
-    topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
-    topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
-
-    _topShape.addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
-
-    // Here are the corresponding colors for the above vertices.
-    std::vector<glm::vec4> topShapeColors;
-    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-    _topShape.addData(bsg::GLDATA_COLORS, "color", topShapeColors);
-
-    // The vertices above are arranged into a set of triangles.
-    _topShape.setDrawType(GL_TRIANGLES);  
-
-    // Same thing for the other tetrahedron.
-    std::vector<glm::vec4> bottomShapeVertices;
-
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-
-    bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
-    bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
-
-    _bottomShape.addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
-
-    // And the corresponding colors for the above vertices.
-    std::vector<glm::vec4> bottomShapeColors;
-    bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-    bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-
-    bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-    bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-    _bottomShape.addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
-
-    // The vertices above are arranged into a set of triangles.
-    _bottomShape.setDrawType(GL_TRIANGLES);  
-
-    // Now let's add a set of axes.
-    _axes = bsg::drawableObj();
-    std::vector<glm::vec4> axesVertices;
-    axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
-  
-    axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
-
-    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
-
-    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
-
-    // With colors. (X = red, Y = green, Z = blue)
-    std::vector<glm::vec4> axesColors;
-    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
-
-    // The axes are not triangles, but lines.
-    _axes.setDrawType(GL_LINES);
-
-    // We could put the axes and the tetrahedron in the same compound
+    // Add a texture to our shader manager object.
+    bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
+    texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    _shader->addTexture(texture);
+    
+    // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
-    _tetrahedron = new bsg::drawableCompound(_shader);
-    _tetrahedron->addObject(_topShape);
-    _tetrahedron->addObject(_bottomShape);
+    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
-    // Now add our tetrahedron to the scene.
-    _scene.addCompound(_tetrahedron);
+    // Now add our rectangle to the scene.
+    _scene.addCompound(_rectangle);
 
-    _box = new bsg::drawableObjModel(_shader, "../data/test.obj");//"../data/LEGO_Man.obj");
-_scene.addCompound(_box);
+    _box = new bsg::drawableObjModel(_shader, "../data/test.obj");
+    _scene.addCompound(_box);
 
-    _axesSet = new bsg::drawableCompound(_shader);
-    _axesSet->addObject(_axes);
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/textureShader.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/textureShader.fp");
+    _axesShader->compileShaders();
+
+    _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
 
     // Now add the axes.
     _scene.addCompound(_axesSet);
@@ -296,6 +176,7 @@ public:
     // These are tracked separately because multiple objects might use
     // them.
     _shader = new bsg::shaderMgr();
+    _axesShader = new bsg::shaderMgr();
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
@@ -310,7 +191,7 @@ public:
 	/// event to process.
 	void onVREvent(const MinVR::VREvent &event) {
         
-    //event.print();
+    // event.print();
         
     // This heartbeat event recurs at regular intervals, so you can do
     // animation with the model matrix here, as well as in the render
@@ -368,12 +249,12 @@ public:
 
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
-      glm::vec3 pos = _tetrahedron->getPosition();
+      glm::vec3 pos = _rectangle->getPosition();
       _oscillator += _oscillationStep;
-      pos.x = sin(_oscillator);
-      pos.y = 1.0f - cos(_oscillator);
-      pos.z = -5.0f;
-      _tetrahedron->setPosition(pos);
+      pos.x = 2.0f * sin(_oscillator);
+      pos.y = 2.0f * cos(_oscillator);
+      pos.z = -4.0f;
+      _rectangle->setPosition(pos);
 
       // Now the preliminaries are done, on to the actual drawing.
   
@@ -419,16 +300,9 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp'");
-
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../src/textureShader.vp ../src/textureShader.fp'");
   }
-
-  std::string arg1 = std::string(argv[1]);
-  
-  if (arg1.find("xml") == std::string::npos) {
-    throw std::runtime_error("\n** First arg should be a config file.  Try desktop-freeglut.xml.");
-  }
-      
+    
   // Initialize the app.
 	DemoVRApp app(argc, argv, argv[1]);
 
