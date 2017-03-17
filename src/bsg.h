@@ -709,12 +709,13 @@ class drawableMulti {
 /// It might consist of just one object, but that's ok, since this is
 /// also where the objects are placed in model space.  The component
 /// objects must specify their vertex coordinates in the same
-/// coordinate system as each other.  If you want to move objects
-/// independently of each other, use multiple drawableCompound objects
-/// within a drawableCollection.  (Or consider using a real scene
-/// graph API, or rewriting this one.)  The view matrix and the
-/// projection matrix are used here, though they are generated and
-/// managed at the scene level.
+/// coordinate system as each other, and they are pretty much stuck
+/// there.  They are not designed to move relative to each other.  If
+/// you want to move objects independently of each other, use multiple
+/// drawableCompound objects within a drawableCollection.  (Or
+/// consider using a real scene graph API, like OSG.)  The view matrix
+/// and the projection matrix are used here, though they are generated
+/// and managed at the scene level.
 ///
 /// The shaders are included in this object as a pointer because many
 /// objects will use the same shader.  So the program that calls this
@@ -827,72 +828,56 @@ class drawableCompound : public drawableMulti {
   
 };
 
+/// \brief A collection of drawable objects.
+///
+/// This is the heart of a scene graph: a collection of drawable
+/// objects that can be nested arbitrarily deeply.  Each object
+/// manages a transformation matrix that it applies to all of its
+/// children, as well as a pointer to a parent object so the
+/// transformations can be applied in the right order.  The objects
+/// are named, so they can be addressed and modified individually.
+///
+/// To use a scene graph, create a collection object like this one to
+/// be the root, making sure it has no parent.  Add objects, or groups
+/// of objects to it, at will.  If you don't assign names to the added
+/// objects, it will come up with a hash-y sort of random-looking name
+/// for you.  There is a getNames() method so you can learn these
+/// random names.  I can't think why someone would want that, but I'm
+/// including it for completeness.
+///
 class drawableCollection : public drawableMulti {
 
   /// We use a pointer to the drawableCompound objects so you can
   /// create an object that inherits from drawableCompound and still
   /// use it here.
-  typedef std::map<std::string, bsgPtr<drawableMulti> > compoundList;
-  compoundList _compoundObjects;
+  typedef std::map<std::string, bsgPtr<drawableMulti> > CollectionMap;
+  CollectionMap _collection;
   
  public:
-  drawableCollection() {
-    // This is for generating hashes for names.
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    srand(tp.tv_usec);
-  };
+  drawableCollection();
   
   /// \brief Add an object to our list.
+  ///
+  /// Using the given name.  You can add objects without a name, too,
+  /// in which case the name is randomly assigned.
   void addObject(const std::string name,
-                 const bsgPtr<drawableMulti> pMultiObject) {
-    pMultiObject->setParent(this);
-    _compoundObjects[name] = pMultiObject;
-  }
+                 const bsgPtr<drawableMulti> pMultiObject);
 
   /// \brief Add an object to our list with a random name.
   ///
   /// Not all applications will need to access members of the scene
   /// individually, so forcing everyone to give every object a name
   /// should not be necessary.
-  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
-
-    addObject(randomName(), pMultiObject);
-  }
+  void addObject(const bsgPtr<drawableMulti> pMultiObject);
 
   /// \brief Retrieve an object by name.
-  bsgPtr<drawableMulti> getObject(const std::string name) {
+  bsgPtr<drawableMulti> getObject(const std::string name);
 
-    compoundList::iterator it = _compoundObjects.find(name);
-
-    // Throwing an error might be a little harsh.
-    if (it == _compoundObjects.end()) {
-      throw std::runtime_error("what object is " + name + "?");
-    } else {
-      return it->second;
-    }
-  }
+  /// \brief Return a list of object names in the collection.
+  std::list<std::string> getNames();
   
   /// \brief A dopey static method to generate a random name.
-  std::string randomName() {
-
-    std::string out = "";
-    for(int i = 0; i < 6; i++) {
-      switch(rand()%3) {
-      case 0:
-        out += ('0' + rand()%10);
-        break;
-      case 1:
-        out += ('A' + rand()%26);
-        break;
-      case 2:
-        out += ('a' + rand()%26);
-        break; 
-      }
-    }
-    return out;
-  }
-
+  static std::string randomName();
   
   /// \brief Gets ready for the drawing sequence.
   ///

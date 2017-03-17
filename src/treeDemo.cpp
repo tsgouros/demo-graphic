@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
 
   rectGroup->addObject("big", bigRectangle);
   rectGroup->addObject("small", smallRectangle);
-  
+
   scene.addObject(rectGroup);
 
   axes = new bsg::drawableAxes(axesShader, 100.0f);
