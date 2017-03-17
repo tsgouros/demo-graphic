@@ -859,16 +859,19 @@ class drawableCollection : public drawableMulti {
   /// \brief Add an object to our list.
   ///
   /// Using the given name.  You can add objects without a name, too,
-  /// in which case the name is randomly assigned.
-  void addObject(const std::string name,
+  /// in which case the name is randomly assigned.  Returns the name
+  /// assigned to the object.
+  std::string addObject(const std::string name,
                  const bsgPtr<drawableMulti> pMultiObject);
 
   /// \brief Add an object to our list with a random name.
   ///
   /// Not all applications will need to access members of the scene
   /// individually, so forcing everyone to give every object a name
-  /// should not be necessary.
-  void addObject(const bsgPtr<drawableMulti> pMultiObject);
+  /// should not be necessary.  But if you want, this version of
+  /// addObject() will come up with a random name, and will return it
+  /// to the calling program.  Some may find this useful.
+  std::string addObject(const bsgPtr<drawableMulti> pMultiObject);
 
   /// \brief Retrieve an object by name.
   bsgPtr<drawableMulti> getObject(const std::string name);

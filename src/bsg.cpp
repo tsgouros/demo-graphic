@@ -641,15 +641,17 @@ drawableCollection::drawableCollection() {
     srand(tp.tv_usec);
 }
 
-void drawableCollection::addObject(const std::string name,
+std::string drawableCollection::addObject(const std::string name,
                                    const bsgPtr<drawableMulti> pMultiObject) {
   pMultiObject->setParent(this);
   _collection[name] = pMultiObject;
+
+  return name;
 }
 
-void drawableCollection::addObject(const bsgPtr<drawableMulti> pMultiObject) {
+std::string drawableCollection::addObject(const bsgPtr<drawableMulti> pMultiObject) {
 
-  addObject(randomName(), pMultiObject);
+  return addObject(randomName(), pMultiObject);
 }
 
 bsgPtr<drawableMulti> drawableCollection::getObject(const std::string name) {
