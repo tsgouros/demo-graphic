@@ -49,6 +49,15 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
+
+  include_directories(
+    ${OPENGL_INCLUDE_DIR}
+    ${FREEGLUT_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}
+    ${GLEW_INCLUDE_DIRS}
+    ${PNG_INCLUDE_DIRS}
+    )
+
   add_executable(demo2 demo2.cpp ${bsg_files})
 
   target_link_libraries(demo2
@@ -81,6 +90,7 @@ if(PNG_FOUND)
       ${FREEGLUT_INCLUDE_DIR}
       ${GLM_INCLUDE_DIR}
       ${GLEW_INCLUDE_DIRS}
+      ${PNG_INCLUDE_DIRS}
       ${MINVR_INCLUDE_DIR}
       )
 
