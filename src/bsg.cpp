@@ -545,7 +545,7 @@ void drawableObj::draw() {
   glDrawArrays(_drawType, 0, _count);
 }
 
-glm::mat4 drawableCompound::getModelMatrix() {
+glm::mat4 drawableMulti::getModelMatrix() {
 
   if (_modelMatrixNeedsReset) {
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), _position);
@@ -563,7 +563,12 @@ glm::mat4 drawableCompound::getModelMatrix() {
     // bsgUtils::printMat("model:", _modelMatrix);
   }
 
-  return _modelMatrix;
+  // If there is a parent, get the parent transformation (model)
+  // matrix and use it with this one.
+  if (_parent) 
+    return _parent->getModelMatrix() * _modelMatrix;
+  else
+    return _modelMatrix;
 }
 
 void drawableCompound::prepare() {
@@ -587,6 +592,10 @@ void drawableCompound::load() {
 
   _pShader->useProgram();
   _pShader->load();
+
+  // Review the current state of the transformation matrices, and pack
+  // them all into the total model matrix.
+  _totalModelMatrix = getModelMatrix();
   
   // Load each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
@@ -604,10 +613,10 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   // Load the model matrix.  This adjusts the position of each object.
   // Remember that all the objects in a compound object use the same
   // shader and the same model matrix.
-  glUniformMatrix4fv(_modelMatrixID, 1, false, &(getModelMatrix())[0][0]);
+  glUniformMatrix4fv(_modelMatrixID, 1, false, &_totalModelMatrix[0][0]);
 
   // Calculate the normal matrix to use for lighting.
-  _normalMatrix = glm::transpose(glm::inverse(viewMatrix * _modelMatrix));
+  _normalMatrix = glm::transpose(glm::inverse(viewMatrix * _totalModelMatrix));
   glUniformMatrix4fv(_normalMatrixID, 1, false, &_normalMatrix[0][0]);
 
   // The view and projection matrices come from the scene object, above us.
@@ -624,6 +633,101 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
     it->draw();
   }  
 }
+
+drawableCollection::drawableCollection() {
+    // Seed a random number generator to generate default names randomly.
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    srand(tp.tv_usec);
+}
+
+void drawableCollection::addObject(const std::string name,
+                                   const bsgPtr<drawableMulti> pMultiObject) {
+  pMultiObject->setParent(this);
+  _collection[name] = pMultiObject;
+}
+
+void drawableCollection::addObject(const bsgPtr<drawableMulti> pMultiObject) {
+
+  addObject(randomName(), pMultiObject);
+}
+
+bsgPtr<drawableMulti> drawableCollection::getObject(const std::string name) {
+
+  CollectionMap::iterator it = _collection.find(name);
+
+  // Throwing an error might be a little harsh.
+  if (it == _collection.end()) {
+    throw std::runtime_error("what object is " + name + "?");
+  } else {
+    return it->second;
+  }
+}
+
+std::list<std::string> drawableCollection::getNames() {
+  
+  std::list<std::string> out;
+  for (CollectionMap::iterator it = _collection.begin();
+       it != _collection.end(); it++) {
+    out.push_back(it->first);
+  }
+
+  return out;
+}    
+
+std::string drawableCollection::randomName() {
+
+  // This is a pretty dopey method, but it seems to work, so long as
+  // the number of characters in each name is big enough.
+  std::string out = "";
+  for(int i = 0; i < 6; i++) {
+    switch(rand()%3) {
+    case 0:
+      out += ('0' + rand()%10);
+      break;
+    case 1:
+      out += ('A' + rand()%26);
+      break;
+    case 2:
+      out += ('a' + rand()%26);
+      break; 
+    }
+  }
+  return out;
+}
+
+
+
+  
+
+  
+void drawableCollection::prepare() {
+
+  for (CollectionMap::iterator it =  _collection.begin();
+       it != _collection.end(); it++) {
+    it->second->prepare();
+  }
+}
+
+void drawableCollection::load() {
+
+  // Then draw all the objects.
+  for (CollectionMap::iterator it =  _collection.begin();
+       it != _collection.end(); it++) {
+    it->second->load();
+  }
+}
+
+void drawableCollection::draw(const glm::mat4 &viewMatrix,
+                              const glm::mat4 &projMatrix) {
+
+  // Then draw all the objects.
+  for (CollectionMap::iterator it =  _collection.begin();
+       it != _collection.end(); it++) {
+    it->second->draw(viewMatrix, projMatrix);
+  }
+}
+
 
 /// \brief Adjust camera position according to input Euler angles.
 ///
@@ -649,71 +753,33 @@ void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) 
   
 void scene::prepare() {
 
-  for (compoundList::iterator it =  _compoundObjects.begin();
-       it != _compoundObjects.end(); it++) {
-    (*it)->prepare();
-  }
+  _sceneRoot.prepare();
 }
 
-void scene::load() {
-
+glm::mat4 scene::getProjMatrix() {
   // Update the projection matrix.  In case of a stereo display, both
   // eyes will use the same projection matrix.
-  glm::mat4 pm = glm::perspective(_fov, _aspect, _nearClip, _farClip);
-
-  load(pm);
-
+  return glm::perspective(_fov, _aspect, _nearClip, _farClip);
 }
 
-void scene::load(glm::mat4& projMatrix) {
-
-  _projMatrix = projMatrix;
-  
-  for (compoundList::iterator it =  _compoundObjects.begin();
-       it != _compoundObjects.end(); it++) {
-    (*it)->load();
-  }
-}
-
-// void scene::draw() {
-
-//   // Update the view matrix.
-//   glm::vec3 dir = glm::normalize(_lookAtPosition - _cameraPosition);
-//   glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
-//   glm::vec3 up = glm::normalize(glm::cross(right, dir));
-
-//   _viewMatrix = glm::lookAt(_cameraPosition, _lookAtPosition, up);
-
-//   // Then draw all the objects.
-//   for (compoundList::iterator it =  _compoundObjects.begin();
-//        it != _compoundObjects.end(); it++) {
-//     (*it)->draw(_viewMatrix, _projMatrix);
-//   }
-// }
-
-void scene::draw() {
-
+glm::mat4 scene::getViewMatrix() {
   // Update the view matrix.
   glm::vec3 dir = glm::normalize(_lookAtPosition - _cameraPosition);
   glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
   glm::vec3 up = glm::normalize(glm::cross(right, dir));
 
-  glm::mat4 vm = glm::lookAt(_cameraPosition, _lookAtPosition, up);
-
-  draw(vm);
-}
-
-void scene::draw(glm::mat4& viewMatrix) {
-
-  _viewMatrix = viewMatrix;
+  return glm::lookAt(_cameraPosition, _lookAtPosition, up);
+}   
   
-  // Then draw all the objects.
-  for (compoundList::iterator it =  _compoundObjects.begin();
-       it != _compoundObjects.end(); it++) {
-    (*it)->draw(_viewMatrix, _projMatrix);
-  }
+void scene::load() {
+
+  _sceneRoot.load();
 }
 
+void scene::draw(const glm::mat4 &viewMatrix,
+                 const glm::mat4 &projMatrix) {
 
+  _sceneRoot.draw(viewMatrix, projMatrix);
+}  
   
 }

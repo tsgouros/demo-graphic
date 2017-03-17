@@ -51,6 +51,15 @@ target_link_libraries(demo
 if(PNG_FOUND)
   #add_executable(demo2 demo2.cpp ${bsg_files})
 
+
+  include_directories(
+    ${OPENGL_INCLUDE_DIR}
+    ${FREEGLUT_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}
+    ${GLEW_INCLUDE_DIRS}
+    ${PNG_INCLUDE_DIRS}
+    )
+
   #target_link_libraries(demo2
   #  ${FREEGLUT_LIBRARY}
   #  ${OPENGL_LIBRARY}
@@ -65,6 +74,14 @@ if(PNG_FOUND)
   #  ${GLEW_LIBRARY}
   #  ${PNG_LIBRARIES})
   
+  add_executable(treeDemo treeDemo.cpp ${bsg_files})
+
+  target_link_libraries(treeDemo
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+  
   if(MINVR_FOUND)
 
     # Redefine the include directories to include MinVR.
@@ -73,6 +90,7 @@ if(PNG_FOUND)
       ${FREEGLUT_INCLUDE_DIR}
       ${GLM_INCLUDE_DIR}
       ${GLEW_INCLUDE_DIRS}
+      ${PNG_INCLUDE_DIRS}
       ${MINVR_INCLUDE_DIR}
       )
 

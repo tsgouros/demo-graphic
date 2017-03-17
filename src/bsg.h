@@ -1,6 +1,8 @@
 #ifndef BSGHEADER
 #define BSGHEADER
 
+#include <sys/time.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdexcept>
@@ -11,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
 #include <iostream>
 #include <fstream>
 
@@ -144,8 +147,10 @@ class bsgPtr {
     }
   }
 
+  operator bool() const { return _pData != 0; };
+  
   T& operator*() { return *_pData; };
-  T* operator->() { return _pData; };
+  T* operator->() const { return _pData; };
 
   /// Assignment operator.
   bsgPtr<T>& operator=(const bsgPtr<T> &sp) {
@@ -587,46 +592,24 @@ class drawableObj {
   void draw();
 };
 
-/// \brief A collection of drawableObj objects.
+/// \brief An abstract class to handle transformation matrices.
 ///
-/// A compound drawable object is made of a bunch of drawableObj
-/// objects but can be considered to be a considered a single object.
-/// It might consist of just one object, but that's ok, since this is
-/// also where the objects are placed in model space.
+/// This class is the common root of drawableCompound and
+/// drawableCollection objects.  It handles the basics of a
+/// transformation matrix, which both of those classes need, and
+/// allows us to define a pointer object that can point equally well
+/// to both.
+
+/// This class is where the model matrix is handled, and it is handled
+/// by combining the internal model matrix (with all the position,
+/// orientation, and scale parameters) with all the model matrices of
+/// the parents above it.
 ///
-/// This is to say that this class is where the model matrix is
-/// handled.  The component objects must specify their vertex
-/// coordinates in the same coordinate system as each other.  If you
-/// want to move objects independently of each other, use different
-/// drawableCompound objects.  (Or consider using a real scene graph
-/// API, or rewriting this one.)  The view matrix and the projection
-/// matrix are used here, though they are generated and managed at the
-/// scene level.
-///
-/// The shaders are included in this object as a pointer because many
-/// objects will use the same shader.  So the program that calls this
-/// should keep three separate lists: the objects in the scene, the
-/// shaders used to render them, and the lights used by those shaders.
-///
-/// This class imposes a small number of restrictions on the shader
-/// code itself, mostly that the matrix names in the shader must match
-/// the matrix names here.  There is a setMatrixNames() method for
-/// that.  Setting things up for the number of lights is also
-/// something that needs to be configured carefully.  See the
-/// lightList documentation.
-///
-class drawableCompound {
+class drawableMulti {
  protected:
 
-  /// The list of objects that make up this compound object.
-  std::list<drawableObj> _objects;
-
-  /// The shader that will be used to render all the pieces of this
-  /// compound object.  Or at least the one they will start with.  You
-  /// can always go back and change the shader for an individual
-  /// object.
-  bsgPtr<shaderMgr> _pShader;
-
+  bsgPtr<drawableMulti> _parent;
+  
   /// The position in model space.
   glm::vec3 _position;
   /// A three-dimensional scale parameter.
@@ -640,80 +623,25 @@ class drawableCompound {
   glm::mat4 _modelMatrix;
   bool _modelMatrixNeedsReset;
 
-  /// We also keep around the inverse transpose model matrix, for
-  /// texture processing.
-  glm::mat4 _normalMatrix;
-  
-  /// These are pairs of ways to reference the matrices that include
-  /// the matrix name (used in the shader) and the ID (used in the
-  /// OpenGL code).  
-  std::string _modelMatrixName;
-  GLuint _modelMatrixID;
-
-  std::string _normalMatrixName;
-  GLuint _normalMatrixID;
-  
-  std::string _viewMatrixName;
-  GLuint _viewMatrixID;
-
-  std::string _projMatrixName;
-  GLuint _projMatrixID;
-  
  public:
- drawableCompound(bsgPtr<shaderMgr> pShader) :
-  _pShader(pShader),
-    // Set the default names for our matrices.
-    _modelMatrixName("modelMatrix"),
-    _normalMatrixName("normalMatrix"),
-    _viewMatrixName("viewMatrix"),
-    _projMatrixName("projMatrix") {
+ drawableMulti() : _parent(0) {
     _position = glm::vec3(0.0f, 0.0f, 0.0f);
     _scale = glm::vec3(1.0f, 1.0f, 1.0f);
     // The glm::quat constructor initializes orientation to be zero
     // rotation by default, so need not be mentioned here.
   };
-
-  /// \brief Set the name of one of the matrices.
-  ///
-  /// This is the name by which this matrix will be known inside your
-  /// shaders.  In other words, these strings must match the "uniform"
-  /// declarations in your shaders.
-  void setMatrixName(GLMATRIXTYPE type, const std::string name) {
-    switch(type) {
-    case(GLMATRIX_MODEL):
-      _modelMatrixName = name;
-      break;
-    case(GLMATRIX_INVMODEL):
-      _normalMatrixName = name;
-      break;
-    case(GLMATRIX_VIEW):
-      _viewMatrixName = name;
-      break;
-    case(GLMATRIX_PROJECTION):
-      _projMatrixName = name;
-      break;
-    }
-  };
- 
-  /// \brief Adds an object to the compound object.
-  ///
-  /// We set the shader to each object to be the same shader for the
-  /// whole compound object.  If you find that objectionable, you are
-  /// probably ready for a more elaborate set of classes to do your
-  /// rendering with.
-  void addObject(drawableObj obj) {
-    _objects.push_back(obj);
-  };    
-
+  virtual ~drawableMulti() {};
+  
+  void setParent(drawableMulti* p) { _parent = p; }
+  
   /// \brief Calculate the model matrix.
   ///
   /// Uses the current position, rotation, and scale to calculate a
   /// new model matrix.  There is an internal flag used to set whether
   /// the model matrix needs to be recalculated or not.
   glm::mat4 getModelMatrix();
-  int getNumObjects() { return _objects.size(); };
 
-  /// \brief Set the model position using a vector.
+    /// \brief Set the model position using a vector.
   void setPosition(glm::vec3 position) {
     _position = position;
     _modelMatrixNeedsReset = true;
@@ -756,23 +684,221 @@ class drawableCompound {
 
   /// \brief Gets ready for the drawing sequence.
   ///
-  void prepare();
+  virtual void prepare() = 0;
   
-  /// \brief Load a compound object.
+  /// \brief Loads an object, gives it a transformation matrix to use.
   ///
-  /// Prepares a compound object to be drawn, including bringing up a
-  /// refreshed model matrix, in case we've moved its position or
-  /// orientation.
-  void load();
+  /// Prepares an object to be drawn, including updating its model
+  /// matrix with whatever position or orientation changes have been
+  /// made, and multiplying it by the input matrix.
+  virtual void load() = 0;
 
-  /// \brief Draws a compound object.
+  /// \brief Draws an object.
   ///
-  /// Just executes draw() for all the component objects.
-  void draw(const glm::mat4 &viewMatrix,
-            const glm::mat4 &projMatrix);
-
+  /// Just executes draw() using the given view and projection matrices.
+  virtual void draw(const glm::mat4 &viewMatrix,
+                    const glm::mat4 &projMatrix) = 0;
+  
 };
 
+  
+/// \brief A collection of drawableObj objects.
+///
+/// A compound drawable object is made of a bunch of drawableObj
+/// objects but can be considered to be a considered a single object.
+/// It might consist of just one object, but that's ok, since this is
+/// also where the objects are placed in model space.  The component
+/// objects must specify their vertex coordinates in the same
+/// coordinate system as each other, and they are pretty much stuck
+/// there.  They are not designed to move relative to each other.  If
+/// you want to move objects independently of each other, use multiple
+/// drawableCompound objects within a drawableCollection.  (Or
+/// consider using a real scene graph API, like OSG.)  The view matrix
+/// and the projection matrix are used here, though they are generated
+/// and managed at the scene level.
+///
+/// The shaders are included in this object as a pointer because many
+/// objects will use the same shader.  So the program that calls this
+/// should keep three separate lists: the objects in the scene, the
+/// shaders used to render them, and the lights used by those shaders.
+///
+/// This class imposes a small number of restrictions on the shader
+/// code itself, mostly that the matrix names in the shader must match
+/// the matrix names here.  There is a setMatrixNames() method for
+/// that.  Setting things up for the number of lights is also
+/// something that needs to be configured carefully.  See the
+/// lightList documentation.
+///
+class drawableCompound : public drawableMulti {
+ protected:
+
+  /// The list of objects that make up this compound object.
+  std::list<drawableObj> _objects;
+
+  /// The shader that will be used to render all the pieces of this
+  /// compound object.  Or at least the one they will start with.  You
+  /// can always go back and change the shader for an individual
+  /// object.
+  bsgPtr<shaderMgr> _pShader;
+
+  /// This is the model matrix of this object, but also all its
+  /// parents, multiplied into one matrix.
+  glm::mat4 _totalModelMatrix;
+  
+  /// We also keep around the inverse transpose model matrix, for
+  /// texture processing.
+  glm::mat4 _normalMatrix;
+  
+  /// These are pairs of ways to reference the matrices that include
+  /// the matrix name (used in the shader) and the ID (used in the
+  /// OpenGL code).  
+  std::string _modelMatrixName;
+  GLuint _modelMatrixID;
+
+  std::string _normalMatrixName;
+  GLuint _normalMatrixID;
+  
+  std::string _viewMatrixName;
+  GLuint _viewMatrixID;
+
+  std::string _projMatrixName;
+  GLuint _projMatrixID;
+  
+ public:
+ drawableCompound(bsgPtr<shaderMgr> pShader) :
+  drawableMulti(),
+    _pShader(pShader),
+    // Set the default names for our matrices.
+    _modelMatrixName("modelMatrix"),
+    _normalMatrixName("normalMatrix"),
+    _viewMatrixName("viewMatrix"),
+    _projMatrixName("projMatrix") {
+  };
+
+  /// \brief Set the name of one of the matrices.
+  ///
+  /// This is the name by which this matrix will be known inside your
+  /// shaders.  In other words, these strings must match the "uniform"
+  /// declarations in your shaders.
+  void setMatrixName(GLMATRIXTYPE type, const std::string name) {
+    switch(type) {
+    case(GLMATRIX_MODEL):
+      _modelMatrixName = name;
+      break;
+    case(GLMATRIX_INVMODEL):
+      _normalMatrixName = name;
+      break;
+    case(GLMATRIX_VIEW):
+      _viewMatrixName = name;
+      break;
+    case(GLMATRIX_PROJECTION):
+      _projMatrixName = name;
+      break;
+    }
+  };
+ 
+  /// \brief Adds an object to the compound object.
+  ///
+  /// We set the shader to each object to be the same shader for the
+  /// whole compound object.  If you find that objectionable, you are
+  /// probably ready for a more elaborate set of classes to do your
+  /// rendering with.
+  void addObject(drawableObj obj) {
+    _objects.push_back(obj);
+  };    
+
+  int getNumObjects() { return _objects.size(); };
+
+  /// \brief Gets ready for the drawing sequence.
+  ///
+  void prepare();
+  
+  /// \brief Loads an object, gives it a transformation matrix to use.
+  ///
+  /// Prepares an object to be drawn, including updating its model
+  /// matrix with whatever position or orientation changes have been
+  /// made, and multiplying it by the input matrix.
+  void load();
+
+  /// \brief Draws an object.
+  ///
+  /// Just executes draw() using the given view and projection matrices.
+  void draw(const glm::mat4 &viewMatrix,
+            const glm::mat4 &projMatrix);
+  
+};
+
+/// \brief A collection of drawable objects.
+///
+/// This is the heart of a scene graph: a collection of drawable
+/// objects that can be nested arbitrarily deeply.  Each object
+/// manages a transformation matrix that it applies to all of its
+/// children, as well as a pointer to a parent object so the
+/// transformations can be applied in the right order.  The objects
+/// are named, so they can be addressed and modified individually.
+///
+/// To use a scene graph, create a collection object like this one to
+/// be the root, making sure it has no parent.  Add objects, or groups
+/// of objects to it, at will.  If you don't assign names to the added
+/// objects, it will come up with a hash-y sort of random-looking name
+/// for you.  There is a getNames() method so you can learn these
+/// random names.  I can't think why someone would want that, but I'm
+/// including it for completeness.
+///
+class drawableCollection : public drawableMulti {
+
+  /// We use a pointer to the drawableCompound objects so you can
+  /// create an object that inherits from drawableCompound and still
+  /// use it here.
+  typedef std::map<std::string, bsgPtr<drawableMulti> > CollectionMap;
+  CollectionMap _collection;
+  
+ public:
+  drawableCollection();
+  
+  /// \brief Add an object to our list.
+  ///
+  /// Using the given name.  You can add objects without a name, too,
+  /// in which case the name is randomly assigned.
+  void addObject(const std::string name,
+                 const bsgPtr<drawableMulti> pMultiObject);
+
+  /// \brief Add an object to our list with a random name.
+  ///
+  /// Not all applications will need to access members of the scene
+  /// individually, so forcing everyone to give every object a name
+  /// should not be necessary.
+  void addObject(const bsgPtr<drawableMulti> pMultiObject);
+
+  /// \brief Retrieve an object by name.
+  bsgPtr<drawableMulti> getObject(const std::string name);
+
+  /// \brief Return a list of object names in the collection.
+  std::list<std::string> getNames();
+  
+  /// \brief A dopey static method to generate a random name.
+  static std::string randomName();
+  
+  /// \brief Gets ready for the drawing sequence.
+  ///
+  void prepare();
+  
+  /// \brief Loads an object, gives it a transformation matrix to use.
+  ///
+  /// Prepares an object to be drawn, including updating its model
+  /// matrix with whatever position or orientation changes have been
+  /// made, and multiplying it by the input matrix.
+  void load();
+
+  /// \brief Draws an object.
+  ///
+  /// Just executes draw() using the given view and projection
+  /// matrices.
+  void draw(const glm::mat4 &viewMatrix,
+            const glm::mat4 &projMatrix);
+  
+};
+ 
 /// \brief A collection of drawableCompound objects that make up a
 /// scene.
 ///
@@ -782,12 +908,9 @@ class drawableCompound {
 ///
 class scene {
  private:
-  /// We use a pointer to the drawableCompound objects so you can
-  /// create an object that inherits from drawableCompound and still
-  /// use it here.
-  typedef std::list<bsgPtr<drawableCompound> > compoundList;
-  compoundList _compoundObjects;
 
+  drawableCollection _sceneRoot;
+  
   glm::mat4 _viewMatrix;
   glm::mat4 _projMatrix;
 
@@ -798,9 +921,6 @@ class scene {
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
-  
-  glm::mat4 _calculateViewMatrix();
-  glm::mat4 _calculateProjMatrix();
   
  public:
   scene() {
@@ -831,24 +951,6 @@ class scene {
   /// \brief Rotates the camera location around the lookat point.
   void addToCameraViewAngle(const float horizAngle, const float vertAngle);
 
-  /// \brief Return the view matrix.
-  ///
-  /// This function recalculates the view matrix, based on the camera
-  /// position and lookat point.
-  glm::mat4 getViewMatrix() {
-    _viewMatrix = _calculateViewMatrix();
-    return _viewMatrix;
-  }
-
-  /// \brief Return a projection matrix.
-  ///
-  /// This function recalculates a projection matrix based on the
-  /// window size (aspect ratio) and clip parameters.
-  glm::mat4 getProjMatrix() {
-    _projMatrix = _calculateProjMatrix();
-    return _projMatrix;
-  }
-
   /// \brief Set the field of view.  In radians.
   void setFOV(float fov) { _fov = fov; };
 
@@ -856,8 +958,14 @@ class scene {
   void setAspect(float aspect) { _aspect = aspect; };
 
   /// \brief Add a compound object to our scene.
-  void addCompound(const bsgPtr<drawableCompound> pCompoundObject) {
-      _compoundObjects.push_back( pCompoundObject);
+  void addObject(const std::string name,
+                 const bsgPtr<drawableMulti> pMultiObject) {
+    _sceneRoot.addObject(name, pMultiObject);
+  }
+
+  /// \brief Add a compound object to our scene with a random name.
+  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
+    _sceneRoot.addObject(_sceneRoot.randomName(), pMultiObject);
   }
 
   /// \brief Prepare the scene to be drawn.
@@ -866,21 +974,38 @@ class scene {
   /// member compound elements.
   void prepare();
 
-  /// \brief Generates a projection matrix and loads all the compound elements.
-  void load();
-  /// \brief Loads all the compound elements.
+  /// \brief Generates a projection matrix.
   ///
-  /// But you supply the projection matrix.
-  void load(glm::mat4 &projMatrix);
+  /// From the field of view and clip planes.  For use in desktop and
+  /// other non-VR applications.
+  glm::mat4 getProjMatrix();
 
+  /// \brief Generates a view matrix.
+  ///
+  /// Uses the internal lookat positino and camera position to
+  /// generate a view matrix.  For use in desktop and other non-VR
+  /// applications.
+  glm::mat4 getViewMatrix();
+  
+  /// \brief Loads all the compound elements.
+  void load();
+  
   /// \brief Generates a view matrix and draws all the compound elements.
+  ///
+  /// The view matrix generated here, like the projection matrix
+  /// generated in load(), is for use when running on a desktop.  In a
+  /// VR environment, the view and projection matrices are provided.
   void draw();
 
-  /// \brief Draws all the compound elements.
+
+  /// \brief Draws using the given matrices.
   ///
-  /// But you supply the view matrix.
-  void draw(glm::mat4 &viewMatrix);
-  
+  /// Use this method to execute a render using the given
+  /// transformation matrices.
+  void draw(const glm::mat4 &viewMatrix,
+            const glm::mat4 &projMatrix);
+
+
 };
 
 
