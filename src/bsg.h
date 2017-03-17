@@ -836,7 +836,13 @@ class drawableCollection : public drawableMulti {
   compoundList _compoundObjects;
   
  public:
-
+  drawableCollection() {
+    // This is for generating hashes for names.
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    srand(tp.tv_usec);
+  };
+  
   /// \brief Add an object to our list.
   void addObject(const std::string name,
                  const bsgPtr<drawableMulti> pMultiObject) {
@@ -845,15 +851,21 @@ class drawableCollection : public drawableMulti {
   }
 
   /// \brief Add an object to our list with a random name.
+  ///
+  /// Not all applications will need to access members of the scene
+  /// individually, so forcing everyone to give every object a name
+  /// should not be necessary.
   void addObject(const bsgPtr<drawableMulti> pMultiObject) {
 
     addObject(randomName(), pMultiObject);
   }
 
+  /// \brief Retrieve an object by name.
   bsgPtr<drawableMulti> getObject(const std::string name) {
 
     compoundList::iterator it = _compoundObjects.find(name);
 
+    // Throwing an error might be a little harsh.
     if (it == _compoundObjects.end()) {
       throw std::runtime_error("what object is " + name + "?");
     } else {
@@ -861,23 +873,23 @@ class drawableCollection : public drawableMulti {
     }
   }
   
-  /// \brief A static method to generate a random name.
-  ///
+  /// \brief A dopey static method to generate a random name.
   std::string randomName() {
 
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    // get the last digit
-    double td = tp.tv_usec / 26.0f;
-    long long ti = td;
-    double dec = td - (double)ti;
-    int d = (int)(10 * dec);
-    char c = 0x40 + d;
-
-    std::string out = std::string(1, c);
-
-    std::cout << "rand: " << d << "," << out << std::endl;
-    
+    std::string out = "";
+    for(int i = 0; i < 6; i++) {
+      switch(rand()%3) {
+      case 0:
+        out += ('0' + rand()%10);
+        break;
+      case 1:
+        out += ('A' + rand()%26);
+        break;
+      case 2:
+        out += ('a' + rand()%26);
+        break; 
+      }
+    }
     return out;
   }
 
