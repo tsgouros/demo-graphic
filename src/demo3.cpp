@@ -1,5 +1,4 @@
 #include "bsg.h"
-#include "bsgObjModel.h"
 
 #include <api/MinVR.h>
 
@@ -20,8 +19,6 @@ private:
   // function and the renderScene() function.
   bsg::drawableCompound* _tetrahedron;
   bsg::drawableCompound* _axesSet;
-  bsg::drawableObjModel* _box;
-
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
@@ -273,9 +270,6 @@ private:
     // Now add our tetrahedron to the scene.
     _scene.addObject(_tetrahedron);
 
-    _box = new bsg::drawableObjModel(_shader, "../data/test.obj");//"../data/LEGO_Man.obj");
-_scene.addCompound(_box);
-
     _axesSet = new bsg::drawableCompound(_shader);
     _axesSet->addObject(_axes);
 
@@ -442,3 +436,4 @@ int main(int argc, char **argv) {
 
 
   
+
