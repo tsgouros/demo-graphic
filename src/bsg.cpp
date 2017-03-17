@@ -593,6 +593,8 @@ void drawableCompound::load() {
   _pShader->useProgram();
   _pShader->load();
 
+  // Review the current state of the transformation matrices, and pack
+  // them all into the total model matrix.
   _totalModelMatrix = getModelMatrix();
   
   // Load each component object.
@@ -632,6 +634,34 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   }  
 }
 
+void drawableCollection::prepare() {
+
+  for (compoundList::iterator it =  _compoundObjects.begin();
+       it != _compoundObjects.end(); it++) {
+    (*it)->prepare();
+  }
+}
+
+void drawableCollection::load() {
+
+  // Then draw all the objects.
+  for (compoundList::iterator it =  _compoundObjects.begin();
+       it != _compoundObjects.end(); it++) {
+    (*it)->load();
+  }
+}
+
+void drawableCollection::draw(const glm::mat4 &viewMatrix,
+                              const glm::mat4 &projMatrix) {
+
+  // Then draw all the objects.
+  for (compoundList::iterator it =  _compoundObjects.begin();
+       it != _compoundObjects.end(); it++) {
+    (*it)->draw(viewMatrix, projMatrix);
+  }
+}
+
+
 /// \brief Adjust camera position according to input Euler angles.
 ///
 /// We use quaternions in the implementation because they provide a
@@ -656,71 +686,33 @@ void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) 
   
 void scene::prepare() {
 
-  for (compoundList::iterator it =  _compoundObjects.begin();
-       it != _compoundObjects.end(); it++) {
-    (*it)->prepare();
-  }
+  _sceneRoot.prepare();
 }
 
-void scene::load() {
-
+glm::mat4 scene::getProjMatrix() {
   // Update the projection matrix.  In case of a stereo display, both
   // eyes will use the same projection matrix.
-  glm::mat4 pm = glm::perspective(_fov, _aspect, _nearClip, _farClip);
-
-  load(pm);
-
+  return glm::perspective(_fov, _aspect, _nearClip, _farClip);
 }
 
-void scene::load(glm::mat4& projMatrix) {
-
-  _projMatrix = projMatrix;
-  
-  for (compoundList::iterator it =  _compoundObjects.begin();
-       it != _compoundObjects.end(); it++) {
-    (*it)->load();
-  }
-}
-
-// void scene::draw() {
-
-//   // Update the view matrix.
-//   glm::vec3 dir = glm::normalize(_lookAtPosition - _cameraPosition);
-//   glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
-//   glm::vec3 up = glm::normalize(glm::cross(right, dir));
-
-//   _viewMatrix = glm::lookAt(_cameraPosition, _lookAtPosition, up);
-
-//   // Then draw all the objects.
-//   for (compoundList::iterator it =  _compoundObjects.begin();
-//        it != _compoundObjects.end(); it++) {
-//     (*it)->draw(_viewMatrix, _projMatrix);
-//   }
-// }
-
-void scene::draw() {
-
+glm::mat4 scene::getViewMatrix() {
   // Update the view matrix.
   glm::vec3 dir = glm::normalize(_lookAtPosition - _cameraPosition);
   glm::vec3 right = glm::cross(dir, glm::vec3(0.0f, 1.0f, 0.0f));
   glm::vec3 up = glm::normalize(glm::cross(right, dir));
 
-  glm::mat4 vm = glm::lookAt(_cameraPosition, _lookAtPosition, up);
-
-  draw(vm);
-}
-
-void scene::draw(glm::mat4& viewMatrix) {
-
-  _viewMatrix = viewMatrix;
+  return glm::lookAt(_cameraPosition, _lookAtPosition, up);
+}   
   
-  // Then draw all the objects.
-  for (compoundList::iterator it =  _compoundObjects.begin();
-       it != _compoundObjects.end(); it++) {
-    (*it)->draw(_viewMatrix, _projMatrix);
-  }
+void scene::load() {
+
+  _sceneRoot.load();
 }
 
+void scene::draw(const glm::mat4 &viewMatrix,
+                 const glm::mat4 &projMatrix) {
 
+  _sceneRoot.draw(viewMatrix, projMatrix);
+}  
   
 }

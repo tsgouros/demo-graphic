@@ -172,13 +172,13 @@ private:
     _rectangle = new bsg::drawableRectangle(_shader, 3.0f, 5.0f);
 
     // Now add our rectangle to the scene.
-    _scene.addCompound(_rectangle);
+    _scene.addObject(_rectangle);
 
     _axesSet = new bsg::drawableCompound(_shader);
     _axesSet->addObject(_axes);
 
     // Now add the axes.
-    _scene.addCompound(_axesSet);
+    _scene.addObject(_axesSet);
 
     // All the shapes are now added to the scene.
   }
@@ -285,7 +285,7 @@ public:
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
       //bsg::bsgUtils::printMat("proj", projMatrix);
-      _scene.load(projMatrix);
+      _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
       const float* vm = renderState.getViewMatrix();
@@ -295,7 +295,7 @@ public:
                                         vm[12],vm[13],vm[14],vm[15]);
 
       //bsg::bsgUtils::printMat("view", viewMatrix);
-      _scene.draw(viewMatrix);
+      _scene.draw(viewMatrix, projMatrix);
 
       // We let MinVR swap the graphics buffers.
       // glutSwapBuffers();

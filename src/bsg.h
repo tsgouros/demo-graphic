@@ -147,7 +147,7 @@ class bsgPtr {
   operator bool() const { return _pData != 0; };
   
   T& operator*() { return *_pData; };
-  T* operator->() { return _pData; };
+  T* operator->() const { return _pData; };
 
   /// Assignment operator.
   bsgPtr<T>& operator=(const bsgPtr<T> &sp) {
@@ -596,6 +596,12 @@ class drawableObj {
 /// transformation matrix, which both of those classes need, and
 /// allows us to define a pointer object that can point equally well
 /// to both.
+
+/// This class is where the model matrix is handled, and it is handled
+/// by combining the internal model matrix (with all the position,
+/// orientation, and scale parameters) with all the model matrices of
+/// the parents above it.
+///
 class drawableMulti {
  protected:
 
@@ -698,16 +704,14 @@ class drawableMulti {
 /// A compound drawable object is made of a bunch of drawableObj
 /// objects but can be considered to be a considered a single object.
 /// It might consist of just one object, but that's ok, since this is
-/// also where the objects are placed in model space.
-///
-/// This is to say that this class is where the model matrix is
-/// handled.  The component objects must specify their vertex
-/// coordinates in the same coordinate system as each other.  If you
-/// want to move objects independently of each other, use different
-/// drawableCompound objects.  (Or consider using a real scene graph
-/// API, or rewriting this one.)  The view matrix and the projection
-/// matrix are used here, though they are generated and managed at the
-/// scene level.
+/// also where the objects are placed in model space.  The component
+/// objects must specify their vertex coordinates in the same
+/// coordinate system as each other.  If you want to move objects
+/// independently of each other, use multiple drawableCompound objects
+/// within a drawableCollection.  (Or consider using a real scene
+/// graph API, or rewriting this one.)  The view matrix and the
+/// projection matrix are used here, though they are generated and
+/// managed at the scene level.
 ///
 /// The shaders are included in this object as a pointer because many
 /// objects will use the same shader.  So the program that calls this
@@ -820,6 +824,42 @@ class drawableCompound : public drawableMulti {
   
 };
 
+class drawableCollection : public drawableMulti {
+
+  /// We use a pointer to the drawableCompound objects so you can
+  /// create an object that inherits from drawableCompound and still
+  /// use it here.
+  typedef std::list<bsgPtr<drawableMulti> > compoundList;
+  compoundList _compoundObjects;
+  
+ public:
+
+  /// \brief Add an object to our list.
+  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
+    pMultiObject->setParent(this);
+    _compoundObjects.push_back(pMultiObject);
+  }
+
+  /// \brief Gets ready for the drawing sequence.
+  ///
+  void prepare();
+  
+  /// \brief Loads an object, gives it a transformation matrix to use.
+  ///
+  /// Prepares an object to be drawn, including updating its model
+  /// matrix with whatever position or orientation changes have been
+  /// made, and multiplying it by the input matrix.
+  void load();
+
+  /// \brief Draws an object.
+  ///
+  /// Just executes draw() using the given view and projection
+  /// matrices.
+  void draw(const glm::mat4 &viewMatrix,
+            const glm::mat4 &projMatrix);
+  
+};
+ 
 /// \brief A collection of drawableCompound objects that make up a
 /// scene.
 ///
@@ -829,12 +869,9 @@ class drawableCompound : public drawableMulti {
 ///
 class scene {
  private:
-  /// We use a pointer to the drawableCompound objects so you can
-  /// create an object that inherits from drawableCompound and still
-  /// use it here.
-  typedef std::list<bsgPtr<drawableMulti> > compoundList;
-  compoundList _compoundObjects;
 
+  drawableCollection _sceneRoot;
+  
   glm::mat4 _viewMatrix;
   glm::mat4 _projMatrix;
 
@@ -845,9 +882,6 @@ class scene {
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
-  
-  glm::mat4 _calculateViewMatrix();
-  glm::mat4 _calculateProjMatrix();
   
  public:
   scene() {
@@ -878,24 +912,6 @@ class scene {
   /// \brief Rotates the camera location around the lookat point.
   void addToCameraViewAngle(const float horizAngle, const float vertAngle);
 
-  /// \brief Return the view matrix.
-  ///
-  /// This function recalculates the view matrix, based on the camera
-  /// position and lookat point.
-  glm::mat4 getViewMatrix() {
-    _viewMatrix = _calculateViewMatrix();
-    return _viewMatrix;
-  }
-
-  /// \brief Return a projection matrix.
-  ///
-  /// This function recalculates a projection matrix based on the
-  /// window size (aspect ratio) and clip parameters.
-  glm::mat4 getProjMatrix() {
-    _projMatrix = _calculateProjMatrix();
-    return _projMatrix;
-  }
-
   /// \brief Set the field of view.  In radians.
   void setFOV(float fov) { _fov = fov; };
 
@@ -903,8 +919,8 @@ class scene {
   void setAspect(float aspect) { _aspect = aspect; };
 
   /// \brief Add a compound object to our scene.
-  void addCompound(const bsgPtr<drawableMulti> pCompoundObject) {
-      _compoundObjects.push_back( pCompoundObject);
+  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
+    _sceneRoot.addObject(pMultiObject);
   }
 
   /// \brief Prepare the scene to be drawn.
@@ -913,21 +929,38 @@ class scene {
   /// member compound elements.
   void prepare();
 
-  /// \brief Generates a projection matrix and loads all the compound elements.
-  void load();
-  /// \brief Loads all the compound elements.
+  /// \brief Generates a projection matrix.
   ///
-  /// But you supply the projection matrix.
-  void load(glm::mat4 &projMatrix);
+  /// From the field of view and clip planes.  For use in desktop and
+  /// other non-VR applications.
+  glm::mat4 getProjMatrix();
 
+  /// \brief Generates a view matrix.
+  ///
+  /// Uses the internal lookat positino and camera position to
+  /// generate a view matrix.  For use in desktop and other non-VR
+  /// applications.
+  glm::mat4 getViewMatrix();
+  
+  /// \brief Loads all the compound elements.
+  void load();
+  
   /// \brief Generates a view matrix and draws all the compound elements.
+  ///
+  /// The view matrix generated here, like the projection matrix
+  /// generated in load(), is for use when running on a desktop.  In a
+  /// VR environment, the view and projection matrices are provided.
   void draw();
 
-  /// \brief Draws all the compound elements.
+
+  /// \brief Draws using the given matrices.
   ///
-  /// But you supply the view matrix.
-  void draw(glm::mat4 &viewMatrix);
-  
+  /// Use this method to execute a render using the given
+  /// transformation matrices.
+  void draw(const glm::mat4 &viewMatrix,
+            const glm::mat4 &projMatrix);
+
+
 };
 
 

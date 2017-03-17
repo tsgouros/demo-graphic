@@ -64,7 +64,7 @@ void renderScene() {
   // The draw step loads a view matrix using the current camera
   // position, and then calls the draw() method for each of the
   // compound objects that make up the scene.
-  scene.draw();
+  scene.draw(scene.getViewMatrix(), scene.getProjMatrix());
 
   // Swap the graphics buffers.
   glutSwapBuffers();
@@ -316,11 +316,11 @@ int main(int argc, char **argv) {
   // separately.
   rectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f,3);
 
-  scene.addCompound(rectangle);
+  scene.addObject(rectangle);
 
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 
-  scene.addCompound(axes);
+  scene.addObject(axes);
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));

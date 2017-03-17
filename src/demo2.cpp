@@ -64,7 +64,7 @@ void renderScene() {
   // The draw step loads a view matrix using the current camera
   // position, and then calls the draw() method for each of the
   // compound objects that make up the scene.
-  scene.draw();
+  scene.draw(scene.getViewMatrix(), scene.getProjMatrix());
 
   // Swap the graphics buffers.
   glutSwapBuffers();
@@ -438,19 +438,19 @@ int main(int argc, char **argv) {
   tetrahedron->addObject(topShape);
   tetrahedron->addObject(bottomShape);
 
-  scene.addCompound(tetrahedron);
+  scene.addObject(tetrahedron);
 
   // You can also use the new bsgMenagerie for some simple shapes.
   // Refer to the bsgMenagerie.h file for more information about the
-  // available shapes.  Try commenting out the above addCompound()
+  // available shapes.  Try commenting out the above addObject()
   // call and replacing it with the following.
   // bsg::drawableRectangle* rect = new bsg::drawableRectangle(shader, 3.0f, 5.0f);
-  // scene.addCompound(rect);
+  // scene.addObject(rect);
   
   axesSet = new bsg::drawableCompound(shader);
   axesSet->addObject(axes);
 
-  scene.addCompound(axesSet);
+  scene.addObject(axesSet);
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
