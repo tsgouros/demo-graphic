@@ -18,7 +18,7 @@ find_package(GLEW REQUIRED)
 message("-- GLEW library:     " ${GLEW_LIBRARY})
 message("-- GLEW includes:    " ${GLEW_INCLUDE_DIRS})
 
-find_package(PNG 1.4 MODULE)
+find_package(PNG MODULE)
 message("-- PNG includes:     " ${PNG_INCLUDE_DIRS})
 message("-- PNG library:      " ${PNG_LIBRARIES})
 
@@ -33,8 +33,8 @@ include_directories(
   ${GLEW_INCLUDE_DIRS}
   )
 
-set(bsg_headers bsg.h bsgMenagerie.h)
-set(bsg_sources bsg.cpp bsgMenagerie.cpp)
+set(bsg_headers bsg.h bsgMenagerie.h bsgObjModel.h)
+set(bsg_sources bsg.cpp bsgMenagerie.cpp bsgObjModel.cpp)
 set(bsg_files ${bsg_headers} ${bsg_sources})
 
 add_library(bsg ${bsg_files})
@@ -49,7 +49,6 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
-
   include_directories(
     ${OPENGL_INCLUDE_DIR}
     ${FREEGLUT_INCLUDE_DIR}
@@ -61,18 +60,18 @@ if(PNG_FOUND)
   add_executable(demo2 demo2.cpp ${bsg_files})
 
   target_link_libraries(demo2
-    ${FREEGLUT_LIBRARY}
-    ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY}
-    ${PNG_LIBRARIES})
+   ${FREEGLUT_LIBRARY}
+   ${OPENGL_LIBRARY}
+   ${GLEW_LIBRARY}
+   ${PNG_LIBRARIES})
 
   add_executable(textureDemo textureDemo.cpp ${bsg_files})
 
   target_link_libraries(textureDemo
-    ${FREEGLUT_LIBRARY}
-    ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY}
-    ${PNG_LIBRARIES})
+   ${FREEGLUT_LIBRARY}
+   ${OPENGL_LIBRARY}
+   ${GLEW_LIBRARY}
+   ${PNG_LIBRARIES})
   
   add_executable(treeDemo treeDemo.cpp ${bsg_files})
 
@@ -106,15 +105,24 @@ if(PNG_FOUND)
     add_executable(demo4 demo4.cpp ${bsg_files})
 
     target_link_libraries(demo4
-      ${MINVR_LIBRARY}
-      ${FREEGLUT_LIBRARY}
-      ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY}
-      ${PNG_LIBRARIES})
+     ${MINVR_LIBRARY}
+     ${FREEGLUT_LIBRARY}
+     ${OPENGL_LIBRARY}
+     ${GLEW_LIBRARY}
+     ${PNG_LIBRARIES})
     
     add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
 
     target_link_libraries(textureDemoMinVR
+     ${MINVR_LIBRARY}
+     ${FREEGLUT_LIBRARY}
+     ${OPENGL_LIBRARY}
+     ${GLEW_LIBRARY}
+     ${PNG_LIBRARIES})
+
+    add_executable(objDemoMinVR objDemoMinVR.cpp ${bsg_files})
+
+    target_link_libraries(objDemoMinVR
       ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
