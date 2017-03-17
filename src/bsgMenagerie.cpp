@@ -58,13 +58,13 @@ namespace bsg {
       _frontFace.addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
       _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
       _frontFace.addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
-      _frontFace.setDrawType(GL_TRIANGLE_STRIP);  
+      _frontFace.setDrawType(GL_TRIANGLE_STRIP, frontFaceVertices.size());  
 
       _backFace.addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
       _backFace.addData(bsg::GLDATA_COLORS, "color", backFaceColors);
       _backFace.addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
       _backFace.addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
-      _backFace.setDrawType(GL_TRIANGLE_STRIP);  
+      _backFace.setDrawType(GL_TRIANGLE_STRIP, backFaceVertices.size());  
 
       addObject(_frontFace);
       addObject(_backFace);
