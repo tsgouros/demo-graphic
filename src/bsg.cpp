@@ -60,11 +60,45 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
   case texturePNG:
     _textureBufferID = _loadPNG(fileName);
     break;
+
+  case textureCHK:
+    _textureBufferID = _loadCheckerBoard (64, 8);
+    break;
     
   default:
     throw std::runtime_error("What texture type is this?");
   }
 }
+
+GLuint textureMgr::_loadCheckerBoard (int size, int numFields) {
+  _width = size;
+  _height = size;
+  int fieldWidth = size/numFields;
+
+  GLubyte image[size][size][3];
+
+  // Create a checkerboard pattern
+  for ( int i = 0; i < size; i++ ) {
+    for ( int j = 0; j < size; j++ ) {
+      GLubyte c = 31;
+      if ((i/fieldWidth)%2 == (j/fieldWidth)%2) {c = 255;}
+        image[i][j][0]  = c;
+        image[i][j][1]  = c;
+        image[i][j][2]  = c;
+      }
+    }
+
+  GLuint texture;
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height,
+               0, GL_RGB, GL_UNSIGNED_BYTE, image);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+  return texture;
+}
+
 
 GLuint textureMgr::_loadPNG(const std::string imagePath) {
   
