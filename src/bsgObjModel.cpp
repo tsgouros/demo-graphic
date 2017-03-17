@@ -11,7 +11,7 @@ namespace bsg {
     std::vector<int> front_face_list;
     std::vector<int> back_face_list;
 
-std::ifstream fileObject(_fileName.c_str(), std::ios::in);
+    std::ifstream fileObject(_fileName.c_str(), std::ios::in);
     std::string fileObjectLine;
 
     if (fileObject.is_open()) {
@@ -71,8 +71,7 @@ std::ifstream fileObject(_fileName.c_str(), std::ios::in);
 			} else {
 				sscanf(fileObjectLine.c_str(),"%d//%d %d//%d %d//%d %d//%d", &v1, &vn1, &v2, &vn2, &v3, &vn3, &v4, &vn4);
 			}
-		}
-		
+		}		
                 		
                 front_face_list.push_back(v1-1);				
                 front_face_list.push_back(vn1-1);					
@@ -119,7 +118,7 @@ std::ifstream fileObject(_fileName.c_str(), std::ios::in);
         }
     }
 
-	int nEntries = front_face_list.size()/3;
+    int nEntries = front_face_list.size()/3;
 
     std::vector<glm::vec4> frontFaceVertices = std::vector<glm::vec4>(nEntries);
     std::vector<glm::vec4> frontFaceColors = std::vector<glm::vec4>(nEntries);
@@ -133,37 +132,28 @@ std::ifstream fileObject(_fileName.c_str(), std::ios::in);
     for(int i=0; i < front_face_list.size(); i+=3) {
 	
         int iv = front_face_list[i]*3;
-	//glm::vec4 test = glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f);
-
 	frontFaceVertices[i/3] = glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f);
-
-	//std::cout <<"blu"<< frontFaceVertices[0].x;
-	//std::cout << ", " << frontFaceVertices.begin() << ", " << test.z << std::endl;
 	iv = back_face_list[i]*3;
 
 	backFaceVertices[i/3] = (glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f));
 
         int ivn = front_face_list[i+1]*3;
-	//std::cout << iv <<", "<<ivn<<"; ";
 	if (ivn > -1) {        
 		frontFaceNormals[i/3] = (glm::vec4(normal_list[ivn], normal_list[ivn+1], normal_list[ivn+2], 1.0f));
 		ivn = back_face_list[i+1]*3;
 		backFaceNormals[i/3] = (glm::vec4(-normal_list[ivn], -normal_list[ivn+1], -normal_list[ivn+2], 1.0f));
-		//std::cout << ivn << std::endl;
 	} else {
 		if (i%9 == 6) {
 			glm::vec3 a = glm::vec3(frontFaceVertices[(i/3)-2]) - glm::vec3(frontFaceVertices[(i/3)-1]);
 			glm::vec3 b = glm::vec3(frontFaceVertices[(i/3)-2]) - glm::vec3(frontFaceVertices[(i/3)]);
 			glm::vec3 normal = glm::normalize(glm::cross(a,b));
 			glm::vec4 n4 = glm::vec4(normal, 1.0f);
-			frontFaceNormals.push_back(n4);
-			frontFaceNormals.push_back(n4);
-			frontFaceNormals.push_back(n4);
-			backFaceNormals.push_back(-n4);
-			backFaceNormals.push_back(-n4);
-			backFaceNormals.push_back(-n4);
-
-			std::cout << "normal "<< i/3<< ": "<< n4.x << ", " << n4.y << ", " << n4.z << std::endl;
+			frontFaceNormals[i/3-2] = (n4);
+			frontFaceNormals[i/3-1] = (n4);
+			frontFaceNormals[i/3] = (n4);
+			backFaceNormals[i/3-2] = (-n4);
+			backFaceNormals[i/3-1] = (-n4);
+			backFaceNormals[i/3] = (-n4);
 		}
 	}
 
@@ -171,13 +161,12 @@ std::ifstream fileObject(_fileName.c_str(), std::ios::in);
 	backFaceColors[i/3] = (glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
         int ivt = front_face_list[i+2]*2;
-        frontFaceUVs[i/3] = (glm::vec2(uv_list[ivn], uv_list[ivt+1]));
+        frontFaceUVs[i/3] = (glm::vec2(uv_list[ivt], uv_list[ivt+1]));
 	ivt = back_face_list[i+2]*2;
-	backFaceUVs[i/3] = (glm::vec2(uv_list[ivn], uv_list[ivt+1]));
-
+	backFaceUVs[i/3] = (glm::vec2(uv_list[ivt], uv_list[ivt+1]));
     }
 
-_frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
+      _frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
       _frontFace.addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
       _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
       _frontFace.addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
@@ -193,6 +182,4 @@ _frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
       addObject(_backFace);
 
   }
-
-  
 }

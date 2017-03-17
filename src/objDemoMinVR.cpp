@@ -21,7 +21,8 @@ private:
   // function and the renderScene() function.
   bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
-  bsg::drawableObjModel* _box;
+  bsg::drawableObjModel* _model;
+
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
@@ -139,7 +140,8 @@ private:
 
     // Add a texture to our shader manager object.
     bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
-    texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    //texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    texture->readFile(bsg::textureCHK, "");
     _shader->addTexture(texture);
     
     // We could put the axes and the rectangle in the same compound
@@ -148,19 +150,20 @@ private:
     _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
     // Now add our rectangle to the scene.
-    _scene.addCompound(_rectangle);
+    //_scene.addObject(_rectangle);
 
-    _box = new bsg::drawableObjModel(_shader, "../data/test.obj");
-    _scene.addCompound(_box);
-
-    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/textureShader.vp");
-    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/textureShader.fp");
+    _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    _model->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
+    _scene.addObject(_model);
+ 
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
 
     // Now add the axes.
-    _scene.addCompound(_axesSet);
+    _scene.addObject(_axesSet);
 
     // All the shapes are now added to the scene.
   }
@@ -268,8 +271,7 @@ public:
                                         pm[4],  pm[5], pm[6], pm[7],
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
-      //bsg::bsgUtils::printMat("proj", projMatrix);
-      _scene.load(projMatrix);
+      _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
       const float* vm = renderState.getViewMatrix();
@@ -279,7 +281,7 @@ public:
                                         vm[12],vm[13],vm[14],vm[15]);
 
       //bsg::bsgUtils::printMat("view", viewMatrix);
-      _scene.draw(viewMatrix);
+      _scene.draw(viewMatrix, projMatrix);
 
       // We let MinVR swap the graphics buffers.
       // glutSwapBuffers();
