@@ -6,10 +6,6 @@ find_package(FreeGLUT REQUIRED)
 message("-- FreeGLUT includes:" ${FREEGLUT_INCLUDE_DIR})
 message("-- FreeGLUT library: " ${FREEGLUT_LIBRARY})
 
-set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-0.9.7.1)
-
-message("-- GLM includes:     " ${GLM_INCLUDE_DIR})
-
 find_package(OpenGL REQUIRED)
 message("-- OpenGL includes:  " ${OPENGL_INCLUDE_DIR})
 message("-- OpenGL library:   " ${OPENGL_LIBRARY})
@@ -18,13 +14,16 @@ find_package(GLEW REQUIRED)
 message("-- GLEW library:     " ${GLEW_LIBRARY})
 message("-- GLEW includes:    " ${GLEW_INCLUDE_DIRS})
 
-find_package(PNG MODULE)
+find_package(PNG 1.4 REQUIRED MODULE)
 message("-- PNG includes:     " ${PNG_INCLUDE_DIRS})
 message("-- PNG library:      " ${PNG_LIBRARIES})
 
 find_package(MinVR MODULE)
 message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
 message("-- MinVR library:    " ${MINVR_LIBRARY})
+
+set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-0.9.7.1)
+message("-- GLM includes:     " ${GLM_INCLUDE_DIR})
 
 include_directories(
   ${OPENGL_INCLUDE_DIR}
@@ -124,10 +123,11 @@ if(PNG_FOUND)
 
     target_link_libraries(objDemoMinVR
       ${MINVR_LIBRARY}
+      ${PNG_LIBRARIES}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY}
-      ${PNG_LIBRARIES})
+      )
 
   else(MINVR_FOUND)
 
