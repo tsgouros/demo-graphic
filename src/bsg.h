@@ -1,6 +1,8 @@
 #ifndef BSGHEADER
 #define BSGHEADER
 
+#include <sys/time.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdexcept>
@@ -11,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
 #include <iostream>
 #include <fstream>
 
@@ -829,17 +832,56 @@ class drawableCollection : public drawableMulti {
   /// We use a pointer to the drawableCompound objects so you can
   /// create an object that inherits from drawableCompound and still
   /// use it here.
-  typedef std::list<bsgPtr<drawableMulti> > compoundList;
+  typedef std::map<std::string, bsgPtr<drawableMulti> > compoundList;
   compoundList _compoundObjects;
   
  public:
 
   /// \brief Add an object to our list.
-  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
+  void addObject(const std::string name,
+                 const bsgPtr<drawableMulti> pMultiObject) {
     pMultiObject->setParent(this);
-    _compoundObjects.push_back(pMultiObject);
+    _compoundObjects[name] = pMultiObject;
   }
 
+  /// \brief Add an object to our list with a random name.
+  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
+
+    addObject(randomName(), pMultiObject);
+  }
+
+  bsgPtr<drawableMulti> getObject(const std::string name) {
+
+    compoundList::iterator it = _compoundObjects.find(name);
+
+    if (it == _compoundObjects.end()) {
+      throw std::runtime_error("what object is " + name + "?");
+    } else {
+      return it->second;
+    }
+  }
+  
+  /// \brief A static method to generate a random name.
+  ///
+  std::string randomName() {
+
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    // get the last digit
+    double td = tp.tv_usec / 26.0f;
+    long long ti = td;
+    double dec = td - (double)ti;
+    int d = (int)(10 * dec);
+    char c = 0x40 + d;
+
+    std::string out = std::string(1, c);
+
+    std::cout << "rand: " << d << "," << out << std::endl;
+    
+    return out;
+  }
+
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
@@ -919,8 +961,14 @@ class scene {
   void setAspect(float aspect) { _aspect = aspect; };
 
   /// \brief Add a compound object to our scene.
+  void addObject(const std::string name,
+                 const bsgPtr<drawableMulti> pMultiObject) {
+    _sceneRoot.addObject(name, pMultiObject);
+  }
+
+  /// \brief Add a compound object to our scene with a random name.
   void addObject(const bsgPtr<drawableMulti> pMultiObject) {
-    _sceneRoot.addObject(pMultiObject);
+    _sceneRoot.addObject(_sceneRoot.randomName(), pMultiObject);
   }
 
   /// \brief Prepare the scene to be drawn.

@@ -638,7 +638,7 @@ void drawableCollection::prepare() {
 
   for (compoundList::iterator it =  _compoundObjects.begin();
        it != _compoundObjects.end(); it++) {
-    (*it)->prepare();
+    it->second->prepare();
   }
 }
 
@@ -647,7 +647,7 @@ void drawableCollection::load() {
   // Then draw all the objects.
   for (compoundList::iterator it =  _compoundObjects.begin();
        it != _compoundObjects.end(); it++) {
-    (*it)->load();
+    it->second->load();
   }
 }
 
@@ -657,7 +657,7 @@ void drawableCollection::draw(const glm::mat4 &viewMatrix,
   // Then draw all the objects.
   for (compoundList::iterator it =  _compoundObjects.begin();
        it != _compoundObjects.end(); it++) {
-    (*it)->draw(viewMatrix, projMatrix);
+    it->second->draw(viewMatrix, projMatrix);
   }
 }
 
