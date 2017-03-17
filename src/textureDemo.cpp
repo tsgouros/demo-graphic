@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
   // lighting, and the shapes don't have textures, this is irrelevant.
   bsg::bsgPtr<bsg::lightList> lights = new bsg::lightList();
   lights->addLight(glm::vec4(0.0f, 0.0f, 3.0f, 1.0f),
-                   glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+                   glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
 
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
