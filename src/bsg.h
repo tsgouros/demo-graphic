@@ -330,7 +330,8 @@ class lightList {
 typedef enum {
   texturePNG = 0,
   textureDDS = 1,
-  textureBMP = 2
+  textureBMP = 2,
+  textureCHK = 3
 } textureType;
 
 
@@ -353,6 +354,7 @@ class textureMgr {
   GLuint _textureBufferID;
 
   GLuint _loadPNG(const std::string imagePath);
+  GLuint _loadCheckerBoard (int size, int numFields);
   
  public:
   textureMgr() { _setupDefaultNames(); };
