@@ -635,23 +635,46 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
 }
 
 drawableCollection::drawableCollection() {
-    // Seed a random number generator to generate default names randomly.
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    srand(tp.tv_usec);
+  // Seed a random number generator to generate default names randomly.
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  srand(tp.tv_usec);
+}
+
+drawableCollection::drawableCollection(const std::string name) :
+  drawableMulti(name) {
+  // Seed a random number generator to generate default names randomly.
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  srand(tp.tv_usec);
 }
 
 std::string drawableCollection::addObject(const std::string name,
-                                   const bsgPtr<drawableMulti> pMultiObject) {
+                                   const bsgPtr<drawableMulti> &pMultiObject) {
   pMultiObject->setParent(this);
   _collection[name] = pMultiObject;
 
   return name;
 }
 
-std::string drawableCollection::addObject(const bsgPtr<drawableMulti> pMultiObject) {
+std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObject) {
 
-  return addObject(randomName(), pMultiObject);
+  if (pMultiObject->getName().empty()) {
+
+    return addObject(randomName(), pMultiObject);
+
+  } else {
+    if (_collection.find(pMultiObject->getName()) != _collection.end()) {
+
+      std::cerr << "You have already used " << pMultiObject->getName() << " in " << getName() << ".  Assigning a random name." << std::endl;
+
+      return addObject(randomName(), pMultiObject);
+
+    } else {
+      
+      return addObject(pMultiObject->getName(), pMultiObject);
+    }
+  }
 }
 
 bsgPtr<drawableMulti> drawableCollection::getObject(const std::string name) {

@@ -608,7 +608,11 @@ class drawableObj {
 class drawableMulti {
  protected:
 
+  ///////  !!!! this is a problem because it is not created from an
+  ///////  !!!! already-existing smart pointer.  FIX ME!
   bsgPtr<drawableMulti> _parent;
+
+  std::string _name;
   
   /// The position in model space.
   glm::vec3 _position;
@@ -623,16 +627,23 @@ class drawableMulti {
   glm::mat4 _modelMatrix;
   bool _modelMatrixNeedsReset;
 
- public:
- drawableMulti() : _parent(0) {
+  void _init() {
     _position = glm::vec3(0.0f, 0.0f, 0.0f);
     _scale = glm::vec3(1.0f, 1.0f, 1.0f);
     // The glm::quat constructor initializes orientation to be zero
     // rotation by default, so need not be mentioned here.
+    _modelMatrixNeedsReset = true;
   };
+  
+ public:
+ drawableMulti() : _parent(0), _name("") { _init(); };
+ drawableMulti(std::string name) : _parent(0), _name(name) { _init(); };
   virtual ~drawableMulti() {};
   
   void setParent(drawableMulti* p) { _parent = p; }
+
+  void setName(const std::string name) { _name = name; };
+  std::string getName() { return _name; };
   
   /// \brief Calculate the model matrix.
   ///
@@ -774,6 +785,15 @@ class drawableCompound : public drawableMulti {
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
   };
+ drawableCompound(const std::string name, bsgPtr<shaderMgr> pShader) :
+  drawableMulti(name),
+    _pShader(pShader),
+    // Set the default names for our matrices.
+    _modelMatrixName("modelMatrix"),
+    _normalMatrixName("normalMatrix"),
+    _viewMatrixName("viewMatrix"),
+    _projMatrixName("projMatrix") {
+  };
 
   /// \brief Set the name of one of the matrices.
   ///
@@ -803,7 +823,7 @@ class drawableCompound : public drawableMulti {
   /// whole compound object.  If you find that objectionable, you are
   /// probably ready for a more elaborate set of classes to do your
   /// rendering with.
-  void addObject(drawableObj obj) {
+  void addObject(drawableObj &obj) {
     _objects.push_back(obj);
   };    
 
@@ -855,6 +875,7 @@ class drawableCollection : public drawableMulti {
   
  public:
   drawableCollection();
+  drawableCollection(const std::string name);
   
   /// \brief Add an object to our list.
   ///
@@ -862,7 +883,7 @@ class drawableCollection : public drawableMulti {
   /// in which case the name is randomly assigned.  Returns the name
   /// assigned to the object.
   std::string addObject(const std::string name,
-                 const bsgPtr<drawableMulti> pMultiObject);
+                 const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Add an object to our list with a random name.
   ///
@@ -871,7 +892,7 @@ class drawableCollection : public drawableMulti {
   /// should not be necessary.  But if you want, this version of
   /// addObject() will come up with a random name, and will return it
   /// to the calling program.  Some may find this useful.
-  std::string addObject(const bsgPtr<drawableMulti> pMultiObject);
+  std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Retrieve an object by name.
   bsgPtr<drawableMulti> getObject(const std::string name);
@@ -962,12 +983,12 @@ class scene {
 
   /// \brief Add a compound object to our scene.
   void addObject(const std::string name,
-                 const bsgPtr<drawableMulti> pMultiObject) {
+                 const bsgPtr<drawableMulti> &pMultiObject) {
     _sceneRoot.addObject(name, pMultiObject);
   }
 
   /// \brief Add a compound object to our scene with a random name.
-  void addObject(const bsgPtr<drawableMulti> pMultiObject) {
+  void addObject(const bsgPtr<drawableMulti> &pMultiObject) {
     _sceneRoot.addObject(_sceneRoot.randomName(), pMultiObject);
   }
 

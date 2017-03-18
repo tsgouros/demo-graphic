@@ -71,6 +71,9 @@ void renderScene() {
 
   // Swap the graphics buffers.
   glutSwapBuffers();
+
+  sleep(1.0);
+  exit(0);
 }
 
 // This function is called when the window changes size.  It
@@ -317,12 +320,12 @@ int main(int argc, char **argv) {
   // We could put the axes and the rectangle in the same compound
   // shape, but we leave them separate so they can be moved
   // separately.
-  bigRectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f, 3);
-  smallRectangle = new bsg::drawableRectangle(shader, 3.0f, 5.0f, 3);
+  bigRectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f, 4);
+  smallRectangle = new bsg::drawableRectangle(shader, 3.0f, 5.0f, 2);
 
   smallRectangle->setPosition(1.0f, 1.0f, 0.5f);
   
-  rectGroup = new bsg::drawableCollection();
+  rectGroup = new bsg::drawableCollection("rectangles");
 
   rectGroup->addObject("big", bigRectangle);
   rectGroup->addObject("small", smallRectangle);
