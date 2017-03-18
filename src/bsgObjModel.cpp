@@ -17,7 +17,7 @@ namespace bsg {
     if (fileObject.is_open()) {
         while (! fileObject.eof() ){
             getline(fileObject, fileObjectLine);
-            std::cout << fileObjectLine << std::endl;
+            //std::cout << fileObjectLine << std::endl;
             if (fileObjectLine.c_str()[0] == 'v'){
                 if (fileObjectLine.c_str()[1] == ' '){
 

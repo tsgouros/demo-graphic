@@ -128,6 +128,9 @@ private:
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
 
+    _vertexFile = "../src/textureShader.vp";
+    _fragmentFile = "../src/textureShader.fp";
+    
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
 
@@ -185,9 +188,6 @@ public:
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
     
-    _vertexFile = std::string(argv[2]);
-    _fragmentFile = std::string(argv[3]);
-
   }
 
 	/// The MinVR apparatus invokes this method whenever there is a new
@@ -301,8 +301,8 @@ int main(int argc, char **argv) {
 
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
-  if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../src/textureShader.vp ../src/textureShader.fp'");
+  if (argc < 2) {
+    throw std::runtime_error("\nNeed a config file.\nTry 'bin/objDemoMinVR ../config/desktop-freeglut.xml'");
   }
     
   // Initialize the app.
