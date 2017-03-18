@@ -608,9 +608,9 @@ class drawableObj {
 class drawableMulti {
  protected:
 
-  ///////  !!!! this is a problem because it is not created from an
-  ///////  !!!! already-existing smart pointer.  FIX ME!
-  bsgPtr<drawableMulti> _parent;
+  // Do not use a smart pointer here.  Since it is not a copy of
+  // another pointer, it will not have a correct reference count.
+  drawableMulti* _parent;
 
   std::string _name;
   

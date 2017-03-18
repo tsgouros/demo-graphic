@@ -71,9 +71,6 @@ void renderScene() {
 
   // Swap the graphics buffers.
   glutSwapBuffers();
-
-  sleep(1.0);
-  exit(0);
 }
 
 // This function is called when the window changes size.  It
