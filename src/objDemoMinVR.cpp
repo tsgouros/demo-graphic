@@ -140,8 +140,8 @@ private:
 
     // Add a texture to our shader manager object.
     bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
-    //texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
-    texture->readFile(bsg::textureCHK, "");
+    texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    //texture->readFile(bsg::textureCHK, "");
     _shader->addTexture(texture);
     
     // We could put the axes and the rectangle in the same compound
@@ -152,7 +152,8 @@ private:
     // Now add our rectangle to the scene.
     //_scene.addObject(_rectangle);
 
-    _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    _model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
     _model->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_model);
  
