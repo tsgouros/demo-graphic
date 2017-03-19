@@ -51,7 +51,7 @@ typedef enum {
 } GLMATRIXTYPE;
    
 
-/// \mainpage Shader Manager
+/// \mainpage Baby Scene Graph
 ///
 /// A set of classes to manage a collection of shaders and objects to
 /// make it easy to define an OpenGL 3D object drawn by them.  This is
@@ -62,7 +62,7 @@ typedef enum {
 /// linux workstations, and the Brown University YURT virtual reality
 /// environment, to name a few.
 ///
-/// In structure, this is very much like a Baby Scene Graph package,
+/// In structure, this is very much a "Baby" Scene Graph package,
 /// with a scene consisting of a graph of objects.  This package is a
 /// teaching tool, as much as it is a package with which to get useful
 /// things done.  If you run out of capacity here, consider using Open
@@ -95,10 +95,22 @@ typedef enum {
 ///   drawableCompound -- A collection of drawableObj objects to be
 ///                considered a single object.  This is where the
 ///                model matrix is applied, so it's ok if it's a
-///                compound of just one drawableObj.
+///                compound of just one drawableObj.  There is no
+///                capacity for independent control of the member
+///                objects of a drawableCompound.  If that's what you
+///                want, use drawableCollection.
 ///
-///   scene -- A collection of drawableCompound objects that make
-///                up a scene.
+///   drawableCollection -- A collection of drawableCompound objects
+///                that make up a scene.  Can also contain a bunch of
+///                drawableCollection objects, making this into a
+///                scene graph API.  You can access the member objects
+///                independently, by name or hash.
+///
+///   scene -- Contains a "root" drawableCollection, along with some
+///                facilities for managing view and projection
+///                matrices and for controlling the rendering of the
+///                whole scene.  Use this as the basis of a scene, and
+///                add objects and groups of objects to it.
 ///
 
 /// \brief A reference counter for a smart pointer to bsg objects.
