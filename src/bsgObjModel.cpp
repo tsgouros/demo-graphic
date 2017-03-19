@@ -17,7 +17,7 @@ namespace bsg {
     if (fileObject.is_open()) {
         while (! fileObject.eof() ){
             getline(fileObject, fileObjectLine);
-            std::cout << fileObjectLine << std::endl;
+            //std::cout << fileObjectLine << std::endl;
             if (fileObjectLine.c_str()[0] == 'v'){
                 if (fileObjectLine.c_str()[1] == ' '){
 
@@ -51,16 +51,16 @@ namespace bsg {
             }
             if (fileObjectLine.c_str()[0] == 'f'){				
                 int v1, vn1=0, vt1=0, v2, vn2=0, vt2=0, v3, vn3=0, vt3, v4=0, vn4=0, vt4=0;
-		char temp[20] = "";
+        char temp[20] = "";
                 fileObjectLine[0] = ' ';
                 std::size_t numSlash = std::count(fileObjectLine.begin(), fileObjectLine.end(), '/');
 		std::size_t doubleSlash = fileObjectLine.find("//");
 		if (numSlash == 0) {
-			sscanf(fileObjectLine.c_str(),"%d %d %d %s", &v1, &v2, &v3, &temp);
+            sscanf(fileObjectLine.c_str(),"%d %d %d %s", &v1, &v2, &v3, temp);
 			if (!temp[0] == 0) {
 				sscanf(temp, "%d", &v4);
 			}
-			std::cout << "\""<<temp<<"\" - " <<v1 << ", " << v2 << ", "<< v3 << ", "<< v4 << std::endl;
+
 		} else if (numSlash == 3) {
 			sscanf(fileObjectLine.c_str(),"%d/%d %d/%d %d/%d", &v1, &vt1, &v2, &vt2, &v3, &vt3);
 		} else if (numSlash == 4) {
@@ -136,40 +136,46 @@ namespace bsg {
     std::vector<glm::vec2> backFaceUVs = std::vector<glm::vec2>(nEntries);
 
     for(int i=0; i < front_face_list.size(); i+=3) {
-	
+
         int iv = front_face_list[i]*3;
-	frontFaceVertices[i/3] = glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f);
-	iv = back_face_list[i]*3;
+        frontFaceVertices[i/3] = glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f);
+        iv = back_face_list[i]*3;
 
-	backFaceVertices[i/3] = (glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f));
+        backFaceVertices[i/3] = (glm::vec4(vert_list[iv], vert_list[iv+1], vert_list[iv+2], 1.0f));
 
-        int ivn = front_face_list[i+1]*3;
-	if (ivn > -1) {        
-		frontFaceNormals[i/3] = (glm::vec4(normal_list[ivn], normal_list[ivn+1], normal_list[ivn+2], 1.0f));
-		ivn = back_face_list[i+1]*3;
-		backFaceNormals[i/3] = (glm::vec4(-normal_list[ivn], -normal_list[ivn+1], -normal_list[ivn+2], 1.0f));
-	} else {
-		if (i%9 == 6) {
-			glm::vec3 a = glm::vec3(frontFaceVertices[(i/3)-2]) - glm::vec3(frontFaceVertices[(i/3)-1]);
-			glm::vec3 b = glm::vec3(frontFaceVertices[(i/3)-2]) - glm::vec3(frontFaceVertices[(i/3)]);
-			glm::vec3 normal = glm::normalize(glm::cross(a,b));
-			glm::vec4 n4 = glm::vec4(normal, 1.0f);
-			frontFaceNormals[i/3-2] = (n4);
-			frontFaceNormals[i/3-1] = (n4);
-			frontFaceNormals[i/3] = (n4);
-			backFaceNormals[i/3-2] = (-n4);
-			backFaceNormals[i/3-1] = (-n4);
-			backFaceNormals[i/3] = (-n4);
-		}
-	}
+            int ivn = front_face_list[i+1]*3;
+        if (ivn > -1) {
+            frontFaceNormals[i/3] = (glm::vec4(normal_list[ivn], normal_list[ivn+1], normal_list[ivn+2], 1.0f));
+            ivn = back_face_list[i+1]*3;
+            backFaceNormals[i/3] = (glm::vec4(-normal_list[ivn], -normal_list[ivn+1], -normal_list[ivn+2], 1.0f));
+        } else {
+            if (i%9 == 6) {
+                glm::vec3 a = glm::vec3(frontFaceVertices[(i/3)-2]) - glm::vec3(frontFaceVertices[(i/3)-1]);
+                glm::vec3 b = glm::vec3(frontFaceVertices[(i/3)-2]) - glm::vec3(frontFaceVertices[(i/3)]);
+                glm::vec3 normal = glm::normalize(glm::cross(a,b));
+                glm::vec4 n4 = glm::vec4(normal, 1.0f);
+                frontFaceNormals[i/3-2] = (n4);
+                frontFaceNormals[i/3-1] = (n4);
+                frontFaceNormals[i/3] = (n4);
+                backFaceNormals[i/3-2] = (-n4);
+                backFaceNormals[i/3-1] = (-n4);
+                backFaceNormals[i/3] = (-n4);
+            }
+        }
 
-	frontFaceColors[i/3] = (glm::vec4(1.0f, 0.2f, 0.2f, 1.0f));
-	backFaceColors[i/3] = (glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
+        frontFaceColors[i/3] = (glm::vec4(1.0f, 0.2f, 0.2f, 1.0f));
+        backFaceColors[i/3] = (glm::vec4(0.2f, 1.0f, 0.2f, 1.0f));
 
         int ivt = front_face_list[i+2]*2;
-        frontFaceUVs[i/3] = (glm::vec2(uv_list[ivt], uv_list[ivt+1]));
-	ivt = back_face_list[i+2]*2;
-	backFaceUVs[i/3] = (glm::vec2(uv_list[ivt], uv_list[ivt+1]));
+        if (ivt > -1) {
+            frontFaceUVs[i/3] = (glm::vec2(uv_list[ivt], uv_list[ivt+1]));
+            ivt = back_face_list[i+2]*2;
+            backFaceUVs[i/3] = (glm::vec2(uv_list[ivt], uv_list[ivt+1]));
+        } else {
+            frontFaceUVs[i/3] = (glm::vec2(0.0f, 0.0f));
+            backFaceUVs[i/3] = (glm::vec2(0.0f, 0.0f));
+        }
+
     }
 
       _frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
