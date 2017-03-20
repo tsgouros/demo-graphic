@@ -153,12 +153,12 @@ private:
     //_scene.addObject(_rectangle);
 
     //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
-    _model = new bsg::drawableObjModel(_shader, "/home/novotny/workspace/demo-graphic/data/test-v.obj");
+    _model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
     _model->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_model);
  
-    _axesShader->addShader(bsg::GLSHADER_VERTEX, "/home/novotny/workspace/demo-graphic/src/shader2.vp");
-    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "/home/novotny/workspace/demo-graphic/src/shader.fp");
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
