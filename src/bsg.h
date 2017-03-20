@@ -534,6 +534,8 @@ class drawableObj {
   
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
+
+  glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
   
  public:
   drawableObj() {};
@@ -574,6 +576,14 @@ class drawableObj {
                const std::string &name,
                const std::vector<glm::vec2> &data);
 
+  /// \brief Returns the upper limit of the bounding box.
+  glm::vec4 getBoundingBoxUpper() { return _vertexBoundingBoxUpper; }
+  /// \brief Returns the lower limit of the bounding box.
+  glm::vec4 getBoundingBoxLower() { return _vertexBoundingBoxLower; }
+
+  bool insideBoundingBox(const glm::vec4 &testPoint,
+                         const glm::mat4 &modelMatrix);
+  
   /// \brief One-time-only draw preparation.
   ///
   /// This generates the proper number of buffers for the shape data
@@ -606,6 +616,8 @@ class drawableObj {
   void draw();
 };
 
+typedef std::list<std::string> objNameList;
+ 
 /// \brief An abstract class to handle transformation matrices.
 ///
 /// This class is the common root of drawableCompound and
@@ -707,6 +719,28 @@ class drawableMulti {
   /// \brief Returns the orienation as Euler angles.
   glm::vec3 getPitchYawRoll() { return glm::eulerAngles(_orientation); };
 
+  /// \brief Returns a vector of object names if the given point is
+  /// within this object's bounding box.
+  ///
+  /// The calculation is to be done in world space, using all the
+  /// available transformation matrices in place, but not the view or
+  /// projection matrix.
+  virtual objNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+
+  /// \brief Retrieve an object by name.
+  ///
+  /// Used in drawableCollective.
+  virtual bsgPtr<drawableMulti> getObject(const std::string &name) {
+    return NULL;
+  }
+
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// Used in drawableCollective.
+  virtual bsgPtr<drawableMulti> getObject(objNameList &names) {
+    return NULL;
+  }  
+
   /// \brief Gets ready for the drawing sequence.
   ///
   virtual void prepare() = 0;
@@ -741,6 +775,9 @@ class drawableMulti {
 /// consider using a real scene graph API, like OSG.)  The view matrix
 /// and the projection matrix are used here, though they are generated
 /// and managed at the scene level.
+///
+/// Important: We expect one of these will be the leaf nodes to every
+/// scene graph branch.
 ///
 /// The shaders are included in this object as a pointer because many
 /// objects will use the same shader.  So the program that calls this
@@ -843,6 +880,8 @@ class drawableCompound : public drawableMulti {
 
   int getNumObjects() { return _objects.size(); };
 
+  objNameList insideBoundingBox(const glm::vec4 &testPoint);
+
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
@@ -909,14 +948,26 @@ class drawableCollection : public drawableMulti {
   std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Retrieve an object by name.
-  bsgPtr<drawableMulti> getObject(const std::string name);
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.
+  bsgPtr<drawableMulti> getObject(const std::string &name);
 
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// 
+  bsgPtr<drawableMulti> getObject(objNameList &names);
+  
   /// \brief Return a list of object names in the collection.
   std::list<std::string> getNames();
   
   /// \brief A dopey static method to generate a random name.
   static std::string randomName();
-  
+
+  /// \brief Returns the names of objects containing the test point.
+  objNameList insideBoundingBox(const glm::vec4 &testPoint);
+
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
