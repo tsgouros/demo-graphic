@@ -11,8 +11,19 @@
 if(MINVR_INSTALL_DIR)
   message("-- Looking for MinVR in: " ${MINVR_INSTALL_DIR})
 
-  set(MINVR_INCLUDE_DIR ${MINVR_INSTALL_DIR}/include)
-  set(MINVR_LIBRARY ${MINVR_INSTALL_DIR}/lib/libMinVR.a)
+  find_path(MINVR_INCLUDE_DIR 
+    NAMES api/MinVR.h
+    HINTS
+    ${MINVR_INSTALL_DIR}/include
+    ENV CPATH
+    /usr/local/include)
+
+  find_library(MINVR_LIBRARY 
+    NAMES MinVR
+    HINTS
+    ${MINVR_INSTALL_DIR}/lib
+    ENV LD_LIBRAR_PATH
+    /usr/local/lib)
 
 else(MINVR_INSTALL_DIR)
   message("MinVR install location not specified.  But we'll still look for it.")
@@ -22,37 +33,40 @@ else(MINVR_INSTALL_DIR)
     NAMES api/MinVR.h
     HINTS
     /usr/local/include
-    ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/include   # This is just a guess.
-    ${MINVR_INSTALL_DIR}/include
+    ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/include   # Wild guess.
     ENV CPATH)
 
   find_library(MINVR_LIBRARY
     NAMES MinVR
     HINTS
     /usr/local/lib
-    ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/lib   # This is just a guess.
-    ${MINVR_INSTALL_DIR}/lib
+    ${PROJECT_SOURCE_DIR}/../../MinVR/build/install/lib   # Wild guess.
     ENV LD_LIBRARY_PATH)
+
 endif(MINVR_INSTALL_DIR)
 
 
 # Handle the QUIETLY and REQUIRED arguments and set MINVR_FOUND to
 # TRUE if all listed variables are TRUE.
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
   MINVR
   DEFAULT_MSG 
   MINVR_LIBRARY 
   MINVR_INCLUDE_DIR)
 
 # Copy the results to the output variables.
-IF(MINVR_FOUND)
-	SET(MINVR_LIBRARIES ${MINVR_LIBRARY})
-	SET(MINVR_INCLUDE_DIRS ${MINVR_INCLUDE_DIR})
-ELSE(MINVR_FOUND)
-	SET(MINVR_LIBRARIES)
-	SET(MINVR_INCLUDE_DIRS)
-ENDIF(MINVR_FOUND)
+if(MINVR_FOUND)
+  get_filename_component(MINVR_INSTALL ${MINVR_INCLUDE_DIR} DIRECTORY)
+  set(MINVR_LIBRARIES ${MINVR_LIBRARY})
+  set(MINVR_INCLUDE_DIRS ${MINVR_INCLUDE_DIR})
+  message("** MinVR found.  Don't forget to set MINVR_ROOT:")
+  message("     Type 'export MINVR_ROOT=${MINVR_INSTALL}'.")
 
-MARK_AS_ADVANCED(MINVR_INCLUDE_DIRS MINVR_LIBRARIES)
+else(MINVR_FOUND)
+  set(MINVR_LIBRARIES)
+  set(MINVR_INCLUDE_DIRS)
+endif(MINVR_FOUND)
+
+mark_as_advanced(MINVR_INCLUDE_DIRS MINVR_LIBRARIES)
 

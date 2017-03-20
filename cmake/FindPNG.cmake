@@ -32,8 +32,6 @@ find_package_handle_standard_args(
 
 # Copy the results to the output variables.
 if(PNG_FOUND)
-  message("-- Found PNG Library: " ${PNG_LIBRARY})
-  message("-- Found PNG includes: " ${PNG_INCLUDE_DIR})
   set(PNG_LIBRARIES ${PNG_LIBRARY})
   set(PNG_INCLUDE_DIRS ${PNG_INCLUDE_DIR})
 else(PNG_FOUND)

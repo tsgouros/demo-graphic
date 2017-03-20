@@ -17,6 +17,8 @@ message("-- GLEW includes:    " ${GLEW_INCLUDE_DIRS})
 find_package(PNG 1.4 REQUIRED MODULE)
 message("-- PNG includes:     " ${PNG_INCLUDE_DIRS})
 message("-- PNG library:      " ${PNG_LIBRARIES})
+get_filename_component(PNG_LIBRARY_PATH ${PNG_LIBRARIES} DIRECTORY)
+message("-- PNG library is in:" ${PNG_LIBRARY_PATH})
 
 find_package(MinVR MODULE)
 message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
@@ -48,6 +50,11 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
+  # This is a goofy fix for a strange libpng linking problem on OSCAR.
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${PNG_LIBRARY_PATH}")
+  endif()
+
   include_directories(
     ${OPENGL_INCLUDE_DIR}
     ${FREEGLUT_INCLUDE_DIR}
