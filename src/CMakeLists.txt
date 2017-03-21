@@ -48,6 +48,7 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
+
   include_directories(
     ${OPENGL_INCLUDE_DIR}
     ${FREEGLUT_INCLUDE_DIR}
@@ -103,6 +104,7 @@ if(PNG_FOUND)
 
     add_executable(demo4 demo4.cpp ${bsg_files})
 
+
     target_link_libraries(demo4
      ${MINVR_LIBRARY}
      ${FREEGLUT_LIBRARY}
@@ -111,6 +113,7 @@ if(PNG_FOUND)
      ${PNG_LIBRARIES})
     
     add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
+
 
     target_link_libraries(textureDemoMinVR
      ${MINVR_LIBRARY}
