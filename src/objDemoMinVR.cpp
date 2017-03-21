@@ -154,7 +154,8 @@ private:
     // separately.
 
     _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
-    _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+        _model = new bsg::drawableObjModel(_shader, "/gpfs/home/tsgouros/data/tsgouros/arcand/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant.obj");
 
     _modelGroup = new bsg::drawableCollection();
 

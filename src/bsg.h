@@ -535,8 +535,10 @@ class drawableObj {
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
   
+  bool _loadedToBuffer;
+
  public:
-  drawableObj() {};
+ drawableObj() : _loadedToBuffer(false) {};
 
   /// \brief Specify the draw type of the shape.
   ///
