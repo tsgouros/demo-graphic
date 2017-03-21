@@ -481,11 +481,44 @@ void drawableObj::addData(const GLDATATYPE type,
   }
 }
 
+bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
+                                    const glm::mat4 &modelMatrix) {
 
+  glm::vec4 upper = modelMatrix * _vertexBoundingBoxUpper;
+  glm::vec4 lower = modelMatrix * _vertexBoundingBoxLower;
+  
+  return
+    (testPoint.x <= upper.x) &&
+    (testPoint.x >= lower.x) &&
+    (testPoint.y <= upper.y) &&
+    (testPoint.y >= lower.y) &&
+    (testPoint.z <= upper.z) &&
+    (testPoint.z >= lower.z);  
+}
   
 void drawableObj::prepare(GLuint programID) {
 
   bool badID = false;
+
+  // Find the bounding box for this object.
+  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0e35);
+  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
+
+  if (true) { //(_selectable) {
+    for (std::vector<glm::vec4>::iterator it = _vertices.getData().begin();
+         it != _vertices.getData().end(); it++) {
+
+      _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
+      _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
+      _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
+      _vertexBoundingBoxUpper.w = fmax((*it).w, _vertexBoundingBoxUpper.w);
+
+      _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
+      _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
+      _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
+      _vertexBoundingBoxLower.w = fmin((*it).w, _vertexBoundingBoxLower.w);
+    }
+  }
   
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
@@ -607,6 +640,27 @@ glm::mat4 drawableMulti::getModelMatrix() {
     return _modelMatrix;
 }
 
+ObjNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
+
+  ObjNameList out;
+  out.push_back(_name);
+  glm::mat4 modelMatrix = getModelMatrix();
+  
+  for (std::list<drawableObj>::iterator it = _objects.begin();
+       it != _objects.end(); it++) {
+
+    if (it->insideBoundingBox(testPoint, modelMatrix)) {
+      
+      return out;
+    }
+  }
+
+  // If we're here, the answer is no, so return an empty list.
+  out.pop_front();
+  return out;
+}        
+
+  
 void drawableCompound::prepare() {
 
   _pShader->useProgram();
@@ -677,7 +731,7 @@ drawableCollection::drawableCollection() {
   srand(tp.tv_usec);
 }
 
-drawableCollection::drawableCollection(const std::string name) :
+drawableCollection::drawableCollection (const std::string name) :
   drawableMulti(name) {
   // Seed a random number generator to generate default names randomly.
   struct timeval tp;
@@ -689,6 +743,7 @@ std::string drawableCollection::addObject(const std::string name,
                                    const bsgPtr<drawableMulti> &pMultiObject) {
   pMultiObject->setParent(this);
   _collection[name] = pMultiObject;
+  pMultiObject->setName(name);
 
   return name;
 }
@@ -713,18 +768,46 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
   }
 }
 
-bsgPtr<drawableMulti> drawableCollection::getObject(const std::string name) {
+bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
 
   CollectionMap::iterator it = _collection.find(name);
 
-  // Throwing an error might be a little harsh.
   if (it == _collection.end()) {
-    throw std::runtime_error("what object is " + name + "?");
+    return NULL;
   } else {
     return it->second;
   }
 }
 
+bsgPtr<drawableMulti> drawableCollection::getObject(ObjNameList &names) {
+
+  if (names.size() > 1) {
+  
+    CollectionMap::iterator it = _collection.find(names.front());
+
+    if (it == _collection.end()) {
+
+      // No match.
+      return NULL;
+      
+    } else {
+
+      // Step down a level.
+      names.pop_front();
+      return it->second->getObject(names);
+
+    }
+  } else if (names.size() > 0) {
+
+    return getObject(names.front());
+
+  } else {
+    
+    // This was called with an empty list for some reason.
+    return NULL;
+  }  
+}
+  
 std::list<std::string> drawableCollection::getNames() {
   
   std::list<std::string> out;
@@ -757,10 +840,38 @@ std::string drawableCollection::randomName() {
   return out;
 }
 
+ObjNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
+  ObjNameList out;
 
+  for (CollectionMap::iterator it = _collection.begin();
+       it != _collection.end(); it++) {
+    out = it->second->insideBoundingBox(testPoint);
+
+    if (!out.empty()) {
+      out.push_front(_name);
+      return out;
+    }
+  }
+
+  // If we're here, the answer is no, so this should be an empty list.
+  return out;
+}
+
+std::string drawableCollection::printObj (const std::string &prefix) const {
+
+  std::string out;
+
+  for (CollectionMap::const_iterator it = _collection.begin();
+       it != _collection.end(); it++) {
+    out += prefix + it->first +
+      " (" + it->second->getName() + ")\n" +
+      it->second->printObj(prefix + "| ");
+  }
+
+  return out;
+}
   
-
   
 void drawableCollection::prepare() {
 
@@ -811,6 +922,24 @@ void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) 
   // camera location.
   _cameraPosition = _lookAtPosition - glm::vec3(newDir.x, newDir.y, newDir.z);
 }
+
+bsgPtr<drawableMulti> scene::getObject(const std::string &name) {
+
+  return _sceneRoot.getObject(name);
+  
+}
+
+bsgPtr<drawableMulti> scene::getObject(ObjNameList &names) {
+
+  return _sceneRoot.getObject(names);
+  
+}
+
+ObjNameList scene::insideBoundingBox(const glm::vec3 &testPoint) {
+
+  return _sceneRoot.insideBoundingBox(glm::vec4(testPoint, 1.0));
+}
+  
   
 void scene::prepare() {
 
