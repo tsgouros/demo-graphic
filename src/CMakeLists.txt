@@ -50,6 +50,7 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
+
   # This is a goofy fix for a strange libpng linking problem on OSCAR.
   if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${PNG_LIBRARY_PATH}")
@@ -110,6 +111,7 @@ if(PNG_FOUND)
 
     add_executable(demo4 demo4.cpp ${bsg_files})
 
+
     target_link_libraries(demo4
      ${MINVR_LIBRARY}
      ${FREEGLUT_LIBRARY}
@@ -118,6 +120,7 @@ if(PNG_FOUND)
      ${PNG_LIBRARIES})
     
     add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
+
 
     target_link_libraries(textureDemoMinVR
      ${MINVR_LIBRARY}

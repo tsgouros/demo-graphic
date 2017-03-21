@@ -19,9 +19,10 @@ private:
   // These are the shapes that make up the scene.  They are out here in
   // the global variables so they can be available in both the main()
   // function and the renderScene() function.
-  bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
+  bsg::drawableCollection* _modelGroup;
   bsg::drawableObjModel* _model;
+  bsg::drawableObjModel* _orbiter;
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
@@ -128,6 +129,7 @@ private:
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
 
+
     _vertexFile = "../src/textureShader.vp";
     _fragmentFile = "../src/textureShader.fp";
     
@@ -143,21 +145,25 @@ private:
 
     // Add a texture to our shader manager object.
     bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
-    //texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+
     texture->readFile(bsg::textureCHK, "");
     _shader->addTexture(texture);
     
-    // We could put the axes and the rectangle in the same compound
+    // We could put the axes and the object in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
-    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
-    // Now add our rectangle to the scene.
-    //_scene.addObject(_rectangle);
-
+    _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
     _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
-    _model->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
-    _scene.addObject(_model);
+
+    _modelGroup = new bsg::drawableCollection();
+
+    _orbiter->setPosition(-3.0, 3.0, 0.0);
+    _modelGroup->addObject(_model);
+    _modelGroup->addObject(_orbiter);
+
+    _modelGroup->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
+    _scene.addObject(_modelGroup);
  
     _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
@@ -173,7 +179,7 @@ private:
 
   
 public:
-	DemoVRApp(int argc, char** argv, const std::string& configFile) :
+  DemoVRApp(int argc, char** argv, const std::string& configFile) :
     MinVR::VRApp(argc, argv, configFile) {
 
     // This is the root of the scene graph.
@@ -187,29 +193,29 @@ public:
 
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
-    
+
   }
 
-	/// The MinVR apparatus invokes this method whenever there is a new
-	/// event to process.
-	void onVREvent(const MinVR::VREvent &event) {
+  /// The MinVR apparatus invokes this method whenever there is a new
+  /// event to process.
+  void onVREvent(const MinVR::VREvent &event) {
         
     // event.print();
         
     // This heartbeat event recurs at regular intervals, so you can do
     // animation with the model matrix here, as well as in the render
     // function.  
-		// if (event.getName() == "FrameStart") {
+                // if (event.getName() == "FrameStart") {
     //   const double time = event.getDataAsDouble("ElapsedSeconds");
     //   return;
-		// }
+                // }
 
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
 
-		// Quit if the escape button is pressed
-		if (event.getName() == "KbdEsc_Down") {
-			shutdown();
+    // Quit if the escape button is pressed
+    if (event.getName() == "KbdEsc_Down") {
+      shutdown();
     } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
                (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
       // Turn on and off the animation.
@@ -224,8 +230,8 @@ public:
     // looking.
     // _showCameraPosition();
     
-	}
-
+  }
+  
   /// \brief Set the render context.
   ///
   /// The onVRRender methods are the heart of the MinVR rendering
@@ -242,22 +248,26 @@ public:
     }
   }
 
+  /// \brief Draw the image.
+  ///
   /// This is the heart of any graphics program, the render function.
   /// It is called each time through the main graphics loop, and
   /// re-draws the scene according to whatever has changed since the
   /// last time it was drawn.
-	void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
-		// Only draw if the application is still running.
-		if (isRunning()) {
+  void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
+    // Only draw if the application is still running.
+    if (isRunning()) {
 
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
-      glm::vec3 pos = _rectangle->getPosition();
       _oscillator += _oscillationStep;
-      pos.x = 2.0f * sin(_oscillator);
-      pos.y = 2.0f * cos(_oscillator);
-      pos.z = -4.0f;
-      _rectangle->setPosition(pos);
+      _orbiter->setPosition(3.0f * cos(_oscillator), 3.0, 3.0 * sin(_oscillator));
+      _orbiter->setOrientation(glm::quat(0.5 * cos(_oscillator * 1.1f), 0.0, 
+					 cos(_oscillator), sin(_oscillator)));
+      _modelGroup->setPosition(cos(_oscillator / 1.2f), 
+			       -2.2f + sin(_oscillator / 1.2f), -10.0);
+      _modelGroup->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0, 
+					 cos(_oscillator * 0.2f), sin(_oscillator * 0.2f)));
 
       // Now the preliminaries are done, on to the actual drawing.
   
@@ -301,18 +311,19 @@ int main(int argc, char **argv) {
 
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
+
   if (argc < 2) {
     throw std::runtime_error("\nNeed a config file.\nTry 'bin/objDemoMinVR ../config/desktop-freeglut.xml'");
   }
     
   // Initialize the app.
-	DemoVRApp app(argc, argv, argv[1]);
+  DemoVRApp app(argc, argv, argv[1]);
 
   // Run it.
-	app.run();
+  app.run();
 
   // We never get here.
-	return 0;
+  return 0;
 }
 
 
