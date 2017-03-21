@@ -504,19 +504,21 @@ void drawableObj::prepare(GLuint programID) {
   _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0e35);
   _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
 
-  for (std::vector<glm::vec4>::iterator it = _vertices.getData().begin();
-       it != _vertices.getData().end(); it++) {
+  if (true) { //(_selectable) {
+    for (std::vector<glm::vec4>::iterator it = _vertices.getData().begin();
+         it != _vertices.getData().end(); it++) {
 
-    (*it).x = fmax((*it).x, _vertexBoundingBoxUpper.x);
-    (*it).y = fmax((*it).y, _vertexBoundingBoxUpper.y);
-    (*it).z = fmax((*it).z, _vertexBoundingBoxUpper.z);
-    (*it).w = fmax((*it).w, _vertexBoundingBoxUpper.w);
+      _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
+      _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
+      _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
+      _vertexBoundingBoxUpper.w = fmax((*it).w, _vertexBoundingBoxUpper.w);
 
-    (*it).x = fmin((*it).x, _vertexBoundingBoxLower.x);
-    (*it).y = fmin((*it).y, _vertexBoundingBoxLower.y);
-    (*it).z = fmin((*it).z, _vertexBoundingBoxLower.z);
-    (*it).w = fmin((*it).w, _vertexBoundingBoxLower.w);
-  }    
+      _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
+      _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
+      _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
+      _vertexBoundingBoxLower.w = fmin((*it).w, _vertexBoundingBoxLower.w);
+    }
+  }
   
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
@@ -636,9 +638,9 @@ glm::mat4 drawableMulti::getModelMatrix() {
     return _modelMatrix;
 }
 
-objNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
+ObjNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
 
-  objNameList out;
+  ObjNameList out;
   out.push_back(_name);
   glm::mat4 modelMatrix = getModelMatrix();
   
@@ -727,7 +729,7 @@ drawableCollection::drawableCollection() {
   srand(tp.tv_usec);
 }
 
-drawableCollection::drawableCollection(const std::string name) :
+drawableCollection::drawableCollection (const std::string name) :
   drawableMulti(name) {
   // Seed a random number generator to generate default names randomly.
   struct timeval tp;
@@ -739,6 +741,7 @@ std::string drawableCollection::addObject(const std::string name,
                                    const bsgPtr<drawableMulti> &pMultiObject) {
   pMultiObject->setParent(this);
   _collection[name] = pMultiObject;
+  pMultiObject->setName(name);
 
   return name;
 }
@@ -774,7 +777,7 @@ bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
   }
 }
 
-bsgPtr<drawableMulti> drawableCollection::getObject(objNameList &names) {
+bsgPtr<drawableMulti> drawableCollection::getObject(ObjNameList &names) {
 
   if (names.size() > 1) {
   
@@ -835,9 +838,9 @@ std::string drawableCollection::randomName() {
   return out;
 }
 
-objNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
+ObjNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
-  objNameList out;
+  ObjNameList out;
 
   for (CollectionMap::iterator it = _collection.begin();
        it != _collection.end(); it++) {
@@ -853,6 +856,20 @@ objNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
   return out;
 }
 
+std::string drawableCollection::printObj (const std::string &prefix) const {
+
+  std::string out;
+
+  for (CollectionMap::const_iterator it = _collection.begin();
+       it != _collection.end(); it++) {
+    out += prefix + it->first +
+      " (" + it->second->getName() + ")\n" +
+      it->second->printObj(prefix + "| ");
+  }
+
+  return out;
+}
+  
   
 void drawableCollection::prepare() {
 
@@ -903,6 +920,24 @@ void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) 
   // camera location.
   _cameraPosition = _lookAtPosition - glm::vec3(newDir.x, newDir.y, newDir.z);
 }
+
+bsgPtr<drawableMulti> scene::getObject(const std::string &name) {
+
+  return _sceneRoot.getObject(name);
+  
+}
+
+bsgPtr<drawableMulti> scene::getObject(ObjNameList &names) {
+
+  return _sceneRoot.getObject(names);
+  
+}
+
+ObjNameList scene::insideBoundingBox(const glm::vec3 &testPoint) {
+
+  return _sceneRoot.insideBoundingBox(glm::vec4(testPoint, 1.0));
+}
+  
   
 void scene::prepare() {
 

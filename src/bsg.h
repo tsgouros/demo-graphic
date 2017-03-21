@@ -616,7 +616,7 @@ class drawableObj {
   void draw();
 };
 
-typedef std::list<std::string> objNameList;
+typedef std::list<std::string> ObjNameList;
  
 /// \brief An abstract class to handle transformation matrices.
 ///
@@ -670,7 +670,7 @@ class drawableMulti {
 
   void setName(const std::string name) { _name = name; };
   std::string getName() { return _name; };
-  
+
   /// \brief Calculate the model matrix.
   ///
   /// Uses the current position, rotation, and scale to calculate a
@@ -709,6 +709,14 @@ class drawableMulti {
     _orientation = glm::quat(pitchYawRoll);      
     _modelMatrixNeedsReset = true;
   };
+  /// \brief Set the rotation with Euler angles.
+  ///
+  /// Specifies the pitch (x), yaw (y), and roll (z) rotations
+  /// individually, in radians.
+  void setRotation(GLfloat pitch, GLfloat yaw, GLfloat roll) {
+    _orientation = glm::quat(glm::vec3(pitch, yaw, roll));      
+    _modelMatrixNeedsReset = true;
+  };
 
   /// \brief Returns the vector position.
   glm::vec3 getPosition() { return _position; };
@@ -725,7 +733,7 @@ class drawableMulti {
   /// The calculation is to be done in world space, using all the
   /// available transformation matrices in place, but not the view or
   /// projection matrix.
-  virtual objNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+  virtual ObjNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
 
   /// \brief Retrieve an object by name.
   ///
@@ -737,10 +745,13 @@ class drawableMulti {
   /// \brief Retrieve an object by a list of names.
   ///
   /// Used in drawableCollective.
-  virtual bsgPtr<drawableMulti> getObject(objNameList &names) {
+  virtual bsgPtr<drawableMulti> getObject(ObjNameList &names) {
     return NULL;
   }  
 
+  /// \brief Returns a printable version of the object.
+  virtual std::string printObj(const std::string &prefix) const = 0;
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   virtual void prepare() = 0;
@@ -880,8 +891,10 @@ class drawableCompound : public drawableMulti {
 
   int getNumObjects() { return _objects.size(); };
 
-  objNameList insideBoundingBox(const glm::vec4 &testPoint);
+  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
 
+  std::string printObj(const std::string &prefix) const { return ""; }
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
@@ -957,7 +970,7 @@ class drawableCollection : public drawableMulti {
   /// \brief Retrieve an object by a list of names.
   ///
   /// 
-  bsgPtr<drawableMulti> getObject(objNameList &names);
+  bsgPtr<drawableMulti> getObject(ObjNameList &names);
   
   /// \brief Return a list of object names in the collection.
   std::list<std::string> getNames();
@@ -966,8 +979,10 @@ class drawableCollection : public drawableMulti {
   static std::string randomName();
 
   /// \brief Returns the names of objects containing the test point.
-  objNameList insideBoundingBox(const glm::vec4 &testPoint);
+  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
 
+  std::string printObj(const std::string &prefix) const;
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
@@ -1010,6 +1025,18 @@ class scene {
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
+
+  /// \brief Walks the scene graph.
+  ///
+  std::string _walkTree(const drawableCollection &root);
+  
+  /// \brief Returns a string representation of the scene graph.
+  ///
+  std::string _printTree() const { return _sceneRoot.printObj("| "); };
+  
+  friend std::ostream &operator<<(std::ostream &os, const scene &scene) {
+    return os << scene._printTree();
+  }
   
  public:
   scene() {
@@ -1075,6 +1102,21 @@ class scene {
   /// generate a view matrix.  For use in desktop and other non-VR
   /// applications.
   glm::mat4 getViewMatrix();
+
+  /// \brief Retrieve an object by name.
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.
+  bsgPtr<drawableMulti> getObject(const std::string &name);
+
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// 
+  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+
+  /// \brief Retrieve an object name identified by a selected point.
+  ObjNameList insideBoundingBox(const glm::vec3 &testPoint);
   
   /// \brief Loads all the compound elements.
   void load();

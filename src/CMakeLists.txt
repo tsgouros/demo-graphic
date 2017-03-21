@@ -87,6 +87,14 @@ if(PNG_FOUND)
     ${GLEW_LIBRARY}
     ${PNG_LIBRARIES})
   
+  add_executable(treeDemo2 treeDemo2.cpp ${bsg_files})
+
+  target_link_libraries(treeDemo2
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY}
+    ${PNG_LIBRARIES})
+  
   if(MINVR_FOUND)
 
     # Redefine the include directories to include MinVR.
