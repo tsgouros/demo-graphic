@@ -51,7 +51,7 @@ endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # Linux specific code
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -L/gpfs/runtime/opt/libpng/1.6.2-intel/lib")
   set(CMAKE_CXX_FLAGS_DEBUG "-lsvml -lirc ${CMAKE_CXX_FLAGS_DEBUG}")
 
 #  set(CMAKE_C_COMPILER gcc)
