@@ -537,20 +537,22 @@ void drawableObj::prepare(GLuint programID) {
 
 void drawableObj::load() {
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
-  glBufferData(GL_ARRAY_BUFFER, _vertices.size(), &_vertices.getData()[0], GL_STATIC_DRAW);
+  if (!_loadedIntoBuffer) {
+    glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+    glBufferData(GL_ARRAY_BUFFER, _vertices.size(), &_vertices.getData()[0], GL_STATIC_DRAW);
 
-  if (!_colors.getData().empty()) {
-    glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _colors.size(), &_colors.getData()[0], GL_STATIC_DRAW);
-  }
-  if (!_normals.getData().empty()) {
-    glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _normals.size(), &_normals.getData()[0], GL_STATIC_DRAW);
-  }
-  if (!_uvs.getData().empty()) {
-    glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _uvs.size(), &_uvs.getData()[0], GL_STATIC_DRAW);
+    if (!_colors.getData().empty()) {
+      glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
+      glBufferData(GL_ARRAY_BUFFER, _colors.size(), &_colors.getData()[0], GL_STATIC_DRAW);
+    }
+    if (!_normals.getData().empty()) {
+      glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
+      glBufferData(GL_ARRAY_BUFFER, _normals.size(), &_normals.getData()[0], GL_STATIC_DRAW);
+    }
+    if (!_uvs.getData().empty()) {
+      glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
+      glBufferData(GL_ARRAY_BUFFER, _uvs.size(), &_uvs.getData()[0], GL_STATIC_DRAW);
+    }
   }
 }
 

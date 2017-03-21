@@ -58,7 +58,7 @@ namespace bsg {
 		std::size_t doubleSlash = fileObjectLine.find("//");
 		if (numSlash == 0) {
             sscanf(fileObjectLine.c_str(),"%d %d %d %s", &v1, &v2, &v3, temp);
-			if (!temp[0] == 0) {
+			if (temp[0] != 0) {
 				sscanf(temp, "%d", &v4);
 			}
 
@@ -102,7 +102,7 @@ namespace bsg {
                 back_face_list.push_back(vt2-1);
 
 
-		if (!temp[0] == 0 || numSlash == 4 || numSlash == 8) {
+		if (temp[0] != 0 || numSlash == 4 || numSlash == 8) {
 
 			front_face_list.push_back(v1-1);				
 		        front_face_list.push_back(vn1-1);			
