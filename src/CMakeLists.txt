@@ -48,8 +48,6 @@ target_link_libraries(demo
 )
 
 if(PNG_FOUND)
-  #add_executable(demo2 demo2.cpp ${bsg_files})
-
 
   include_directories(
     ${OPENGL_INCLUDE_DIR}
@@ -59,19 +57,21 @@ if(PNG_FOUND)
     ${PNG_INCLUDE_DIRS}
     )
 
-  #target_link_libraries(demo2
-  #  ${FREEGLUT_LIBRARY}
-  #  ${OPENGL_LIBRARY}
-  #  ${GLEW_LIBRARY}
-  #  ${PNG_LIBRARIES})
+  add_executable(demo2 demo2.cpp ${bsg_files})
 
-  #add_executable(textureDemo textureDemo.cpp ${bsg_files})
+  target_link_libraries(demo2
+   ${FREEGLUT_LIBRARY}
+   ${OPENGL_LIBRARY}
+   ${GLEW_LIBRARY}
+   ${PNG_LIBRARIES})
 
-  #target_link_libraries(textureDemo
-  #  ${FREEGLUT_LIBRARY}
-  #  ${OPENGL_LIBRARY}
-  #  ${GLEW_LIBRARY}
-  #  ${PNG_LIBRARIES})
+  add_executable(textureDemo textureDemo.cpp ${bsg_files})
+
+  target_link_libraries(textureDemo
+   ${FREEGLUT_LIBRARY}
+   ${OPENGL_LIBRARY}
+   ${GLEW_LIBRARY}
+   ${PNG_LIBRARIES})
   
   add_executable(treeDemo treeDemo.cpp ${bsg_files})
 
@@ -102,23 +102,25 @@ if(PNG_FOUND)
       ${GLEW_LIBRARY}
       ${PNG_LIBRARIES})
 
-    #add_executable(demo4 demo4.cpp ${bsg_files})
+    add_executable(demo4 demo4.cpp ${bsg_files})
 
-    #target_link_libraries(demo4
-    #  ${MINVR_LIBRARY}
-    #  ${FREEGLUT_LIBRARY}
-    #  ${OPENGL_LIBRARY}
-    #  ${GLEW_LIBRARY}
-    #  ${PNG_LIBRARIES})
+
+    target_link_libraries(demo4
+     ${MINVR_LIBRARY}
+     ${FREEGLUT_LIBRARY}
+     ${OPENGL_LIBRARY}
+     ${GLEW_LIBRARY}
+     ${PNG_LIBRARIES})
     
-    #add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
+    add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
 
-    #target_link_libraries(textureDemoMinVR
-    #  ${MINVR_LIBRARY}
-    #  ${FREEGLUT_LIBRARY}
-    #  ${OPENGL_LIBRARY}
-    #  ${GLEW_LIBRARY}
-    #  ${PNG_LIBRARIES})
+
+    target_link_libraries(textureDemoMinVR
+     ${MINVR_LIBRARY}
+     ${FREEGLUT_LIBRARY}
+     ${OPENGL_LIBRARY}
+     ${GLEW_LIBRARY}
+     ${PNG_LIBRARIES})
 
     add_executable(objDemoMinVR objDemoMinVR.cpp ${bsg_files})
 

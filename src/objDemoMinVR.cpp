@@ -128,6 +128,10 @@ private:
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
 
+
+    _vertexFile = "../src/textureShader.vp";
+    _fragmentFile = "../src/textureShader.fp";
+    
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
 
@@ -140,8 +144,9 @@ private:
 
     // Add a texture to our shader manager object.
     bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
-    texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
-    //texture->readFile(bsg::textureCHK, "");
+
+    //texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    texture->readFile(bsg::textureCHK, "");
     _shader->addTexture(texture);
     
     // We could put the axes and the rectangle in the same compound
@@ -154,6 +159,7 @@ private:
 
     //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
     _model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
+
     _model->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_model);
  
@@ -186,6 +192,7 @@ public:
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
     
+
     _vertexFile = std::string(argv[2]);
     _fragmentFile = std::string(argv[3]);
 
@@ -302,6 +309,7 @@ int main(int argc, char **argv) {
 
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
+
   if (argc < 4) {
     throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../src/textureShader.vp ../src/textureShader.fp'");
   }

@@ -51,6 +51,7 @@ namespace bsg {
             }
             if (fileObjectLine.c_str()[0] == 'f'){				
                 int v1, vn1=0, vt1=0, v2, vn2=0, vt2=0, v3, vn3=0, vt3, v4=0, vn4=0, vt4=0;
+
         char temp[20] = "";
                 fileObjectLine[0] = ' ';
                 std::size_t numSlash = std::count(fileObjectLine.begin(), fileObjectLine.end(), '/');
@@ -62,6 +63,7 @@ namespace bsg {
 			}
 
 		} else if (numSlash == 3) {
+
 			sscanf(fileObjectLine.c_str(),"%d/%d %d/%d %d/%d", &v1, &vt1, &v2, &vt2, &v3, &vt3);
 		} else if (numSlash == 4) {
 			sscanf(fileObjectLine.c_str(),"%d/%d %d/%d %d/%d %d/%d", &v1, &vt1, &v2, &vt2, &v3, &vt3, &v4, &vt4);
@@ -99,7 +101,9 @@ namespace bsg {
                 back_face_list.push_back(vn2-1);				
                 back_face_list.push_back(vt2-1);
 
+
 		if (!temp[0] == 0 || numSlash == 4 || numSlash == 8) {
+
 			front_face_list.push_back(v1-1);				
 		        front_face_list.push_back(vn1-1);			
 		        front_face_list.push_back(vt1-1);
@@ -175,7 +179,6 @@ namespace bsg {
             frontFaceUVs[i/3] = (glm::vec2(0.0f, 0.0f));
             backFaceUVs[i/3] = (glm::vec2(0.0f, 0.0f));
         }
-
     }
 
       _frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
