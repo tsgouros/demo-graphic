@@ -1049,4 +1049,19 @@ class scene {
 
 }
 
+struct material {
+    std::string name;
+
+    glm::vec3 colorAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 colorDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 colorSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    float opacity = 1.0f;
+    float exponentSpecular = 0.0f;
+
+    GLuint textureIDAmbient = 0;
+    GLuint textureIDDiffuse = 0;
+    GLuint textureIDSpecular = 0;
+};
+
 #endif //BSGHEADER
