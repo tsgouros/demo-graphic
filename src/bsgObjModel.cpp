@@ -33,7 +33,10 @@ void drawableObjModel::_processObjFile() {
   int matIndex =
       0; // placeholder material Index until material parsing is implemented
   face_list.push_back(std::vector<int>());
-  std::cout << "Processing: " << _fileName << "..." << std::endl;
+  
+  std::cout << "Processing: " << _fileName;
+  if (!_includeBackFace) std::cout << " (front face only)";
+  std::cout << " ..." << std::endl;
 
   if (fileObject.is_open()) {
     while (!fileObject.eof()) {
@@ -289,7 +292,7 @@ void drawableObjModel::_processObjFile() {
 
   addObject(_frontFace);
   if (_includeBackFace) addObject(_backFace);
-  std::cout << "..." << _fileName << " done." << std::endl;
+  std::cout << "... " << _fileName << " done." << std::endl;
 }
 
 std::vector<std::string> drawableObjModel::split(const std::string line,

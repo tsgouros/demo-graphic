@@ -50,11 +50,11 @@ typedef enum {
   GLMATRIX_INVMODEL = 3
 } GLMATRIXTYPE;
 
- long gettimeusec() {
-  struct timeval tp;
-  gettimeofday(&tp, NULL);
-  return tp.tv_usec;
-}
+// long gettimeusec() {
+//   struct timeval tp;
+//   gettimeofday(&tp, NULL);
+//   return tp.tv_usec;
+// }
 
   
 
