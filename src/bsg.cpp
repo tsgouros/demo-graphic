@@ -495,7 +495,7 @@ bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
     (testPoint.z <= upper.z) &&
     (testPoint.z >= lower.z);  
 }
-  
+
 void drawableObj::prepare(GLuint programID) {
 
   bool badID = false;
@@ -505,8 +505,12 @@ void drawableObj::prepare(GLuint programID) {
   _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
 
   if (true) { //(_selectable) {
-    for (std::vector<glm::vec4>::iterator it = _vertices.getData().begin();
-         it != _vertices.getData().end(); it++) {
+    // Optimization here, so as not to use a templated accessor within
+    // the for loop.
+    std::vector<glm::vec4> data = _vertices.getData();
+
+    for (std::vector<glm::vec4>::iterator it = data.begin();
+         it != data.end(); it++) {
 
       _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
       _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);

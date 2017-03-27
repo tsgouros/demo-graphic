@@ -49,7 +49,15 @@ typedef enum {
   GLMATRIX_PROJECTION = 2,
   GLMATRIX_INVMODEL = 3
 } GLMATRIXTYPE;
-   
+
+ long gettimeusec() {
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  return tp.tv_usec;
+}
+
+  
+
 
 /// \mainpage Baby Scene Graph
 ///
