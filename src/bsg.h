@@ -228,8 +228,9 @@ class drawableObjData {
   std::vector<T> getData() const { return _data; };
   void addData(T d) { _data.push_back(d); };
   void setData(const std::vector<T> data) { _data = data; };
-  T* beginAddress() { return &_data[0]; };
 
+  T* beginAddress() { return &_data[0]; };
+  
   T operator[](const int i) { return _data[i]; };
   
   // The ID that goes with that name.
@@ -242,12 +243,12 @@ class drawableObjData {
   bool empty() { return _data.empty(); };
 
   /// A size calculator. Total number of bytes.
-  size_t size() { return _data.size() * sizeof(T); };
+  size_t byteSize() { return _data.size() * sizeof(T); };
 
   /// Another size calculator.
-  size_t realSize() { return _data.size(); };
+  size_t size() { return _data.size(); };
   
-  /// Another size calculator.
+  /// Yet another size calculator.
   size_t componentsPerVertex() { return sizeof(T) / sizeof(float); };
 };
 
@@ -313,29 +314,31 @@ class lightList {
     return addLight(position, white);
   };
   
-  int getNumLights() { return _lightPositions.getData().size(); };
+  int getNumLights() { return _lightPositions.size(); };
 
   // We have mutators and accessors for all the pieces...
   std::vector<glm::vec4> getPositions() { return _lightPositions.getData(); };
   void setPositions(const std::vector<glm::vec4> positions) {
-    _lightPositions.getData() = positions;
+    _lightPositions.setData(positions);
   };
   GLuint getPositionID() { return _lightPositions.ID; };
 
   std::vector<glm::vec4> getColors() { return _lightColors.getData(); };
-  void setColors(const std::vector<glm::vec4> &colors) { _lightColors.getData() = colors; };
+  void setColors(const std::vector<glm::vec4> &colors) {
+    _lightColors.setData(colors);
+  };
   GLuint getColorID() { return _lightColors.ID; };
 
   /// ... and also for individual lights.
   void setPosition(const int &i, const glm::vec4 &position) {
-    _lightPositions.getData()[i] = position;
+    _lightPositions[i] = position;
   };
-  glm::vec4 getPosition(const int &i) { return _lightPositions.getData()[i]; };
+  glm::vec4 getPosition(const int &i) { return _lightPositions[i]; };
 
   /// \brief Change a light's color.
   void setColor(const int &i, const glm::vec4 &color) {
-    _lightColors.getData()[i] = color; };
-  glm::vec4 getColor(const int &i) { return _lightColors.getData()[i]; };
+    _lightColors[i] = color; };
+  glm::vec4 getColor(const int &i) { return _lightColors[i]; };
 
   /// \brief Link the light data with whatever shader is in use.
   ///

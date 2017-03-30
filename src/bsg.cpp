@@ -38,10 +38,10 @@ void lightList::draw() {
   // If there aren't any lights, don't bother.
   if (_lightPositions.size() > 0) {
     glUniform4fv(_lightPositions.ID,
-                 _lightPositions.getData().size(),
+                 _lightPositions.size(),
                  &_lightPositions.getData()[0].x);
     glUniform4fv(_lightColors.ID,
-                 _lightColors.getData().size(),
+                 _lightColors.size(),
                  &_lightColors.getData()[0].x);
   }
 }
@@ -535,7 +535,7 @@ void drawableObj::prepare(GLuint programID) {
     badID = true;
   }
   
-  if (!_colors.getData().empty()) {
+  if (!_colors.empty()) {
     glGenBuffers(1, &_colors.bufferID);
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
     
@@ -544,7 +544,7 @@ void drawableObj::prepare(GLuint programID) {
       badID = true;
     }
   }
-  if (!_normals.getData().empty()) {
+  if (!_normals.empty()) {
     glGenBuffers(1, &_normals.bufferID);
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
     
@@ -553,7 +553,7 @@ void drawableObj::prepare(GLuint programID) {
       badID = true;
     }
   }
-  if (!_uvs.getData().empty()) {
+  if (!_uvs.empty()) {
     glGenBuffers(1, &_uvs.bufferID);
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
     
@@ -576,19 +576,23 @@ void drawableObj::load() {
 
   if (!_loadedIntoBuffer) {
     glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _vertices.size(), &_vertices.getData()[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _vertices.byteSize(), _vertices.beginAddress(),
+                 GL_STATIC_DRAW);
 
-    if (!_colors.getData().empty()) {
+    if (!_colors.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, _colors.size(), &_colors.getData()[0], GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, _colors.byteSize(), _colors.beginAddress(),
+                   GL_STATIC_DRAW);
     }
-    if (!_normals.getData().empty()) {
+    if (!_normals.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, _normals.size(), &_normals.getData()[0], GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, _normals.byteSize(), _normals.beginAddress(),
+                   GL_STATIC_DRAW);
     }
-    if (!_uvs.getData().empty()) {
+    if (!_uvs.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, _uvs.size(), &_uvs.getData()[0], GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, _uvs.byteSize(), _uvs.beginAddress(),
+                   GL_STATIC_DRAW);
     }
   }
 }
@@ -600,19 +604,19 @@ void drawableObj::draw() {
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
 
-  if (!_colors.getData().empty()) {
+  if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
     glEnableVertexAttribArray(_colors.ID);
     glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
-  if (!_normals.getData().empty()) {
+  if (!_normals.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
     glEnableVertexAttribArray(_normals.ID);
     glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
-  if (!_uvs.getData().empty()) {
+  if (!_uvs.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
     glEnableVertexAttribArray(_uvs.ID);
     glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(),
