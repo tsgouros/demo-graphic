@@ -1,5 +1,7 @@
 #include "bsg.h"
 
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 namespace bsg {
 
 void bsgUtils::printMat(const std::string& name, const glm::mat4& mat) {
@@ -498,6 +500,39 @@ bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
 
 void drawableObj::prepare(GLuint programID) {
 
+  if (_interleaved) {
+    _prepareInterleaved(programID);
+  } else {
+    _prepareSeparate(programID);
+  }
+}
+
+void drawableObj::_prepareInterleaved(GLuint programID) {
+
+  // Calculate the stride and offset for each vertex value.
+  _stride = 12; // We're cheating here, assuming only x,y,z.  
+
+  if (!_colors.empty()) {
+    _colorPos = _stride;  // The colors appear after the vertices.
+    _stride += 12;  // The next value appears after that.
+  }
+  
+  if (!_normals.empty()) {
+    _normalPos = _stride;
+    _stride += 12;
+  }
+  
+  if (!_uvs.empty()) {
+    _uvPos = _stride;
+    _stride += 8;
+  }
+  // End of calculating all the stride values.
+  
+}
+
+  
+void drawableObj::_prepareSeparate(GLuint programID) { 
+
   bool badID = false;
 
   // Find the bounding box for this object.
@@ -574,6 +609,55 @@ void drawableObj::prepare(GLuint programID) {
 
 void drawableObj::load() {
 
+  if (_interleaved) {
+    _loadInterleaved();
+  } else {
+    _loadSeparate();
+  }
+}
+
+void drawableObj::_loadInterleaved() {
+
+  if (!_loadedIntoBuffer) {
+
+    // First we interleave the data...
+    int i;
+    for (i = 0; i < _vertices.size(); i++) {
+
+      _indices.addData(i);
+      _interleavedData.addData(_vertices[i].x);
+      _interleavedData.addData(_vertices[i].y);
+      _interleavedData.addData(_vertices[i].z);
+
+      if (!_colors.empty()) {
+        _interleavedData.addData(_colors[i].r);
+        _interleavedData.addData(_colors[i].g);
+        _interleavedData.addData(_colors[i].b);
+      }
+        
+      if (!_normals.empty()) {
+        _interleavedData.addData(_normals[i].x);
+        _interleavedData.addData(_normals[i].y);
+        _interleavedData.addData(_normals[i].z);
+      }
+
+      if (!_uvs.empty()) {
+        _interleavedData.addData(_uvs[i].s);
+        _interleavedData.addData(_uvs[i].t);
+      }      
+    }
+
+    // Now we load it into a buffer and an index buffer.
+
+    
+    
+    _loadedIntoBuffer = true;
+  }  
+}
+
+  
+void drawableObj::_loadSeparate() { 
+  
   if (!_loadedIntoBuffer) {
     glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
     glBufferData(GL_ARRAY_BUFFER, _vertices.byteSize(), _vertices.beginAddress(),
@@ -599,6 +683,48 @@ void drawableObj::load() {
 
 void drawableObj::draw() {
 
+  if (_interleaved) {
+    _drawInterleaved();
+  } else {
+    _drawSeparate();
+  }
+}
+
+void drawableObj::_drawInterleaved() {
+
+  // All the data is in the single vertex buffer.
+  glBindBuffer(GL_ARRAY_BUFFER, _vertices.ID);
+  glEnableVertexAttribArray(_vertices.ID);
+  glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(), GL_FLOAT,
+                        GL_FALSE, _stride, BUFFER_OFFSET(0));
+
+  if (!_colors.empty()) {
+    glEnableVertexAttribArray(_colors.ID);
+    glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(), GL_FLOAT,
+                          GL_FALSE, _stride, BUFFER_OFFSET(_colorPos));
+  }
+  
+  if (!_normals.empty()) {
+    glEnableVertexAttribArray(_normals.ID);
+    glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(), GL_FLOAT,
+                          GL_FALSE, _stride, BUFFER_OFFSET(_normalPos));
+  }
+  
+  if (!_uvs.empty()) {
+    glEnableVertexAttribArray(_uvs.ID);
+    glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(), GL_FLOAT,
+                          GL_FALSE, _stride, BUFFER_OFFSET(_uvPos));
+  }
+  
+  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices.ID);
+  glDrawElements(_drawType, _count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+  
+}
+
+  
+void drawableObj::_drawSeparate() { 
+  
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
   glEnableVertexAttribArray(_vertices.ID);
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
