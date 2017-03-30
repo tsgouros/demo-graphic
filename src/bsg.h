@@ -227,6 +227,10 @@ class drawableObjData {
 
   std::vector<T> getData() const { return _data; };
   void addData(T d) { _data.push_back(d); };
+  void setData(const std::vector<T> data) { _data = data; };
+  T* beginAddress() { return &_data[0]; };
+
+  T operator[](const int i) { return _data[i]; };
   
   // The ID that goes with that name.
   GLint ID;
@@ -234,11 +238,17 @@ class drawableObjData {
   /// The ID of the buffer containing that data.
   GLuint bufferID;
 
-  /// A size calculator.
+  /// Is there any data in here?
+  bool empty() { return _data.empty(); };
+
+  /// A size calculator. Total number of bytes.
   size_t size() { return _data.size() * sizeof(T); };
 
   /// Another size calculator.
-  int intSize() { return sizeof(T) / sizeof(float); };
+  size_t realSize() { return _data.size(); };
+  
+  /// Another size calculator.
+  size_t componentsPerVertex() { return sizeof(T) / sizeof(float); };
 };
 
 /// \class lightList

@@ -597,22 +597,26 @@ void drawableObj::draw() {
 
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
   glEnableVertexAttribArray(_vertices.ID);
-  glVertexAttribPointer(_vertices.ID, _vertices.intSize(), GL_FLOAT, 0, 0, 0);
+  glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
+                        GL_FLOAT, 0, 0, 0);
 
   if (!_colors.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
     glEnableVertexAttribArray(_colors.ID);
-    glVertexAttribPointer(_colors.ID, _colors.intSize(), GL_FLOAT, 0, 0, 0);
+    glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
+                          GL_FLOAT, 0, 0, 0);
   }
   if (!_normals.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
     glEnableVertexAttribArray(_normals.ID);
-    glVertexAttribPointer(_normals.ID, _normals.intSize(), GL_FLOAT, 0, 0, 0);
+    glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(),
+                          GL_FLOAT, 0, 0, 0);
   }
   if (!_uvs.getData().empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
     glEnableVertexAttribArray(_uvs.ID);
-    glVertexAttribPointer(_uvs.ID, _uvs.intSize(), GL_FLOAT, 0, 0, 0);
+    glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(),
+                          GL_FLOAT, 0, 0, 0);
   }
 
   glDrawArrays(_drawType, 0, _count);
