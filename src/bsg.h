@@ -51,6 +51,23 @@ typedef enum {
 } GLMATRIXTYPE;
    
 
+struct material {
+    std::string name;
+
+    glm::vec3 colorAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 colorDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 colorSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    float opacity = 1.0f;
+    float specularExp = 0.0f;
+
+    GLint textureIDAmbient = -1;
+    GLint textureIDDiffuse =-1;
+    GLint textureIDSpecular = -1;
+    GLint textureIDSpecularExp = -1;
+    GLint textureIDOpacity = -1;
+};
+
 /// \mainpage Baby Scene Graph
 ///
 /// A set of classes to manage a collection of shaders and objects to
@@ -359,8 +376,20 @@ class textureMgr {
   GLuint _textureAttribID;
   std::string _textureAttribName;
 
+  std::map<std::string, GLint> _attribIDs;
+
   void _setupDefaultNames() {
     _textureAttribName = std::string("textureImage");
+
+
+    _attribIDs["colorAmbient"] = -1;
+    _attribIDs["colorDiffuse"] = -1;
+    _attribIDs["colorSpecular"] = -1;
+    _attribIDs["specularExp"] = -1;
+    _attribIDs["opacity"] = -1;
+
+    _attribIDs["diffuseTexture"] = -1;
+    _attribIDs["textureImage"] = -1;
   };
 
   GLuint _textureBufferID;
@@ -371,10 +400,12 @@ class textureMgr {
  public:
   textureMgr() { _setupDefaultNames(); };
 
+  void readFile(const std::string& fileName);
   void readFile(const textureType &type, const std::string &fileName);
   
   void load(const GLuint programID);
   void draw();
+  void drawMaterial(material mat);
 
   GLuint getTextureID() { return _textureBufferID; };
 
@@ -504,6 +535,12 @@ class shaderMgr {
   ///
   /// Actually loads data like the light list to be used in the shader.
   void draw();
+
+  void drawMaterial(material mat) {
+      if (_textureLoaded) {
+          _texture->drawMaterial(mat);
+      }
+  }
 };
 
 /// \brief The information necessary to draw an object.
@@ -531,6 +568,7 @@ class drawableObj {
   drawableObjData<glm::vec4> _colors;
   drawableObjData<glm::vec4> _normals;
   drawableObjData<glm::vec2> _uvs;
+  material _material;
   
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
@@ -573,6 +611,9 @@ class drawableObj {
   void addData(const GLDATATYPE type,
                const std::string &name,
                const std::vector<glm::vec2> &data);
+
+  void addMaterial(material mat);
+  material getMaterial();
 
   /// \brief One-time-only draw preparation.
   ///
@@ -1048,20 +1089,5 @@ class scene {
 
 
 }
-
-struct material {
-    std::string name;
-
-    glm::vec3 colorAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 colorDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 colorSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
-
-    float opacity = 1.0f;
-    float exponentSpecular = 0.0f;
-
-    GLuint textureIDAmbient = 0;
-    GLuint textureIDDiffuse = 0;
-    GLuint textureIDSpecular = 0;
-};
 
 #endif //BSGHEADER

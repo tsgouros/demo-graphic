@@ -46,6 +46,14 @@ void lightList::draw() {
   }
 }
 
+void textureMgr::readFile(const std::string& fileName) {
+    if (fileName.size() > 3 && fileName.substr(fileName.size()-3, fileName.size()).compare("png") == 0) {
+        readFile(texturePNG, fileName);
+    } else {
+        readFile(textureCHK, fileName);
+    }
+}
+
 void textureMgr::readFile(const textureType& type, const std::string& fileName) {
 
   switch(type) {
@@ -255,18 +263,60 @@ void textureMgr::load(const GLuint programID) {
   // Get a handle for the texture uniform.
   _textureAttribID = glGetUniformLocation(programID,
                                           _textureAttribName.c_str());
+
+  for (std::map<std::string, GLint>::iterator it =_attribIDs.begin(); it != _attribIDs.end(); ++it) {
+      it->second = glGetUniformLocation(programID, it->first.c_str());
+  }
 }
 
 void textureMgr::draw() {
+    if (_attribIDs["colorDiffuse"] > -1) {
+        glUniform3f(_attribIDs["colorDiffuse"], 1.0, 1.0, 1.0);
+    }
 
-  // Bind the texture in Texture Unit 0
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, _textureBufferID);
-  
-  // Set our "myTextureSampler" sampler to user Texture Unit 0
-  glUniform1i(_textureAttribID, 0);
+    if (_attribIDs["diffuseTexture"] > -1) {
+        glUniform1i(_attribIDs["diffuseTexture"], false);
+    }
 
-  // The data is actually loaded into the buffer in the loadXX() method.
+}
+
+void textureMgr::drawMaterial(material mat) {
+
+  if (_attribIDs["colorAmbient"] > -1) {
+      glUniform3f(_attribIDs["colorAmbient"], mat.colorAmbient.r, mat.colorAmbient.g, mat.colorAmbient.b);
+  }
+
+  if (_attribIDs["colorDiffuse"] > -1) {
+      glUniform3f(_attribIDs["colorDiffuse"], mat.colorDiffuse.r, mat.colorDiffuse.g, mat.colorDiffuse.b);
+  }
+
+  if (_attribIDs["colorSpecular"] > -1) {
+      glUniform3f(_attribIDs["colorSpecular"], mat.colorSpecular.r, mat.colorSpecular.g, mat.colorSpecular.b);
+  }
+
+  if (_attribIDs["specularExp"] > -1) {
+      glUniform1f(_attribIDs["specularExp"], mat.specularExp);
+  }
+
+  if (_attribIDs["opacity"] > -1) {
+      glUniform1f(_attribIDs["opacity"], mat.opacity);
+  }
+
+  if (_attribIDs["textureImage"] > -1 ) { //&&
+      if(mat.textureIDDiffuse > -1) {
+      // Bind the texture in Texture Unit 0
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, mat.textureIDDiffuse);
+
+      // Set our "myTextureSampler" sampler to user Texture Unit 0
+      glUniform1i(_attribIDs["diffuseTexture"], true);
+      glUniform1i(_attribIDs["textureImage"], 0);
+
+      // The data is actually loaded into the buffer in the loadXX() method.
+      } else {
+          glUniform1i(_attribIDs["diffuseTexture"], false);
+      }
+  }
 }
   
 std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
@@ -481,7 +531,13 @@ void drawableObj::addData(const GLDATATYPE type,
   }
 }
 
+void drawableObj::addMaterial(material mat) {
+    _material = mat;
+}
 
+material drawableObj::getMaterial() {
+    return _material;
+}
   
 void drawableObj::prepare(GLuint programID) {
 
@@ -664,6 +720,7 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
+      _pShader->drawMaterial(it->getMaterial());
     it->draw();
   }  
 }

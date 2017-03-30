@@ -130,8 +130,8 @@ private:
     _shader->addLights(_lights);
 
 
-    _vertexFile = "../src/textureShader.vp";
-    _fragmentFile = "../src/textureShader.fp";
+    _vertexFile = "../src/tex2.vp";
+    _fragmentFile = "../src/tex2.fp";
     
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
