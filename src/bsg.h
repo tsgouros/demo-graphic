@@ -569,6 +569,8 @@ class drawableObj {
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
 
   bool _interleaved;
+
+  void _getAttribLocations(GLuint programID);
   void _prepareSeparate(GLuint programID);
   void _prepareInterleaved(GLuint programID);
   void _loadSeparate();

@@ -498,6 +498,56 @@ bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
     (testPoint.z >= lower.z);  
 }
 
+
+void drawableObj::_getAttribLocations(GLuint programID) {
+
+  bool badID = false;
+
+  _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
+
+  // Check to make sure the ID awarded is sane.  If not, probably the
+  // name does not match the name in the shader.
+  if (_vertices.ID < 0) {
+    std::cerr << "** Caution: Bad ID for vertices attribute '"
+              << _vertices.name << "'" << std::endl;
+    badID = true;
+  }
+  
+  if (!_colors.empty()) {
+    _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
+    
+    if (_colors.ID < 0) {
+      std::cerr << "** Caution: Bad ID for colors attribute '"
+                << _colors.name << "'" << std::endl;
+      badID = true;
+    }
+  }
+  if (!_normals.empty()) {
+    _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
+    
+    if (_normals.ID < 0) {
+      std::cerr << "** Caution: Bad ID for normals attribute '"
+                << _normals.name << "'" << std::endl;
+      badID = true;
+    }
+  }
+  if (!_uvs.empty()) {
+    _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
+    
+    if (_uvs.ID < 0) {
+      std::cerr << "** Caution: Bad ID for texture attribute '"
+                << _uvs.name << "'" << std::endl;
+      badID = true;
+    }
+  }
+
+  if (badID) {
+    std::cerr << "This can be caused either by a spelling error, or by not using"
+              << std::endl << "the attribute within the shader code." << std::endl;
+  }
+}
+
+  
 void drawableObj::prepare(GLuint programID) {
 
   if (_interleaved) {
@@ -527,13 +577,14 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
     _stride += 8;
   }
   // End of calculating all the stride values.
-  
+
+    _getAttribLocations(programID);
+
+    _loadInterleaved();  
 }
 
   
 void drawableObj::_prepareSeparate(GLuint programID) { 
-
-  bool badID = false;
 
   // Find the bounding box for this object.
   _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0e35);
@@ -560,50 +611,15 @@ void drawableObj::_prepareSeparate(GLuint programID) {
   }
   
   // Figure out which buffers we need and get IDs for them.
-  glGenBuffers(1, &_vertices.bufferID);  
-  _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
+  glGenBuffers(1, &_vertices.bufferID);
+  if (!_colors.empty()) { glGenBuffers(1, &_colors.bufferID);  }
+  if (!_normals.empty()) { glGenBuffers(1, &_normals.bufferID);  }
+  if (!_uvs.empty()) { glGenBuffers(1, &_uvs.bufferID);  }
 
-  // Check to make sure the ID awarded is sane.  If not, probably the
-  // name does not match the name in the shader.
-  if (_vertices.ID < 0) {
-    std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
-    badID = true;
-  }
-  
-  if (!_colors.empty()) {
-    glGenBuffers(1, &_colors.bufferID);
-    _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
-    
-    if (_colors.ID < 0) {
-      std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
-      badID = true;
-    }
-  }
-  if (!_normals.empty()) {
-    glGenBuffers(1, &_normals.bufferID);
-    _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
-    
-    if (_normals.ID < 0) {
-      std::cerr << "** Caution: Bad ID for normals attribute '" << _normals.name << "'" << std::endl;
-      badID = true;
-    }
-  }
-  if (!_uvs.empty()) {
-    glGenBuffers(1, &_uvs.bufferID);
-    _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
-    
-    if (_uvs.ID < 0) {
-      std::cerr << "** Caution: Bad ID for texture attribute '" << _uvs.name << "'" << std::endl;
-      badID = true;
-    }
-  }
-
-  if (badID) {
-    std::cerr << "This can be caused either by a spelling error, or by not using the" << std::endl << "attribute within the shader code." << std::endl;
-  }
+  _getAttribLocations(programID);
   
   // Put the data in its buffers, for practice.
-  load();
+  _loadSeparate();
 
 }
 
@@ -647,8 +663,10 @@ void drawableObj::_loadInterleaved() {
       }      
     }
 
-    // Now we load it into a buffer and an index buffer.
-
+    // ... then we load it into a buffer.
+    glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
+    glBufferData(GL_ARRAY_BUFFER, _interleavedData.byteSize(),
+                 _interleavedData.beginAddress(), GL_STATIC_DRAW);
     
     
     _loadedIntoBuffer = true;
@@ -659,10 +677,14 @@ void drawableObj::_loadInterleaved() {
 void drawableObj::_loadSeparate() { 
   
   if (!_loadedIntoBuffer) {
+    // Select a buffer to work on.
     glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+
+    // Put something in it.
     glBufferData(GL_ARRAY_BUFFER, _vertices.byteSize(), _vertices.beginAddress(),
                  GL_STATIC_DRAW);
 
+    // Do the same for the other attributes, if they have any data.
     if (!_colors.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
       glBufferData(GL_ARRAY_BUFFER, _colors.byteSize(), _colors.beginAddress(),
@@ -724,12 +746,19 @@ void drawableObj::_drawInterleaved() {
 
   
 void drawableObj::_drawSeparate() { 
-  
+
+  // What buffer are we using?
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+
+  // What OpenGL-assigned ID does it have (corresponds to a shader
+  // attribute name)?
   glEnableVertexAttribArray(_vertices.ID);
+
+  // How do we read it?
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
 
+  // Now do the same for the other attributes we're using.
   if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
     glEnableVertexAttribArray(_colors.ID);
