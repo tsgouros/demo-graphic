@@ -538,7 +538,7 @@ class shaderMgr {
 /// All the drawableObj shapes in a compound object (see below) use the
 /// same shader, and the same model matrix.
 class drawableObj {
- private:
+ protected:
 
   // Specifies whether this is a triangle, a triangle strip, fan,
   // whatever.
@@ -557,18 +557,17 @@ class drawableObj {
   // This data is for taking the component data and creating an
   // interleaved buffer with an index array.  This is supposed to be
   // an optimization.  The vertex position is always zero, and the
-  // vertices array is not optional, so there is not vertexPos variable.
+  // vertices array is not optional, so there is no vertexPos variable.
+  bool _interleaved;
   GLshort _colorPos, _normalPos, _uvPos, _stride;
   drawableObjData<float> _interleavedData;
-  drawableObjData<int> _indices;
+  //drawableObjData<unsigned int> _indices;
   
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
 
   bool _loadedIntoBuffer;
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
-
-  bool _interleaved;
 
   void _getAttribLocations(GLuint programID);
   void _prepareSeparate(GLuint programID);

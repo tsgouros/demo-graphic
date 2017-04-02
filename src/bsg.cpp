@@ -560,27 +560,30 @@ void drawableObj::prepare(GLuint programID) {
 void drawableObj::_prepareInterleaved(GLuint programID) {
 
   // Calculate the stride and offset for each vertex value.
-  _stride = 12; // We're cheating here, assuming only x,y,z.  
+  _stride = 3 * sizeof(float); // We're cheating here, assuming only x,y,z.  
 
   if (!_colors.empty()) {
     _colorPos = _stride;  // The colors appear after the vertices.
-    _stride += 12;  // The next value appears after that.
+    _stride += 3 * sizeof(float);  // The next value appears after that.
   }
   
   if (!_normals.empty()) {
     _normalPos = _stride;
-    _stride += 12;
+    _stride += 3 * sizeof(float);
   }
   
   if (!_uvs.empty()) {
     _uvPos = _stride;
-    _stride += 8;
+    _stride += 2 * sizeof(float);
   }
   // End of calculating all the stride values.
 
-    _getAttribLocations(programID);
+  glGenBuffers(1, &_interleavedData.bufferID);
+  //  glGenBuffers(1, &_indices.bufferID);
 
-    _loadInterleaved();  
+  _getAttribLocations(programID);
+
+  _loadInterleaved();  
 }
 
   
@@ -592,7 +595,7 @@ void drawableObj::_prepareSeparate(GLuint programID) {
 
   if (true) { //(_selectable) {
     // Optimization here, so as not to use a templated accessor within
-    // the for loop.
+    // the for loop (slow).
     std::vector<glm::vec4> data = _vertices.getData();
 
     for (std::vector<glm::vec4>::iterator it = data.begin();
@@ -636,38 +639,72 @@ void drawableObj::_loadInterleaved() {
 
   if (!_loadedIntoBuffer) {
 
+    std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
+
+    
     // First we interleave the data...
     int i;
     for (i = 0; i < _vertices.size(); i++) {
 
-      _indices.addData(i);
+      //_indices.addData(i);
+
+      //std::cout << "index: " << _indices[i] << " (" << i << ") >> ";
+
       _interleavedData.addData(_vertices[i].x);
       _interleavedData.addData(_vertices[i].y);
       _interleavedData.addData(_vertices[i].z);
+
+      // std::cout << "v(" << _vertices[i].x << "," << _vertices[i].y << "," << _vertices[i].z << ")";
 
       if (!_colors.empty()) {
         _interleavedData.addData(_colors[i].r);
         _interleavedData.addData(_colors[i].g);
         _interleavedData.addData(_colors[i].b);
+
+      // std::cout << "c(" << _colors[i].r << "," << _colors[i].g << "," << _colors[i].b << ")";
       }
         
       if (!_normals.empty()) {
         _interleavedData.addData(_normals[i].x);
         _interleavedData.addData(_normals[i].y);
         _interleavedData.addData(_normals[i].z);
+        // std::cout << "n(" << _normals[i].x << "," << _normals[i].y << "," << _normals[i].z << ")";
+
       }
 
       if (!_uvs.empty()) {
         _interleavedData.addData(_uvs[i].s);
         _interleavedData.addData(_uvs[i].t);
+      // std::cout << "t(" << _uvs[i].s << "," << _uvs[i].s << ")";
       }      
+
+      // std::cout << std::endl;
+
     }
 
+    std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
+
+    // for (int j = 0; j < _count; j++) {
+    //   std::cout << "(" << j << ") ";
+    //   for (int k = 0; k < _stride/sizeof(float); k++) 
+    //     std::cout << _interleavedData[ j * (_stride/sizeof(float)) + k ] << ",";
+      
+    //   std::cout << std::endl;
+    // }
+
+    std::cout << "buffer ID:" << _interleavedData.bufferID << " size:" << _interleavedData.byteSize() << " first point:" << (float)*(_interleavedData.beginAddress()) << std::endl;
+    
     // ... then we load it into a buffer.
     glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
     glBufferData(GL_ARRAY_BUFFER, _interleavedData.byteSize(),
                  _interleavedData.beginAddress(), GL_STATIC_DRAW);
-    
+
+
+    // All the data is in the single vertex buffer.
+    glEnableVertexAttribArray(_vertices.ID);
+    if (!_colors.empty()) glEnableVertexAttribArray(_colors.ID);
+    if (!_normals.empty()) glEnableVertexAttribArray(_normals.ID);
+    if (!_uvs.empty()) glEnableVertexAttribArray(_uvs.ID);
     
     _loadedIntoBuffer = true;
   }  
@@ -684,19 +721,26 @@ void drawableObj::_loadSeparate() {
     glBufferData(GL_ARRAY_BUFFER, _vertices.byteSize(), _vertices.beginAddress(),
                  GL_STATIC_DRAW);
 
+    // What OpenGL-assigned ID does it have (corresponds to a shader
+    // attribute name)?
+    glEnableVertexAttribArray(_vertices.ID);
+
     // Do the same for the other attributes, if they have any data.
     if (!_colors.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
       glBufferData(GL_ARRAY_BUFFER, _colors.byteSize(), _colors.beginAddress(),
                    GL_STATIC_DRAW);
+      glEnableVertexAttribArray(_colors.ID);
     }
     if (!_normals.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
+      glEnableVertexAttribArray(_normals.ID);
       glBufferData(GL_ARRAY_BUFFER, _normals.byteSize(), _normals.beginAddress(),
                    GL_STATIC_DRAW);
     }
     if (!_uvs.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
+      glEnableVertexAttribArray(_uvs.ID);
       glBufferData(GL_ARRAY_BUFFER, _uvs.byteSize(), _uvs.beginAddress(),
                    GL_STATIC_DRAW);
     }
@@ -714,34 +758,25 @@ void drawableObj::draw() {
 
 void drawableObj::_drawInterleaved() {
 
-  // All the data is in the single vertex buffer.
-  glBindBuffer(GL_ARRAY_BUFFER, _vertices.ID);
-  glEnableVertexAttribArray(_vertices.ID);
-  glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(), GL_FLOAT,
-                        GL_FALSE, _stride, BUFFER_OFFSET(0));
+  glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
+
+  glVertexAttribPointer(_vertices.ID, 3,//_vertices.componentsPerVertex() - 1,
+                        GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(0));
 
   if (!_colors.empty()) {
-    glEnableVertexAttribArray(_colors.ID);
-    glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(), GL_FLOAT,
-                          GL_FALSE, _stride, BUFFER_OFFSET(_colorPos));
+    glVertexAttribPointer(_colors.ID, 3,//_colors.componentsPerVertex() - 1,
+                            GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(_colorPos));
   }
-  
   if (!_normals.empty()) {
-    glEnableVertexAttribArray(_normals.ID);
-    glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(), GL_FLOAT,
-                          GL_FALSE, _stride, BUFFER_OFFSET(_normalPos));
+    glVertexAttribPointer(_normals.ID, 3,//_normals.componentsPerVertex() - 1,
+                            GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(_normalPos));
   }
-  
   if (!_uvs.empty()) {
-    glEnableVertexAttribArray(_uvs.ID);
-    glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(), GL_FLOAT,
-                          GL_FALSE, _stride, BUFFER_OFFSET(_uvPos));
+    glVertexAttribPointer(_uvs.ID, 2,//_uvs.componentsPerVertex(),
+                            GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(_uvPos));
   }
-  
-  
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indices.ID);
-  glDrawElements(_drawType, _count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-  
+
+  glDrawArrays(_drawType, 0, _count);
 }
 
   
@@ -750,30 +785,23 @@ void drawableObj::_drawSeparate() {
   // What buffer are we using?
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
 
-  // What OpenGL-assigned ID does it have (corresponds to a shader
-  // attribute name)?
-  glEnableVertexAttribArray(_vertices.ID);
-
   // How do we read it?
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
-
+    
   // Now do the same for the other attributes we're using.
   if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-    glEnableVertexAttribArray(_colors.ID);
     glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
   if (!_normals.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-    glEnableVertexAttribArray(_normals.ID);
     glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
   if (!_uvs.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-    glEnableVertexAttribArray(_uvs.ID);
     glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
