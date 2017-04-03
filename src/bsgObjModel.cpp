@@ -180,6 +180,8 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
           //Shading groups, currently not implemented
       }
     }
+  } else {
+	std::cout << "Could not open Obj file \"" << _fileName << "\"" << std::endl;
   }
 
   // File parsing complete
@@ -449,13 +451,17 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
             }
         }
       }
-    }
 
     if (!currentMaterial.name.empty()) {
         // Reached end of file
         // Write the current material to map
         mtlLib[currentMaterial.name] = currentMaterial;
     }
+    } else {
+	std::cout << "Could not open Mtl file \"" << mtlFileDir + mtlFileName << "\"" << std::endl;
+    }
+
+    
     return mtlLib;
 }
 
