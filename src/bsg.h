@@ -54,19 +54,51 @@ typedef enum {
 struct material {
     std::string name;
 
-    glm::vec3 colorAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 colorDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 colorSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 colorAmbient;
+    glm::vec3 colorDiffuse;
+    glm::vec3 colorSpecular;
 
-    float opacity = 1.0f;
-    float specularExp = 0.0f;
+    float opacity;
+    float specularExp;
 
-    GLint textureIDAmbient = -1;
-    GLint textureIDDiffuse =-1;
-    GLint textureIDSpecular = -1;
-    GLint textureIDSpecularExp = -1;
-    GLint textureIDOpacity = -1;
+    GLint textureIDAmbient;
+    GLint textureIDDiffuse;
+    GLint textureIDSpecular;
+    GLint textureIDSpecularExp;
+    GLint textureIDOpacity;
+
+    material() {
+	colorAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
+	colorDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+	colorSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+	opacity = 1.0f;
+	specularExp = 0.0f;
+
+	textureIDAmbient = -1;
+	textureIDDiffuse =-1;
+	textureIDSpecular = -1;
+	textureIDSpecularExp = -1;
+	textureIDOpacity = -1;
+    }
 };
+
+
+inline std::ostream& operator << (std::ostream &o, const material &mat)
+  {
+  o << "Material: \"" << mat.name << "\"" << std::endl
+    << " colorAmbient:    [" << mat.colorAmbient.x << ", " << mat.colorAmbient.y << ", " << mat.colorAmbient.z << "]" << std::endl
+    << " colorDiffuse:    [" << mat.colorDiffuse.x << ", " << mat.colorDiffuse.y << ", " << mat.colorDiffuse.z << "]" << std::endl
+    << " colorSpecular:   [" << mat.colorSpecular.x << ", " << mat.colorSpecular.y << ", " << mat.colorSpecular.z << "]" << std::endl
+    << " specularExp:      " << mat.specularExp << std::endl
+    << " opacity:          " << mat.opacity << std::endl
+    << " texIDAmbient:     " << mat.textureIDAmbient << std::endl
+    << " texIDDiffuse:     " << mat.textureIDDiffuse << std::endl
+    << " texIDSpecular:    " << mat.textureIDSpecular << std::endl
+    << " texIDSpecularExp: " << mat.textureIDSpecularExp << std::endl
+    << " texIDOpacity:     " << mat.textureIDOpacity << std::endl;
+  return o;
+  };
 
 /// \mainpage Baby Scene Graph
 ///

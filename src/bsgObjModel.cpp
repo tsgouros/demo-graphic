@@ -10,7 +10,7 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
   std::vector<glm::vec2> uv_list;
   std::map<std::string, material> materialLib;
   std::vector<std::string> face_materials;
-  std::vector<std::vector<int>> face_list;
+  std::vector<std::vector<int> > face_list;
 
   std::ifstream fileObject(_fileName.c_str(), std::ios::in);
   std::string fileObjectLine;
@@ -21,8 +21,7 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
 
   int matIndex = 0;
   face_list.push_back(std::vector<int>());
-  face_materials.push_back("");
-  std::cout << fileName << std::endl;
+  face_materials.push_back("internal_default");
 
   std::string fileParentDir = fileName;
   const size_t last_slash_idx = fileParentDir.find_last_of("\\/");
@@ -165,12 +164,13 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
           }
         }
       } else if (lineType.compare("mtllib") == 0) {
-          std::string mtlFileName = fileParentDir + lineTokens[1];
-          std::map<std::string, material> tempMtlLib = readMtlFile(fileParentDir, mtlFileName);
-
-        materialLib.insert(tempMtlLib.begin(), tempMtlLib.end());
-
+	  // Reading the specified material library file
+          // Multiple .mtl files are allowed, all materials are merged into the materialLib map
+          std::map<std::string, material> tempMtlLib = readMtlFile(fileParentDir, lineTokens[1]);
+          materialLib.insert(tempMtlLib.begin(), tempMtlLib.end());
       } else if (lineType.compare("usemtl") == 0) {
+	// The material for the upcoming triangles has changed
+        // Starting a new face_list entry 
         face_materials.push_back(lineTokens[1]);
         face_list.push_back(std::vector<int>());
         matIndex++;
@@ -292,6 +292,11 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
   _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
   _frontFace.addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
   _frontFace.setDrawType(GL_TRIANGLES, frontFaceVertices.size());
+  if(materialLib.count(face_materials[matIndex]) == 0 && !face_materials[matIndex].compare("internal_default") == 0) {
+	// The material was not present in the materialLibrary, using the internal default 
+	std::cout << "Material \"" << face_materials[matIndex] << "\" was not found, using default material" << std::endl;
+        std::cout << "Check the mtllib entry of the \"" << fileName << "\" file and its associated .mtl files for errors" << std::endl;
+  }
   _frontFace.addMaterial(materialLib[face_materials[matIndex]]);
 
   /*_backFace.addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
@@ -338,13 +343,13 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
             // start of a new material block
             // write previous material into map
             if (!currentMaterial.name.empty()) {
-                std::cout << "Writing material \"" << currentMaterial.name << std::endl;
                 mtlLib[currentMaterial.name] = currentMaterial;
             }
             currentMaterial = material();
             currentMaterial.name = lineTokens[1];
 
         } else if (lineType.compare("Ka") == 0) {
+	    // parsing ambient color entry
             if (lineTokens[1].compare("spectral") != 0 && lineTokens[1].compare("xyz") != 0 ) {
                 float r, g, b;
                 sscanf(lineTokens[1].c_str(), "%f", &r);
@@ -354,6 +359,7 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
             }
 
         } else if (lineType.compare("Kd") == 0) {
+	    // parsing diffuse color entry
             if (lineTokens[1].compare("spectral") != 0 && lineTokens[1].compare("xyz") != 0 ) {
                 float r, g, b;
                 sscanf(lineTokens[1].c_str(), "%f", &r);
@@ -363,6 +369,7 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
             }
 
         } else if (lineType.compare("Ks") == 0) {
+            // parsing specular color entry
             if (lineTokens[1].compare("spectral") != 0 && lineTokens[1].compare("xyz") != 0 ) {
                 float r, g, b;
                 sscanf(lineTokens[1].c_str(), "%f", &r);
@@ -371,14 +378,18 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
                 currentMaterial.colorSpecular = glm::vec3(r, g, b);
             }
         } else if (lineType.compare("Ns") == 0) {
+            // parsing specular exponent entry
             float factor;
             sscanf(lineTokens[1].c_str(), "%f", &factor);
             currentMaterial.specularExp = factor;
         } else if (lineType.compare("d") == 0) {
+            // parsing opacity entry
             float opacity;
             sscanf(lineTokens[1].c_str(), "%f", &opacity);
             currentMaterial.opacity = opacity;
         } else if (lineType.compare("map_Ka") == 0) {
+            // loading ambient color texture and storing textureID
+            // texture options ("-<option> <value>") are currently not supported
             for (std::vector<std::string>::iterator it = lineTokens.begin() + 1 ; it != lineTokens.end(); ++it) {
                 if (it->c_str()[0] == '-') {
                     ++it;
@@ -388,8 +399,9 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
                     break;
                 }
             }
-
         } else if (lineType.compare("map_Kd") == 0) {
+            // loading diffuse color texture and storing textureID
+            // texture options ("-<option> <value>") are currently not supported
             for (std::vector<std::string>::iterator it = lineTokens.begin() + 1 ; it != lineTokens.end(); ++it) {
                 if (it->c_str()[0] == '-') {
                     ++it;
@@ -400,6 +412,8 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
                 }
             }
         } else if (lineType.compare("map_Ks") == 0) {
+	    // loading specular color texture and storing textureID
+            // texture options ("-<option> <value>") are currently not supported
             for (std::vector<std::string>::iterator it = lineTokens.begin() + 1 ; it != lineTokens.end(); ++it) {
                 if (it->c_str()[0] == '-') {
                     ++it;
@@ -410,6 +424,8 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
                 }
             }
         } else if (lineType.compare("map_Ns") == 0) {
+            // loading specular exponent texture and storing textureID
+            // texture options ("-<option> <value>") are currently not supported
             for (std::vector<std::string>::iterator it = lineTokens.begin() + 1 ; it != lineTokens.end(); ++it) {
                 if (it->c_str()[0] == '-') {
                     ++it;
@@ -420,6 +436,8 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
                 }
             }
         } else if (lineType.compare("map_d") == 0) {
+            // loading opacity texture and storing textureID
+            // texture options ("-<option> <value>") are currently not supported
             for (std::vector<std::string>::iterator it = lineTokens.begin() + 1 ; it != lineTokens.end(); ++it) {
                 if (it->c_str()[0] == '-') {
                     ++it;
@@ -434,7 +452,8 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
     }
 
     if (!currentMaterial.name.empty()) {
-        std::cout << "Writing material \"" << currentMaterial.name << std::endl;
+        // Reached end of file
+        // Write the current material to map
         mtlLib[currentMaterial.name] = currentMaterial;
     }
     return mtlLib;
@@ -442,11 +461,16 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
 
 std::vector<std::string> drawableObjModel::split(const std::string line,
                                                  const char separator) {
+  // Split a string at separator character
+  // Empty tokens are removed, and line feed characters '\r' filtered out of the resulting tokens
   std::vector<std::string> out;
   std::string element;
   std::stringstream linestream(line);
   while (std::getline(linestream, element, separator)) {
+	if (!element.empty()) {
+element.erase(std::remove(element.begin(), element.end(), '\r'), element.end());
     out.push_back(element);
+}
   }
   return out;
 }
