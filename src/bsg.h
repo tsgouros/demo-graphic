@@ -537,6 +537,25 @@ class shaderMgr {
 /// 
 /// All the drawableObj shapes in a compound object (see below) use the
 /// same shader, and the same model matrix.
+///
+/// This class supports drawing the object from a set of parallel
+/// buffers or from a single buffer with the data interleaved.  That
+/// is, if you have vertices vvvv, colors cccc, normals nnnn, and
+/// texture coordinates tttt, you can either draw from four buffers
+/// like these:
+///
+///              vvvv cccc nnnn tttt
+///
+/// Or from a single buffer like this:
+///
+///              vcntvcntvcntvcnt
+///
+/// This is an OpenGL optimization that minimizes the number of
+/// buffers to be loaded.  Also, the data block is slightly smaller,
+/// since the vertices and colors are 3-vectors instead of 4-vectors.
+/// There is an "interleaved" boolean that controls which version you
+/// use.  The interleaved version is faster, but the other is simpler,
+/// so we keep it around as a model for people to look at.
 class drawableObj {
  protected:
 
@@ -553,28 +572,48 @@ class drawableObj {
   drawableObjData<glm::vec4> _normals;
   drawableObjData<glm::vec2> _uvs;
 
-
   // This data is for taking the component data and creating an
-  // interleaved buffer with an index array.  This is supposed to be
-  // an optimization.  The vertex position is always zero, and the
-  // vertices array is not optional, so there is no vertexPos variable.
+  // interleaved buffer with an index array.  This is an OpenGL
+  // optimization that reduces the number of buffers, and amount of
+  // data to be copied.  The vertex position is always zero, and the
+  // vertices array is not optional, so there is no vertexPos
+  // variable.
   bool _interleaved;
-  GLshort _colorPos, _normalPos, _uvPos, _stride;
+  GLshort _stride, _colorPos, _normalPos, _uvPos;
   drawableObjData<float> _interleavedData;
-  //drawableObjData<unsigned int> _indices;
   
-  std::string print() const { return std::string("drawableObj"); };
-  friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
+  std::string print() const { return std::string("<drawableObj>"); };
+  friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj) {
+    return os << obj.print(); }
 
+  /// A flag to indicate whether this data has already been put into
+  /// the respective OpenGL buffer.  If the data changes, the flag
+  /// must be toggled, so it can be reloaded.
   bool _loadedIntoBuffer;
+
+  // Corners used for user interaction -- simplified version of where
+  // this object is in space.
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
 
+  /// \brief Matches OpenGL IDs with attribute names.
+  ///
+  /// Sorts through the various attributes to be used, and gets an
+  /// OpenGL ID for each one, corresponding to the name to be used in
+  /// the shader.
   void _getAttribLocations(GLuint programID);
+
+  /// \brief Prepare arrays for loading, for separate buffers.
   void _prepareSeparate(GLuint programID);
+  /// \brief Prepare arrays for loading, for interleaved data.
   void _prepareInterleaved(GLuint programID);
+  /// \brief Load object data into the buffers, separate buffers.
   void _loadSeparate();
+  /// \brief Load object data into the buffers, interleaved.
   void _loadInterleaved();
+
+  /// \brief Draw an object described by separate buffers.
   void _drawSeparate();
+  /// \brief Draw an object described by interleaved date.
   void _drawInterleaved();
   
  public:
@@ -624,8 +663,18 @@ class drawableObj {
   /// \brief Returns the lower limit of the bounding box.
   glm::vec4 getBoundingBoxLower() { return _vertexBoundingBoxLower; }
 
+  /// \brief Is a test point inside the object's bounding box.
+  ///
+  /// The test point is given in the world coordinates.
   bool insideBoundingBox(const glm::vec4 &testPoint,
                          const glm::mat4 &modelMatrix);
+
+  /// \brief Calculates the bounding box.
+  ///
+  /// Used for debug situations where you want to see an object's
+  /// bounding box.  See the drawableCompound object's
+  /// addObjectBoundingBox() method.
+  void findBoundingBox();
   
   /// \brief One-time-only draw preparation.
   ///
@@ -932,6 +981,12 @@ class drawableCompound : public drawableMulti {
     _objects.push_back(obj);
   };    
 
+  /// \brief Add an object's bounding box to a compound object.
+  ///
+  /// Does not add the object, but just an outline of its bounding box.
+  void addObjectBoundingBox(drawableObj &obj);
+
+  
   int getNumObjects() { return _objects.size(); };
 
   ObjNameList insideBoundingBox(const glm::vec4 &testPoint);

@@ -583,34 +583,73 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
 
   _getAttribLocations(programID);
 
-  _loadInterleaved();  
-}
-
-  
-void drawableObj::_prepareSeparate(GLuint programID) { 
-
   // Find the bounding box for this object.
   _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0e35);
   _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
+  
+  // Now interleave the data.
+  for (int i = 0; i < _vertices.size(); i++) {
+
+    // Load the x,y,z vertices, and also grab the max and mins.
+    _interleavedData.addData(_vertices[i].x);
+    _vertexBoundingBoxUpper.x = fmax(_vertices[i].x, _vertexBoundingBoxUpper.x);
+    _vertexBoundingBoxLower.x = fmin(_vertices[i].x, _vertexBoundingBoxLower.x);
+    
+    _interleavedData.addData(_vertices[i].y);
+    _vertexBoundingBoxUpper.y = fmax(_vertices[i].y, _vertexBoundingBoxUpper.y);
+    _vertexBoundingBoxLower.y = fmin(_vertices[i].y, _vertexBoundingBoxLower.y);
+
+    _interleavedData.addData(_vertices[i].z);
+    _vertexBoundingBoxUpper.z = fmax(_vertices[i].z, _vertexBoundingBoxUpper.z);
+    _vertexBoundingBoxLower.z = fmin(_vertices[i].z, _vertexBoundingBoxLower.z);
+
+    // Now interleave the other vertex attributes, if any.
+    if (!_colors.empty()) {
+      _interleavedData.addData(_colors[i].r);
+      _interleavedData.addData(_colors[i].g);
+      _interleavedData.addData(_colors[i].b);
+    }
+    if (!_normals.empty()) {
+      _interleavedData.addData(_normals[i].x);
+      _interleavedData.addData(_normals[i].y);
+      _interleavedData.addData(_normals[i].z);
+    }
+    if (!_uvs.empty()) {
+      _interleavedData.addData(_uvs[i].s);
+      _interleavedData.addData(_uvs[i].t);
+    }      
+  }
+
+  _loadInterleaved();  
+}
+
+void drawableObj::findBoundingBox() {
+
+  // Find the bounding box for this object.
+  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0f);
+  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, 1.0f);
+
+  std::vector<glm::vec4> data = _vertices.getData();
+
+  for (std::vector<glm::vec4>::iterator it = data.begin();
+       it != data.end(); it++) {
+
+    _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
+    _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
+    _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
+
+    _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
+    _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
+    _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
+  }
+}
+  
+void drawableObj::_prepareSeparate(GLuint programID) { 
 
   if (true) { //(_selectable) {
     // Optimization here, so as not to use a templated accessor within
     // the for loop (slow).
-    std::vector<glm::vec4> data = _vertices.getData();
-
-    for (std::vector<glm::vec4>::iterator it = data.begin();
-         it != data.end(); it++) {
-
-      _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
-      _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
-      _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
-      _vertexBoundingBoxUpper.w = fmax((*it).w, _vertexBoundingBoxUpper.w);
-
-      _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
-      _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
-      _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
-      _vertexBoundingBoxLower.w = fmin((*it).w, _vertexBoundingBoxLower.w);
-    }
+    findBoundingBox();
   }
   
   // Figure out which buffers we need and get IDs for them.
@@ -639,68 +678,14 @@ void drawableObj::_loadInterleaved() {
 
   if (!_loadedIntoBuffer) {
 
-    std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
-
-    
-    // First we interleave the data...
-    int i;
-    for (i = 0; i < _vertices.size(); i++) {
-
-      //_indices.addData(i);
-
-      //std::cout << "index: " << _indices[i] << " (" << i << ") >> ";
-
-      _interleavedData.addData(_vertices[i].x);
-      _interleavedData.addData(_vertices[i].y);
-      _interleavedData.addData(_vertices[i].z);
-
-      // std::cout << "v(" << _vertices[i].x << "," << _vertices[i].y << "," << _vertices[i].z << ")";
-
-      if (!_colors.empty()) {
-        _interleavedData.addData(_colors[i].r);
-        _interleavedData.addData(_colors[i].g);
-        _interleavedData.addData(_colors[i].b);
-
-      // std::cout << "c(" << _colors[i].r << "," << _colors[i].g << "," << _colors[i].b << ")";
-      }
-        
-      if (!_normals.empty()) {
-        _interleavedData.addData(_normals[i].x);
-        _interleavedData.addData(_normals[i].y);
-        _interleavedData.addData(_normals[i].z);
-        // std::cout << "n(" << _normals[i].x << "," << _normals[i].y << "," << _normals[i].z << ")";
-
-      }
-
-      if (!_uvs.empty()) {
-        _interleavedData.addData(_uvs[i].s);
-        _interleavedData.addData(_uvs[i].t);
-      // std::cout << "t(" << _uvs[i].s << "," << _uvs[i].s << ")";
-      }      
-
-      // std::cout << std::endl;
-
-    }
-
-    std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
-
-    // for (int j = 0; j < _count; j++) {
-    //   std::cout << "(" << j << ") ";
-    //   for (int k = 0; k < _stride/sizeof(float); k++) 
-    //     std::cout << _interleavedData[ j * (_stride/sizeof(float)) + k ] << ",";
-      
-    //   std::cout << std::endl;
-    // }
-
-    std::cout << "buffer ID:" << _interleavedData.bufferID << " size:" << _interleavedData.byteSize() << " first point:" << (float)*(_interleavedData.beginAddress()) << std::endl;
-    
-    // ... then we load it into a buffer.
+    // Load the interleaved data into a buffer.
     glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
     glBufferData(GL_ARRAY_BUFFER, _interleavedData.byteSize(),
                  _interleavedData.beginAddress(), GL_STATIC_DRAW);
 
 
-    // All the data is in the single vertex buffer.
+    // All the data is in the single vertex buffer, but these are the
+    // pieces we'll be finding in there.
     glEnableVertexAttribArray(_vertices.ID);
     if (!_colors.empty()) glEnableVertexAttribArray(_colors.ID);
     if (!_normals.empty()) glEnableVertexAttribArray(_normals.ID);
@@ -835,6 +820,68 @@ glm::mat4 drawableMulti::getModelMatrix() {
     return _modelMatrix;
 }
 
+void drawableCompound::addObjectBoundingBox(drawableObj &obj) {
+
+  obj.findBoundingBox();
+  
+  drawableObj bb;
+  std::vector<glm::vec4> bbCorners(24);
+  std::vector<glm::vec4> bbColors(24, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+  glm::vec4 bbLower = obj.getBoundingBoxLower();
+  glm::vec4 bbUpper = obj.getBoundingBoxUpper();
+
+  bbCorners[0] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[1] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[2] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+  bbCorners[3] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+
+  bbCorners[4] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[5] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[6] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+  bbCorners[7] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[8] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[9] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+
+  bbCorners[10] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[11] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[12] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[13] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+
+  bbCorners[14] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[15] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[16] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[17] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[18] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+  bbCorners[19] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[20] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[21] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[22] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+  bbCorners[23] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+
+  // This is a bit hackish; should query to use the same name as in
+  // obj._vertices, etc.
+  bb.addData(GLDATA_VERTICES, "position", bbCorners);
+  bb.addData(GLDATA_COLORS, "color", bbColors);
+  bb.setDrawType(GL_LINES);
+
+  std::cout << bb << std::endl;
+
+  for (int i = 0; i < 24; i++) {
+    std::cout << "corner:" << bbCorners[i].x << "," << bbCorners[i].y << "," << bbCorners[i].z << " color:" << bbColors[i].r << "," << bbColors[i].g << "," << bbColors[i].b << std::endl;
+  }
+  
+  _objects.push_back(bb);
+}
+  
 ObjNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
 
   ObjNameList out;
