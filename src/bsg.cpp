@@ -498,6 +498,16 @@ bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
 
 void drawableObj::prepare(GLuint programID) {
 
+  if (_interleaved) {
+    _prepareInterleaved(programID);
+  } else {
+    _prepareSeparate(programID);
+  }
+}
+
+
+void drawableObj::_prepareSeparate(GLuint programID) {
+
   bool badID = false;
 
   // Find the bounding box for this object.
@@ -568,11 +578,21 @@ void drawableObj::prepare(GLuint programID) {
   }
   
   // Put the data in its buffers, for practice.
-  load();
+  _loadSeparate();
 
 }
 
+
 void drawableObj::load() {
+
+  if (_interleaved) {
+    _loadInterleaved();
+  } else {
+    _loadSeparate();
+  }
+}
+
+void drawableObj::_loadSeparate() {
 
   if (!_loadedIntoBuffer) {
     glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
@@ -595,11 +615,21 @@ void drawableObj::load() {
                    GL_STATIC_DRAW);
     }
 
-    loadedIntoBuffer = true;
+    _loadedIntoBuffer = true;
   }
 }
 
+ 
 void drawableObj::draw() {
+
+  if (_interleaved) {
+    _drawInterleaved();
+  } else {
+    _drawSeparate();
+  }
+}
+
+void drawableObj::_drawSeparate() {
 
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
   glEnableVertexAttribArray(_vertices.ID);

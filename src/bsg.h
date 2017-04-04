@@ -558,9 +558,31 @@ class drawableObj {
 
   bool _loadedIntoBuffer;
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
+
+
+
+  // This data is for taking the component data and creating an
+  // interleaved buffer with an index array.  This is supposed to be
+  // an optimization.  The vertex position is always zero, and the
+  // vertices array is not optional, so there is no vertexPos variable.
+  bool _interleaved;
+  GLshort _colorPos, _normalPos, _uvPos, _stride;
+  drawableObjData<float> _interleavedData;
+
+  void _getAttribLocations(GLuint programID);
+  void _prepareSeparate(GLuint programID);
+  void _prepareInterleaved(GLuint programID) {};
+  void _loadSeparate();
+  void _loadInterleaved() {};
+  void _drawSeparate();
+  void _drawInterleaved() {};
   
  public:
- drawableObj() : _loadedIntoBuffer(false) {};
+ drawableObj() : _loadedIntoBuffer(false), _interleaved(false) {};
+
+
+  /// \brief Set up the buffers to be interleaved,
+  void setInterleaved(bool interleaved) { _interleaved = interleaved; };
 
   /// \brief Specify the draw type of the shape.
   ///
