@@ -290,8 +290,17 @@ void drawableObjModel::_processObjFile() {
   _backFace.addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
   _backFace.setDrawType(GL_TRIANGLES, backFaceVertices.size());
 
+  std::cout << "numVertices:" << frontFaceVertices.size() << " numColors:" << frontFaceColors.size() << std::endl;
+
+
+  _frontFace.setInterleaved(true);
+
   addObject(_frontFace);
-  if (_includeBackFace) addObject(_backFace);
+  if (_includeBackFace) {
+    _backFace.setInterleaved(true);
+    addObject(_backFace);
+  }
+
   std::cout << "... " << _fileName << " done." << std::endl;
 }
 

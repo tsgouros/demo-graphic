@@ -571,11 +571,11 @@ class drawableObj {
 
   void _getAttribLocations(GLuint programID);
   void _prepareSeparate(GLuint programID);
-  void _prepareInterleaved(GLuint programID) {};
+  void _prepareInterleaved(GLuint programID);
   void _loadSeparate();
-  void _loadInterleaved() {};
+  void _loadInterleaved();
   void _drawSeparate();
-  void _drawInterleaved() {};
+  void _drawInterleaved();
   
  public:
  drawableObj() : _loadedIntoBuffer(false), _interleaved(false) {};
