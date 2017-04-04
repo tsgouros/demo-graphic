@@ -70,10 +70,10 @@ struct material {
     material() {
 	colorAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
 	colorDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-	colorSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+    colorSpecular = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	opacity = 1.0f;
-	specularExp = 0.0f;
+    specularExp = 100.0f;
 
 	textureIDAmbient = -1;
 	textureIDDiffuse =-1;
@@ -306,6 +306,8 @@ class lightList {
   drawableObjData<glm::vec4> _lightPositions;
   /// The colors of the lights in the list.
   drawableObjData<glm::vec4> _lightColors;
+  /// The ambient, diffuse and specular coefficients of the lights in the list.
+  drawableObjData<glm::vec4> _lightCoefficients;
 
   /// The default names of things in the shaders, put here for easy
   /// comparison or editing.  If you're mucking around with the
@@ -313,7 +315,7 @@ class lightList {
   /// shader, and that the size of the arrays is set with 'XX', see
   /// the shader constructors below.
   void _setupDefaultNames() {
-    setNames("lightPositionWS", "lightColor");
+    setNames("lightPositionWS", "lightColor", "lightCoefficients");
   }
 
  public:
@@ -323,9 +325,10 @@ class lightList {
 
   /// Set the names of the light positions and colors to be used inside
   /// the shaders.
-  void setNames(const std::string &positionName, const std::string &colorName) {
+  void setNames(const std::string &positionName, const std::string &colorName, const std::string &coeffName) {
     _lightPositions.name = positionName;
     _lightColors.name = colorName;
+    _lightCoefficients.name = coeffName;
   };
     
   /// \brief Add lights to the list.
@@ -334,14 +337,17 @@ class lightList {
   /// lights is set, this is pretty much a one-way street.  Add
   /// lights, but don't subtract them.  If you want to extinguish one,
   /// just move it far away, or dial its intensity way down.
-  int addLight(const glm::vec4 &position, const glm::vec4 &color) {
+  int addLight(const glm::vec4 &position, const glm::vec4 &color, const glm::vec4 &coeff) {
     _lightPositions.addData(position);
     _lightColors.addData(color);
+    _lightCoefficients.addData(coeff);
     return _lightPositions.size();
   };
+
   int addLight(const glm::vec4 &position) {
     glm::vec4 white = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
-    return addLight(position, white);
+    glm::vec4 simpleCoeff = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    return addLight(position, white, simpleCoeff);
   };
   
   int getNumLights() { return _lightPositions.getData().size(); };
@@ -367,6 +373,11 @@ class lightList {
   void setColor(const int &i, const glm::vec4 &color) {
     _lightColors.getData()[i] = color; };
   glm::vec4 getColor(const int &i) { return _lightColors.getData()[i]; };
+
+  /// \brief Change a light's coefficients.
+  void setCoeff(const int &i, const glm::vec4 &coeff) {
+    _lightCoefficients.getData()[i] = coeff; }
+  glm::vec4 getCoeff(const int &i) { return _lightCoefficients.getData()[i]; }
 
   /// \brief Link the light data with whatever shader is in use.
   ///
@@ -420,8 +431,16 @@ class textureMgr {
     _attribIDs["specularExp"] = -1;
     _attribIDs["opacity"] = -1;
 
-    _attribIDs["diffuseTexture"] = -1;
-    _attribIDs["textureImage"] = -1;
+    _attribIDs["texAmbient"] = -1;
+    _attribIDs["hasTexAmbient"] = -1;
+    _attribIDs["texDiffuse"] = -1;
+    _attribIDs["hasTexDiffuse"] = -1;
+    _attribIDs["texSpecular"] = -1;
+    _attribIDs["hasTexSpecular"] = -1;
+    _attribIDs["texSpecularExp"] = -1;
+    _attribIDs["hastTexSpecularExp"] = -1;
+    _attribIDs["texOpacity"] = -1;
+    _attribIDs["hastTexOpacity"] = -1;
   };
 
   GLuint _textureBufferID;

@@ -28,6 +28,8 @@ void lightList::load(const GLint programID) {
                                               _lightPositions.name.c_str());
     _lightColors.ID = glGetUniformLocation(programID,
                                            _lightColors.name.c_str());
+    _lightCoefficients.ID = glGetUniformLocation(programID,
+                                           _lightCoefficients.name.c_str());
   }
 }
 
@@ -43,6 +45,10 @@ void lightList::draw() {
     glUniform4fv(_lightColors.ID,
                  _lightColors.getData().size(),
                  &_lightColors.getData()[0].x);
+
+    glUniform4fv(_lightCoefficients.ID,
+                 _lightCoefficients.getData().size(),
+                 &_lightCoefficients.getData()[0].x);
   }
 }
 
@@ -302,21 +308,92 @@ void textureMgr::drawMaterial(material mat) {
       glUniform1f(_attribIDs["opacity"], mat.opacity);
   }
 
-  if (_attribIDs["textureImage"] > -1 ) { //&&
-      if(mat.textureIDDiffuse > -1) {
-      // Bind the texture in Texture Unit 0
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, mat.textureIDDiffuse);
+  if (_attribIDs["texAmbient"] > -1 ) {
+      // Shader supports ambient texture
+      if(mat.textureIDAmbient > -1) {
+          // Material has an ambient texture
+          // Load texture to texture unit 0
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDAmbient);
 
-      // Set our "myTextureSampler" sampler to user Texture Unit 0
-      glUniform1i(_attribIDs["diffuseTexture"], true);
-      glUniform1i(_attribIDs["textureImage"], 0);
-
-      // The data is actually loaded into the buffer in the loadXX() method.
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexAmbient"], true);
+          glUniform1i(_attribIDs["texAmbient"], 0);
       } else {
-          glUniform1i(_attribIDs["diffuseTexture"], false);
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexDiffuse"], false);
       }
   }
+
+  if (_attribIDs["texDiffuse"] > -1 ) {
+      // Shader supports Diffuse texture
+      if(mat.textureIDDiffuse > -1) {
+          // Material has an Diffuse texture
+          // Load texture to texture unit 1
+          glActiveTexture(GL_TEXTURE1);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDDiffuse);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexDiffuse"], true);
+          glUniform1i(_attribIDs["texDiffuse"], 1);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexDiffuse"], false);
+      }
+  }
+
+  if (_attribIDs["texSpecular"] > -1 ) {
+      // Shader supports Specular texture
+      if(mat.textureIDSpecular > -1) {
+          // Material has an Specular texture
+          // Load texture to texture unit 2
+          glActiveTexture(GL_TEXTURE2);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDSpecular);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexSpecular"], true);
+          glUniform1i(_attribIDs["texSpecular"], 2);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexSpecular"], false);
+      }
+  }
+
+  if (_attribIDs["texSpecularExp"] > -1 ) {
+      // Shader supports SpecularExp texture
+      if(mat.textureIDSpecularExp > -1) {
+          // Material has an SpecularExp texture
+          // Load texture to texture unit 3
+          glActiveTexture(GL_TEXTURE3);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDSpecularExp);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexSpecularExp"], true);
+          glUniform1i(_attribIDs["texSpecularExp"], 3);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexSpecularExp"], false);
+      }
+  }
+
+  if (_attribIDs["texOpacity"] > -1 ) {
+      // Shader supports Opacity texture
+      if(mat.textureIDOpacity > -1) {
+          // Material has an Opacity texture
+          // Load texture to texture unit 4
+          glActiveTexture(GL_TEXTURE4);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDOpacity);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexOpacity"], true);
+          glUniform1i(_attribIDs["texOpacity"], 4);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexOpacity"], false);
+      }
+  }
+
+
 }
   
 std::string shaderMgr::_getShaderInfoLog(GLuint obj) {

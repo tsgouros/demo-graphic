@@ -15,34 +15,81 @@ varying vec4 normalCS;
 varying vec4 lightPositionCS;
 
 // Values that stay constant for the whole mesh.
-uniform sampler2D textureImage;
 uniform vec4 lightPositionWS[NUM_LIGHTS];
 uniform vec4 lightColor[NUM_LIGHTS];
+uniform vec4 lightCoefficients[NUM_LIGHTS];
+
+// Material properties
+uniform vec3 colorAmbient;
 uniform vec3 colorDiffuse;
-uniform bool diffuseTexture;
+uniform vec3 colorSpecular;
+uniform float specularExp;
+uniform float opacity;
+
+// Indicators if textures exists and textureIDs
+uniform bool hasVertexColors;
+uniform bool hasTexAmbient;
+uniform bool hasTexDiffuse;
+uniform bool hasTexSpecular;
+uniform bool hasTexSpecularExp;
+uniform bool hasTexOpacity;
+
+uniform sampler2D texAmbient;
+uniform sampler2D texDiffuse;
+uniform sampler2D texSpecular;
+uniform sampler2D texSpecularExp;
+uniform sampler2D texOpacity;
 
 void main() {
-  vec4 materialColor = vec4(1.0);
-  if (diffuseTexture == true) {
-	materialColor = texture2D(textureImage, uvFrag);
-  } else {
-  	materialColor = vec4(colorDiffuse, 1.0);
-  }
-  
-  //vec4 materialColor = colorFrag;
-  //0.6 * vec4(1.0, 1.0, 1.0, 1.0);
-  float ambientCoefficient = 0.3;
-  vec4 materialSpecularColor = 0.5 * vec4(1.0, 1.0, 1.0, 0.0);
+  vec4 matColorAmbient = vec4(colorAmbient, 1.0);
+  vec4 matColorDiffuse = vec4(colorDiffuse, 1.0);
+  vec4 matColorSpecular = vec4(colorDiffuse, 1.0);
+  float matSpecularExp = specularExp;
+  float matOpacity = opacity;
 
-  vec4 color = 0.05 * colorFrag;
-  //vec4 color = vec4(0,0,0,0);
+  // Overwrite material colors with texture colors if any are loaded
+    if (hasTexAmbient) {
+          matColorAmbient = texture2D(texAmbient, uvFrag);
+    } else {
+        // If a diffuse texture exists we want to use it as ambient texture as well
+        if (hasTexDiffuse) {
+              matColorDiffuse = texture2D(texDiffuse, uvFrag);
+        } else {
+              if (hasVertexColors) {
+                  matColorDiffuse = colorFrag;
+              }
+        }
+    }
+
+    if (hasTexDiffuse) {
+          matColorDiffuse = texture2D(texDiffuse, uvFrag);
+    } else {
+          if (hasVertexColors) {
+              matColorDiffuse = colorFrag;
+          }
+    }
+
+    if (hasTexSpecular) {
+          matColorSpecular = texture2D(texSpecular, uvFrag);
+    }
+
+
+    if (hasTexSpecularExp) {
+          matSpecularExp = texture2D(texSpecularExp, uvFrag).x;
+    }
+
+    if (hasTexOpacity) {
+          matOpacity = texture2D(texOpacity, uvFrag).x;
+    }
+
+  vec4 outputColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
   
   // The lighting effects are additive, so we run through the lights,
   // and add their effects.
   for (int i = 0; i < NUM_LIGHTS; i++) {
 
     // Ambient : simulates indirect lighting
-    vec4 ambient = ambientCoefficient * lightColor[i] * materialColor;
+    vec4 ambient = lightCoefficients[i].r * lightColor[i] * matColorAmbient;
     
     // Distance to the light
     float distanceToLight = length(lightPositionWS[i] - positionWS);
@@ -55,7 +102,7 @@ void main() {
     float cosAngleFromNormal = max(0.0, dot(normalCS, lightDirectionCS[i]));
 
     // Diffuse : "color" of the object
-    vec4 diffuse = materialColor * lightColor[i] * cosAngleFromNormal;
+    vec4 diffuse = lightCoefficients[i].g * lightColor[i] * cosAngleFromNormal * matColorDiffuse;
     
     // Direction in which the triangle reflects the light
     vec4 reflectDir = reflect(-lightDirectionCS[i], normalCS);
@@ -66,15 +113,13 @@ void main() {
 
     // Specular : reflective highlight, like a mirror. Adjust the
     // exponent to adjust the size of the highlight.
-    vec4 specular = materialSpecularColor * lightColor[i] * pow(cosAlpha, 5);
-    //specular = materialSpecularColor * pow(cosAlpha, 9);
-    
+    vec4 specular = lightColor[i] * pow(cosAlpha, matSpecularExp) * matColorSpecular;
     float attenuation = 1.0 / (1.0 + 0.01 * pow(distanceToLight, 2));
-    //attenuation = 1.0;
-    
-    color += ambient + attenuation * (diffuse + 0.0 * specular);
+
+    outputColor += ambient + attenuation * (diffuse + 0.0 * lightCoefficients[i].b * specular);
+
   }
   
-  gl_FragColor = color; // normalize(normalCS) ;//+ materialColor;
+  gl_FragColor = outputColor;
 
 }
