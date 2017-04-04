@@ -594,6 +594,8 @@ void drawableObj::load() {
       glBufferData(GL_ARRAY_BUFFER, _uvs.byteSize(), _uvs.beginAddress(),
                    GL_STATIC_DRAW);
     }
+
+    loadedIntoBuffer = true;
   }
 }
 
