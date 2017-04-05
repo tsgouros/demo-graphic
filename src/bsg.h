@@ -49,7 +49,15 @@ typedef enum {
   GLMATRIX_PROJECTION = 2,
   GLMATRIX_INVMODEL = 3
 } GLMATRIXTYPE;
-   
+
+// long gettimeusec() {
+//   struct timeval tp;
+//   gettimeofday(&tp, NULL);
+//   return tp.tv_usec;
+// }
+
+  
+
 
 struct material {
     std::string name;
@@ -268,6 +276,11 @@ class drawableObjData {
 
   std::vector<T> getData() const { return _data; };
   void addData(T d) { _data.push_back(d); };
+  void setData(const std::vector<T> data) { _data = data; };
+
+  T* beginAddress() { return &_data[0]; };
+  
+  T operator[](const int i) { return _data[i]; };
   
   // The ID that goes with that name.
   GLint ID;
@@ -275,11 +288,17 @@ class drawableObjData {
   /// The ID of the buffer containing that data.
   GLuint bufferID;
 
-  /// A size calculator.
-  size_t size() { return _data.size() * sizeof(T); };
+  /// Is there any data in here?
+  bool empty() { return _data.empty(); };
+
+  /// A size calculator. Total number of bytes.
+  size_t byteSize() { return _data.size() * sizeof(T); };
 
   /// Another size calculator.
-  int intSize() { return sizeof(T) / sizeof(float); };
+  size_t size() { return _data.size(); };
+  
+  /// Yet another size calculator.
+  size_t componentsPerVertex() { return sizeof(T) / sizeof(float); };
 };
 
 /// \class lightList
@@ -350,29 +369,31 @@ class lightList {
     return addLight(position, white, simpleCoeff);
   };
   
-  int getNumLights() { return _lightPositions.getData().size(); };
+  int getNumLights() { return _lightPositions.size(); };
 
   // We have mutators and accessors for all the pieces...
   std::vector<glm::vec4> getPositions() { return _lightPositions.getData(); };
   void setPositions(const std::vector<glm::vec4> positions) {
-    _lightPositions.getData() = positions;
+    _lightPositions.setData(positions);
   };
   GLuint getPositionID() { return _lightPositions.ID; };
 
   std::vector<glm::vec4> getColors() { return _lightColors.getData(); };
-  void setColors(const std::vector<glm::vec4> &colors) { _lightColors.getData() = colors; };
+  void setColors(const std::vector<glm::vec4> &colors) {
+    _lightColors.setData(colors);
+  };
   GLuint getColorID() { return _lightColors.ID; };
 
   /// ... and also for individual lights.
   void setPosition(const int &i, const glm::vec4 &position) {
-    _lightPositions.getData()[i] = position;
+    _lightPositions[i] = position;
   };
-  glm::vec4 getPosition(const int &i) { return _lightPositions.getData()[i]; };
+  glm::vec4 getPosition(const int &i) { return _lightPositions[i]; };
 
   /// \brief Change a light's color.
   void setColor(const int &i, const glm::vec4 &color) {
-    _lightColors.getData()[i] = color; };
-  glm::vec4 getColor(const int &i) { return _lightColors.getData()[i]; };
+    _lightColors[i] = color; };
+  glm::vec4 getColor(const int &i) { return _lightColors[i]; };
 
   /// \brief Change a light's coefficients.
   void setCoeff(const int &i, const glm::vec4 &coeff) {
@@ -604,8 +625,27 @@ class shaderMgr {
 /// 
 /// All the drawableObj shapes in a compound object (see below) use the
 /// same shader, and the same model matrix.
+///
+/// This class supports drawing the object from a set of parallel
+/// buffers or from a single buffer with the data interleaved.  That
+/// is, if you have vertices vvvv, colors cccc, normals nnnn, and
+/// texture coordinates tttt, you can either draw from four buffers
+/// like these:
+///
+///              vvvv cccc nnnn tttt
+///
+/// Or from a single buffer like this:
+///
+///              vcntvcntvcntvcnt
+///
+/// This is an OpenGL optimization that minimizes the number of
+/// buffers to be loaded.  Also, the data block is slightly smaller,
+/// since the vertices and colors are 3-vectors instead of 4-vectors.
+/// There is an "interleaved" boolean that controls which version you
+/// use.  The interleaved version is faster, but the other is simpler,
+/// so we keep it around as a model for people to look at.
 class drawableObj {
- private:
+ protected:
 
   // Specifies whether this is a triangle, a triangle strip, fan,
   // whatever.
@@ -620,12 +660,56 @@ class drawableObj {
   drawableObjData<glm::vec4> _normals;
   drawableObjData<glm::vec2> _uvs;
   material _material;
-  
-  std::string print() const { return std::string("drawableObj"); };
-  friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
+
+  std::string print() const { return std::string("<drawableObj>"); };
+  friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj) {
+    return os << obj.print(); }
+
+  /// A flag to indicate whether this data has already been put into
+  /// the respective OpenGL buffer.  If the data changes, the flag
+  /// must be toggled, so it can be reloaded.
+  bool _loadedIntoBuffer;
+
+  // Corners used for user interaction -- simplified version of where
+  // this object is in space.
+  glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
+
+
+  // This data is for taking the component data and creating an
+  // interleaved buffer with an index array.  This is supposed to be
+  // an optimization.  The vertex position is always zero, and the
+  // vertices array is not optional, so there is no vertexPos variable.
+  bool _interleaved;
+  GLshort _colorPos, _normalPos, _uvPos, _stride;
+  drawableObjData<float> _interleavedData;
+
+  /// \brief Matches OpenGL IDs with attribute names.
+  ///
+  /// Sorts through the various attributes to be used, and gets an
+  /// OpenGL ID for each one, corresponding to the name to be used in
+  /// the shader.
+  void _getAttribLocations(GLuint programID);
+
+  /// \brief Prepare arrays for loading, for separate buffers.
+  void _prepareSeparate(GLuint programID);
+  /// \brief Prepare arrays for loading, for interleaved data.
+  void _prepareInterleaved(GLuint programID);
+  /// \brief Load object data into the buffers, separate buffers.
+  void _loadSeparate();
+  /// \brief Load object data into the buffers, interleaved.
+  void _loadInterleaved();
+
+  /// \brief Draw an object described by separate buffers.
+  void _drawSeparate();
+  /// \brief Draw an object described by interleaved date.
+  void _drawInterleaved();
   
  public:
-  drawableObj() {};
+ drawableObj() : _loadedIntoBuffer(false), _interleaved(false) {};
+
+
+  /// \brief Set up the buffers to be interleaved,
+  void setInterleaved(bool interleaved) { _interleaved = interleaved; };
 
   /// \brief Specify the draw type of the shape.
   ///
@@ -666,6 +750,24 @@ class drawableObj {
   void addMaterial(material mat);
   material getMaterial();
 
+  /// \brief Returns the upper limit of the bounding box.
+  glm::vec4 getBoundingBoxUpper() { return _vertexBoundingBoxUpper; }
+  /// \brief Returns the lower limit of the bounding box.
+  glm::vec4 getBoundingBoxLower() { return _vertexBoundingBoxLower; }
+
+  /// \brief Is a test point inside the object's bounding box.
+  ///
+  /// The test point is given in the world coordinates.
+  bool insideBoundingBox(const glm::vec4 &testPoint,
+                         const glm::mat4 &modelMatrix);
+
+  /// \brief Calculates the bounding box.
+  ///
+  /// Used for debug situations where you want to see an object's
+  /// bounding box.  See the drawableCompound object's
+  /// addObjectBoundingBox() method.
+  void findBoundingBox();
+
   /// \brief One-time-only draw preparation.
   ///
   /// This generates the proper number of buffers for the shape data
@@ -698,6 +800,8 @@ class drawableObj {
   void draw();
 };
 
+typedef std::list<std::string> ObjNameList;
+ 
 /// \brief An abstract class to handle transformation matrices.
 ///
 /// This class is the common root of drawableCompound and
@@ -750,7 +854,7 @@ class drawableMulti {
 
   void setName(const std::string name) { _name = name; };
   std::string getName() { return _name; };
-  
+
   /// \brief Calculate the model matrix.
   ///
   /// Uses the current position, rotation, and scale to calculate a
@@ -789,6 +893,14 @@ class drawableMulti {
     _orientation = glm::quat(pitchYawRoll);      
     _modelMatrixNeedsReset = true;
   };
+  /// \brief Set the rotation with Euler angles.
+  ///
+  /// Specifies the pitch (x), yaw (y), and roll (z) rotations
+  /// individually, in radians.
+  void setRotation(GLfloat pitch, GLfloat yaw, GLfloat roll) {
+    _orientation = glm::quat(glm::vec3(pitch, yaw, roll));      
+    _modelMatrixNeedsReset = true;
+  };
 
   /// \brief Returns the vector position.
   glm::vec3 getPosition() { return _position; };
@@ -799,6 +911,31 @@ class drawableMulti {
   /// \brief Returns the orienation as Euler angles.
   glm::vec3 getPitchYawRoll() { return glm::eulerAngles(_orientation); };
 
+  /// \brief Returns a vector of object names if the given point is
+  /// within this object's bounding box.
+  ///
+  /// The calculation is to be done in world space, using all the
+  /// available transformation matrices in place, but not the view or
+  /// projection matrix.
+  virtual ObjNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+
+  /// \brief Retrieve an object by name.
+  ///
+  /// Used in drawableCollective.
+  virtual bsgPtr<drawableMulti> getObject(const std::string &name) {
+    return NULL;
+  }
+
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// Used in drawableCollective.
+  virtual bsgPtr<drawableMulti> getObject(ObjNameList &names) {
+    return NULL;
+  }  
+
+  /// \brief Returns a printable version of the object.
+  virtual std::string printObj(const std::string &prefix) const = 0;
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   virtual void prepare() = 0;
@@ -833,6 +970,9 @@ class drawableMulti {
 /// consider using a real scene graph API, like OSG.)  The view matrix
 /// and the projection matrix are used here, though they are generated
 /// and managed at the scene level.
+///
+/// Important: We expect one of these will be the leaf nodes to every
+/// scene graph branch.
 ///
 /// The shaders are included in this object as a pointer because many
 /// objects will use the same shader.  So the program that calls this
@@ -933,8 +1073,18 @@ class drawableCompound : public drawableMulti {
     _objects.push_back(obj);
   };    
 
+  /// \brief Add an object's bounding box to a compound object.
+  ///
+  /// Does not add the object, but just an outline of its bounding box.
+  void addObjectBoundingBox(drawableObj &obj);
+
+  
   int getNumObjects() { return _objects.size(); };
 
+  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
+
+  std::string printObj(const std::string &prefix) const { return ""; }
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
@@ -1001,13 +1151,27 @@ class drawableCollection : public drawableMulti {
   std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Retrieve an object by name.
-  bsgPtr<drawableMulti> getObject(const std::string name);
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.
+  bsgPtr<drawableMulti> getObject(const std::string &name);
 
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// 
+  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+  
   /// \brief Return a list of object names in the collection.
   std::list<std::string> getNames();
   
   /// \brief A dopey static method to generate a random name.
   static std::string randomName();
+
+  /// \brief Returns the names of objects containing the test point.
+  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
+
+  std::string printObj(const std::string &prefix) const;
   
   /// \brief Gets ready for the drawing sequence.
   ///
@@ -1051,6 +1215,18 @@ class scene {
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
+
+  /// \brief Walks the scene graph.
+  ///
+  std::string _walkTree(const drawableCollection &root);
+  
+  /// \brief Returns a string representation of the scene graph.
+  ///
+  std::string _printTree() const { return _sceneRoot.printObj("| "); };
+  
+  friend std::ostream &operator<<(std::ostream &os, const scene &scene) {
+    return os << scene._printTree();
+  }
   
  public:
   scene() {
@@ -1116,6 +1292,21 @@ class scene {
   /// generate a view matrix.  For use in desktop and other non-VR
   /// applications.
   glm::mat4 getViewMatrix();
+
+  /// \brief Retrieve an object by name.
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.
+  bsgPtr<drawableMulti> getObject(const std::string &name);
+
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// 
+  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+
+  /// \brief Retrieve an object name identified by a selected point.
+  ObjNameList insideBoundingBox(const glm::vec3 &testPoint);
   
   /// \brief Loads all the compound elements.
   void load();

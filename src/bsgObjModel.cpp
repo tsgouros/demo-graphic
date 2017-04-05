@@ -4,7 +4,22 @@ namespace bsg {
 
 drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
                                    const std::string &fileName)
-    : drawableCompound(pShader), _fileName(fileName) {
+  : drawableCompound(pShader), _fileName(fileName), _includeBackFace(true) {
+  _processObjFile();
+}
+   
+drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
+                                   const std::string &fileName,
+                                   const bool &back)
+  : drawableCompound(pShader), _fileName(fileName), _includeBackFace(back) {
+  _processObjFile();
+}
+   
+void drawableObjModel::_processObjFile() {
+
+  _frontFace.setInterleaved(true);
+  if (_includeBackFace) _backFace.setInterleaved(true);
+  
   std::vector<glm::vec4> vert_list;
   std::vector<glm::vec4> normal_list;
   std::vector<glm::vec2> uv_list;
@@ -23,13 +38,16 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
   face_list.push_back(std::vector<int>());
   face_materials.push_back("internal_default");
 
-  std::string fileParentDir = fileName;
+  std::string fileParentDir = _fileName;
   const size_t last_slash_idx = fileParentDir.find_last_of("\\/");
   if (std::string::npos != last_slash_idx)
   {
       fileParentDir.erase(last_slash_idx + 1, fileParentDir.size());
   }
-
+  
+  std::cout << "Processing: " << _fileName;
+  if (!_includeBackFace) std::cout << " (front face only)";
+  std::cout << " ..." << std::endl;
 
   if (fileObject.is_open()) {
     while (!fileObject.eof()) {
@@ -47,6 +65,7 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
       lineType = lineTokens[0];
 
       if (lineType.compare("v") == 0) {
+
         // Parse an obj vertex location line. Format: "v x y z"
         float x, y, z;
 
@@ -297,7 +316,7 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
   if(materialLib.count(face_materials[matIndex]) == 0 && !face_materials[matIndex].compare("internal_default") == 0) {
 	// The material was not present in the materialLibrary, using the internal default 
 	std::cout << "Material \"" << face_materials[matIndex] << "\" was not found, using default material" << std::endl;
-        std::cout << "Check the mtllib entry of the \"" << fileName << "\" file and its associated .mtl files for errors" << std::endl;
+        std::cout << "Check the mtllib entry of the \"" << _fileName << "\" file and its associated .mtl files for errors" << std::endl;
   }
   _frontFace.addMaterial(materialLib[face_materials[matIndex]]);
 
@@ -308,8 +327,21 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
   _backFace.setDrawType(GL_TRIANGLES, backFaceVertices.size());
   _backFace.addMaterial(materialLib[face_materials[matIndex]]);*/
 
+  std::cout << "numVertices:" << frontFaceVertices.size() << " numColors:" << frontFaceColors.size() << std::endl;
+
+
+  _frontFace.setInterleaved(false);
+
   addObject(_frontFace);
   //addObject(_backFace);
+
+            if (_includeBackFace) {
+              _backFace.setInterleaved(false);
+              addObject(_backFace);
+            }
+
+            std::cout << "... " << _fileName << " done." << std::endl;
+
   }
   }
 }
@@ -463,6 +495,7 @@ std::map<std::string, material> drawableObjModel::readMtlFile(const std::string 
 
     
     return mtlLib;
+
 }
 
 std::vector<std::string> drawableObjModel::split(const std::string line,
