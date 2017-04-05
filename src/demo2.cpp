@@ -434,10 +434,12 @@ int main(int argc, char **argv) {
   // We could put the axes and the tetrahedron in the same compound
   // shape, but we leave them separate so they can be moved
   // separately.
+  topShape.setInterleaved(true);
   tetrahedron = new bsg::drawableCompound(shader);
   tetrahedron->addObject(topShape);
   tetrahedron->addObject(bottomShape);
-
+  //  tetrahedron->addObjectBoundingBox(bottomShape);
+  
   scene.addObject(tetrahedron);
 
   // You can also use the new bsgMenagerie for some simple shapes.

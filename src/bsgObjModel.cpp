@@ -17,6 +17,9 @@ drawableObjModel::drawableObjModel(bsgPtr<shaderMgr> pShader,
    
 void drawableObjModel::_processObjFile() {
 
+  _frontFace.setInterleaved(true);
+  if (_includeBackFace) _backFace.setInterleaved(true);
+  
   std::vector<glm::vec4> vert_list;
   std::vector<glm::vec4> normal_list;
   std::vector<glm::vec2> uv_list;
