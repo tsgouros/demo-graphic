@@ -791,17 +791,22 @@ class drawableMulti {
 
   /// \brief Retrieve an object by name.
   ///
-  /// Used in drawableCollective.
+  /// Used in drawableCollection.  If there is no name found, returns
+  /// NULL.  So be wary of segfaults.
   virtual bsgPtr<drawableMulti> getObject(const std::string &name) {
     return NULL;
   }
 
   /// \brief Retrieve an object by a list of names.
   ///
-  /// Used in drawableCollective.
+  /// Used in drawableCollection.  If there is no name found, returns
+  /// NULL.  So be wary of segfaults.
   virtual bsgPtr<drawableMulti> getObject(ObjNameList &names) {
     return NULL;
   }  
+
+  /// \brief A dopey static method to generate a random name.
+  static std::string randomName(const std::string &nameRoot);
 
   /// \brief Returns a printable version of the object.
   virtual std::string printObj(const std::string &prefix) const = 0;
@@ -900,6 +905,7 @@ class drawableCompound : public drawableMulti {
     _normalMatrixName("normalMatrix"),
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
+    _name = randomName("obj");
   };
  drawableCompound(const std::string name, bsgPtr<shaderMgr> pShader) :
   drawableMulti(name),
@@ -1023,20 +1029,21 @@ class drawableCollection : public drawableMulti {
   ///
   /// You'll be getting something that might be a drawableCompound and
   /// might be a drawableCollective.  That is, it might be a leaf
-  /// node, and might be a branch.
+  /// node, and might be a branch.  Returns NULL if no match, so be
+  /// careful.
   bsgPtr<drawableMulti> getObject(const std::string &name);
 
   /// \brief Retrieve an object by a list of names.
   ///
-  /// 
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.  Returns NULL if no match, so be
+  /// careful.
   bsgPtr<drawableMulti> getObject(ObjNameList &names);
   
   /// \brief Return a list of object names in the collection.
   std::list<std::string> getNames();
   
-  /// \brief A dopey static method to generate a random name.
-  static std::string randomName();
-
   /// \brief Returns the names of objects containing the test point.
   ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
 
@@ -1140,7 +1147,7 @@ class scene {
 
   /// \brief Add a compound object to our scene with a random name.
   void addObject(const bsgPtr<drawableMulti> &pMultiObject) {
-    _sceneRoot.addObject(_sceneRoot.randomName(), pMultiObject);
+    _sceneRoot.addObject(pMultiObject->getName(), pMultiObject);
   }
 
   /// \brief Prepare the scene to be drawn.

@@ -817,6 +817,27 @@ glm::mat4 drawableMulti::getModelMatrix() {
     return _modelMatrix;
 }
 
+std::string drawableMulti::randomName(const std::string &nameRoot) {
+
+  // This is a pretty dopey method, but it seems to work, so long as
+  // the number of characters in each name is big enough.
+  std::string out = nameRoot;
+  for(int i = 0; i < 6; i++) {
+    switch(rand()%3) {
+    case 0:
+      out += ('0' + rand()%10);
+      break;
+    case 1:
+      out += ('A' + rand()%26);
+      break;
+    case 2:
+      out += ('a' + rand()%26);
+      break; 
+    }
+  }
+  return out;
+}
+
 ObjNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
 
   ObjNameList out;
@@ -970,6 +991,7 @@ drawableCollection::drawableCollection() {
   struct timeval tp;
   gettimeofday(&tp, NULL);
   srand(tp.tv_usec);
+  _name = randomName("coll");
 }
 
 drawableCollection::drawableCollection (const std::string name) :
@@ -993,14 +1015,15 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
 
   if (pMultiObject->getName().empty()) {
 
-    return addObject(randomName(), pMultiObject);
+    // This should not happen.
+    return addObject(randomName("err"), pMultiObject);
 
   } else {
     if (_collection.find(pMultiObject->getName()) != _collection.end()) {
 
       std::cerr << "You have already used " << pMultiObject->getName() << " in " << getName() << ".  Assigning a random name." << std::endl;
 
-      return addObject(randomName(), pMultiObject);
+      return addObject(randomName(pMultiObject->getName()), pMultiObject);
 
     } else {
       
@@ -1060,27 +1083,6 @@ std::list<std::string> drawableCollection::getNames() {
   return out;
 }    
 
-std::string drawableCollection::randomName() {
-
-  // This is a pretty dopey method, but it seems to work, so long as
-  // the number of characters in each name is big enough.
-  std::string out = "";
-  for(int i = 0; i < 6; i++) {
-    switch(rand()%3) {
-    case 0:
-      out += ('0' + rand()%10);
-      break;
-    case 1:
-      out += ('A' + rand()%26);
-      break;
-    case 2:
-      out += ('a' + rand()%26);
-      break; 
-    }
-  }
-  return out;
-}
-
 ObjNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
   ObjNameList out;
@@ -1106,8 +1108,8 @@ std::string drawableCollection::printObj (const std::string &prefix) const {
   for (CollectionMap::const_iterator it = _collection.begin();
        it != _collection.end(); it++) {
     out += prefix + it->first +
-      " (" + it->second->getName() + ")\n" +
-      it->second->printObj(prefix + "| ");
+      //" (" + it->second->getName() + ")" +
+      "\n" + it->second->printObj(prefix + "| ");
   }
 
   return out;
