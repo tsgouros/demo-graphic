@@ -465,6 +465,7 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
                 << shaderFile
                 << ") does not care about number of lights." << std::endl;
     }
+    std::cout << "blurb" << std::endl;
   }
 }
 
@@ -832,7 +833,7 @@ void drawableObj::load() {
 }
 
 void drawableObj::_loadInterleaved() {
-
+std::cout << "loadInter" << std::endl;
   if (!_loadedIntoBuffer) {
 
     std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
@@ -908,6 +909,7 @@ void drawableObj::_loadInterleaved() {
 
 
 void drawableObj::_loadSeparate() { 
+  std::cout << "loadSep" << std::endl;
   
   if (!_loadedIntoBuffer) {
     // Select a buffer to work on.
@@ -926,17 +928,17 @@ void drawableObj::_loadSeparate() {
       glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
       glBufferData(GL_ARRAY_BUFFER, _colors.byteSize(), _colors.beginAddress(),
                    GL_STATIC_DRAW);
-      glEnableVertexAttribArray(_colors.ID);
+      //glEnableVertexAttribArray(_colors.ID);
     }
     if (!_normals.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-      glEnableVertexAttribArray(_normals.ID);
+      //glEnableVertexAttribArray(_normals.ID);
       glBufferData(GL_ARRAY_BUFFER, _normals.byteSize(), _normals.beginAddress(),
                    GL_STATIC_DRAW);
     }
     if (!_uvs.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-      glEnableVertexAttribArray(_uvs.ID);
+      //glEnableVertexAttribArray(_uvs.ID);
       glBufferData(GL_ARRAY_BUFFER, _uvs.byteSize(), _uvs.beginAddress(),
                    GL_STATIC_DRAW);
     }
@@ -985,27 +987,46 @@ void drawableObj::_drawSeparate() {
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
 
   // How do we read it?
+  glEnableVertexAttribArray(_vertices.ID);
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
-    
+    std::cout << "vert " << _vertices.ID << ", " << _vertices.componentsPerVertex() << std::endl;
   // Now do the same for the other attributes we're using.
   if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
+    glEnableVertexAttribArray(_colors.ID);
     glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
+    std::cout << "vert " << _colors.ID << ", " << _colors.componentsPerVertex() << std::endl;
   }
+
   if (!_normals.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
+    glEnableVertexAttribArray(_normals.ID);
     glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
+    std::cout << "normals " << _normals.ID << ", " << _normals.componentsPerVertex() << std::endl;
   }
   if (!_uvs.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
+    glEnableVertexAttribArray(_uvs.ID);
     glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
 
   glDrawArrays(_drawType, 0, _count);
+
+  glDisableVertexAttribArray(_vertices.ID);
+  if (!_colors.empty()) {
+    glDisableVertexAttribArray(_colors.ID);
+  }
+
+  if (!_normals.empty()) {
+    glDisableVertexAttribArray(_normals.ID);
+  }
+  if (!_uvs.empty()) {
+    glDisableVertexAttribArray(_uvs.ID);
+  }
 }
 
 glm::mat4 drawableMulti::getModelMatrix() {
@@ -1128,9 +1149,12 @@ void drawableCompound::prepare() {
   _projMatrixID = _pShader->getUniformID(_projMatrixName);
 
   // Prepare each component object.
+  int i = 1;
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
     it->prepare(_pShader->getProgram());
+    std::cout << "prepare - " << i << std::endl;
+    i++;
   }
 }
   
@@ -1146,6 +1170,7 @@ void drawableCompound::load() {
   // Load each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
+      std::cout << "loading: drawableObj" << std::endl;
     it->load();
   }
 }
