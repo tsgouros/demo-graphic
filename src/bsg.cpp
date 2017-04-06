@@ -739,6 +739,31 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
   glGenBuffers(1, &_interleavedData.bufferID);
   //  glGenBuffers(1, &_indices.bufferID);
 
+  // Now interleave the data.
+  for (int i = 0; i < _vertices.size(); i++) {
+
+    // Load the x,y,z vertices, and also grab the max and mins.
+    _interleavedData.addData(_vertices[i].x);
+    _interleavedData.addData(_vertices[i].y);
+    _interleavedData.addData(_vertices[i].z);
+
+    // Now interleave the other vertex attributes, if any.
+    if (!_colors.empty()) {
+      _interleavedData.addData(_colors[i].r);
+      _interleavedData.addData(_colors[i].g);
+      _interleavedData.addData(_colors[i].b);
+    }
+    if (!_normals.empty()) {
+      _interleavedData.addData(_normals[i].x);
+      _interleavedData.addData(_normals[i].y);
+      _interleavedData.addData(_normals[i].z);
+    }
+    if (!_uvs.empty()) {
+      _interleavedData.addData(_uvs[i].s);
+      _interleavedData.addData(_uvs[i].t);
+    }      
+  }
+
   _getAttribLocations(programID);
 
   // Find the bounding box for this object.
@@ -788,7 +813,7 @@ void drawableObj::_prepareSeparate(GLuint programID) {
   _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
 
   if (true) { //(_selectable) {
-    // Optimization here, so as not to use a templated accessor within
+    // Optimization here, so as not to use a templated accessor to test
     // the for loop.
     std::vector<glm::vec4> data = _vertices.getData();
 
@@ -806,6 +831,12 @@ void drawableObj::_prepareSeparate(GLuint programID) {
       _vertexBoundingBoxLower.w = fmin((*it).w, _vertexBoundingBoxLower.w);
     }
   }
+
+  // Figure out which buffers we need and get IDs for them.
+  glGenBuffers(1, &_vertices.bufferID);  
+  if (!_colors.empty()) glGenBuffers(1, &_colors.bufferID);
+  if (!_normals.empty()) glGenBuffers(1, &_normals.bufferID);
+  if (!_uvs.empty()) glGenBuffers(1, &_uvs.bufferID);
 
   _getAttribLocations(programID);
   
@@ -836,73 +867,13 @@ void drawableObj::_loadInterleaved() {
 std::cout << "loadInter" << std::endl;
   if (!_loadedIntoBuffer) {
 
-    std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
-
-    
-    // First we interleave the data...
-    int i;
-    for (i = 0; i < _vertices.size(); i++) {
-
-      //_indices.addData(i);
-
-      //std::cout << "index: " << _indices[i] << " (" << i << ") >> ";
-
-      _interleavedData.addData(_vertices[i].x);
-      _interleavedData.addData(_vertices[i].y);
-      _interleavedData.addData(_vertices[i].z);
-
-      // std::cout << "v(" << _vertices[i].x << "," << _vertices[i].y << "," << _vertices[i].z << ")";
-
-      if (!_colors.empty()) {
-        _interleavedData.addData(_colors[i].r);
-        _interleavedData.addData(_colors[i].g);
-        _interleavedData.addData(_colors[i].b);
-
-      // std::cout << "c(" << _colors[i].r << "," << _colors[i].g << "," << _colors[i].b << ")";
-      }
-        
-      if (!_normals.empty()) {
-        _interleavedData.addData(_normals[i].x);
-        _interleavedData.addData(_normals[i].y);
-        _interleavedData.addData(_normals[i].z);
-        // std::cout << "n(" << _normals[i].x << "," << _normals[i].y << "," << _normals[i].z << ")";
-
-      }
-
-      if (!_uvs.empty()) {
-        _interleavedData.addData(_uvs[i].s);
-        _interleavedData.addData(_uvs[i].t);
-      // std::cout << "t(" << _uvs[i].s << "," << _uvs[i].s << ")";
-      }      
-
-      // std::cout << std::endl;
-
-    }
-
-    std::cout << "stride: " << _stride << "," << _colorPos << "," << _normalPos << "," << _uvPos << "    count: " << _count << std::endl;
-
-    // for (int j = 0; j < _count; j++) {
-    //   std::cout << "(" << j << ") ";
-    //   for (int k = 0; k < _stride/sizeof(float); k++) 
-    //     std::cout << _interleavedData[ j * (_stride/sizeof(float)) + k ] << ",";
-      
-    //   std::cout << std::endl;
-    // }
-
-    std::cout << "buffer ID:" << _interleavedData.bufferID << " size:" << _interleavedData.byteSize() << " first point:" << (float)*(_interleavedData.beginAddress()) << std::endl;
-    
-    // ... then we load it into a buffer.
+    // Load it into a buffer.
     glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
     glBufferData(GL_ARRAY_BUFFER, _interleavedData.byteSize(),
                  _interleavedData.beginAddress(), GL_STATIC_DRAW);
 
 
-    // All the data is in the single vertex buffer.
-    glEnableVertexAttribArray(_vertices.ID);
-    if (!_colors.empty()) glEnableVertexAttribArray(_colors.ID);
-    if (!_normals.empty()) glEnableVertexAttribArray(_normals.ID);
-    if (!_uvs.empty()) glEnableVertexAttribArray(_uvs.ID);
-    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     _loadedIntoBuffer = true;
   }  
 }
@@ -943,6 +914,7 @@ void drawableObj::_loadSeparate() {
                    GL_STATIC_DRAW);
     }
 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     _loadedIntoBuffer = true;
   }
 }
@@ -950,17 +922,34 @@ void drawableObj::_loadSeparate() {
  
 void drawableObj::draw() {
 
+  // Enable all the attribute arrays we'll use.
+  glEnableVertexAttribArray(_vertices.ID);
+  if (!_colors.empty()) glEnableVertexAttribArray(_colors.ID);
+  if (!_normals.empty()) glEnableVertexAttribArray(_normals.ID);
+  if (!_uvs.empty()) glEnableVertexAttribArray(_uvs.ID);
+    
   if (_interleaved) {
     _drawInterleaved();
   } else {
     _drawSeparate();
   }
+
+  // Now disable the attribute arrays so they won't interfere with the
+  // next draw.
+  glDisableVertexAttribArray(_vertices.ID);
+  if (!_colors.empty()) glDisableVertexAttribArray(_colors.ID);
+  if (!_normals.empty()) glDisableVertexAttribArray(_normals.ID);
+  if (!_uvs.empty()) glDisableVertexAttribArray(_uvs.ID);
 }
 
 void drawableObj::_drawInterleaved() {
 
   glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
 
+  // Since the point of the interleaving is to make the transfer of
+  // data more efficient, we are cheating in the following, and
+  // leaving out the w from the vec4 data and the a from rgba.  These
+  // are restored with default values by OpenGL.
   glVertexAttribPointer(_vertices.ID, 3,//_vertices.componentsPerVertex() - 1,
                         GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(0));
 
@@ -983,50 +972,28 @@ void drawableObj::_drawInterleaved() {
 
 void drawableObj::_drawSeparate() {
 
-  // What buffer are we using?
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
-
-  // How do we read it?
-  glEnableVertexAttribArray(_vertices.ID);
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
-    std::cout << "vert " << _vertices.ID << ", " << _vertices.componentsPerVertex() << std::endl;
-  // Now do the same for the other attributes we're using.
+
   if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-    glEnableVertexAttribArray(_colors.ID);
     glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
-    std::cout << "vert " << _colors.ID << ", " << _colors.componentsPerVertex() << std::endl;
   }
-
   if (!_normals.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-    glEnableVertexAttribArray(_normals.ID);
     glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
-    std::cout << "normals " << _normals.ID << ", " << _normals.componentsPerVertex() << std::endl;
   }
   if (!_uvs.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-    glEnableVertexAttribArray(_uvs.ID);
     glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(),
                           GL_FLOAT, 0, 0, 0);
   }
 
   glDrawArrays(_drawType, 0, _count);
 
-  glDisableVertexAttribArray(_vertices.ID);
-  if (!_colors.empty()) {
-    glDisableVertexAttribArray(_colors.ID);
-  }
-
-  if (!_normals.empty()) {
-    glDisableVertexAttribArray(_normals.ID);
-  }
-  if (!_uvs.empty()) {
-    glDisableVertexAttribArray(_uvs.ID);
-  }
 }
 
 glm::mat4 drawableMulti::getModelMatrix() {

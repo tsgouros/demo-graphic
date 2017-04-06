@@ -330,18 +330,13 @@ void drawableObjModel::_processObjFile() {
   std::cout << "numVertices:" << frontFaceVertices.size() << " numColors:" << frontFaceColors.size() << std::endl;
 
 
-  _frontFace.setInterleaved(false);
-
+  _frontFace.setInterleaved(true);
   addObject(_frontFace);
-  //addObject(_backFace);
 
-            if (_includeBackFace) {
-              _backFace.setInterleaved(false);
-              addObject(_backFace);
-            }
-
-            std::cout << "... " << _fileName << " done." << std::endl;
-
+  if (_includeBackFace) {
+    _backFace.setInterleaved(true);
+    addObject(_backFace);
+}
   }
   }
 }
