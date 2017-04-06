@@ -13,9 +13,13 @@ private:
   const std::string &_fileName;
   drawableObj _frontFace, _backFace;
 
+
+  std::map<std::string, material> readMtlFile(const std::string &mtlFileDir, const std::string &mtlFileName);
+
   // Do we *want* to see the interior?  Set this to false to show only
   // the object exterior, a simple optimization for big models.
   bool _includeBackFace;
+
 
   std::vector<std::string> split(const std::string line, const char separator);
 
@@ -30,7 +34,7 @@ public:
 
 };
 
-class material {
+/*class material {
  private:
   std::string _name;
 
@@ -52,7 +56,7 @@ class material {
     textureIDDiffuse(0),
     textureIDSpecular(0) {};    
   
-};
+};*/
 
 
 }

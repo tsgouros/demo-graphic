@@ -123,15 +123,16 @@ private:
 
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
-    _lights->addLight(glm::vec4(0.0f, 0.0f, 3.0f, 1.0f),
-                      glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+    _lights->addLight(glm::vec4(0.0f, 0.0f, -3.0f, 1.0f),
+                      glm::vec4(1.0f, 1.0f, 1.0f, 0.0f),
+                      glm::vec4(0.3f, 1.0f, 1.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
 
 
-    _vertexFile = "../src/textureShader.vp";
-    _fragmentFile = "../src/textureShader.fp";
+    _vertexFile = "../src/tex2.vp";
+    _fragmentFile = "../src/tex2.fp";
     
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
@@ -155,9 +156,10 @@ private:
 
     _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
     //_model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
-    _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    _model = new bsg::drawableObjModel(_shader, "../../demo-graphic/data/CasA_Supernova_Remnant.obj", false);
     //_model = new bsg::drawableObjModel(_shader, "/Users/tomfool/tech/17/yurt/data/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant.obj", false);
-    
+
     _modelGroup = new bsg::drawableCollection();
 
     _orbiter->setPosition(-3.0, 3.0, 0.0);
@@ -167,8 +169,8 @@ private:
     _modelGroup->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_modelGroup);
  
-    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
-    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/tex2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/tex2.fp");
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
