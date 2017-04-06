@@ -538,7 +538,7 @@ class shaderMgr {
 /// All the drawableObj shapes in a compound object (see below) use the
 /// same shader, and the same model matrix.
 class drawableObj {
- private:
+ protected:
 
   // Specifies whether this is a triangle, a triangle strip, fan,
   // whatever.
