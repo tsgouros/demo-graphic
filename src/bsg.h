@@ -557,9 +557,8 @@ class drawableObj {
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
 
   bool _loadedIntoBuffer;
+  bool _haveBoundingBox;
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
-
-
 
   // This data is for taking the component data and creating an
   // interleaved buffer with an index array.  This is supposed to be
@@ -578,8 +577,10 @@ class drawableObj {
   void _drawInterleaved();
   
  public:
- drawableObj() : _loadedIntoBuffer(false), _interleaved(false) {};
-
+ drawableObj() : 
+  _loadedIntoBuffer(false), 
+    _interleaved(false), 
+    _haveBoundingBox(false) {};
 
   /// \brief Set up the buffers to be interleaved,
   void setInterleaved(bool interleaved) { _interleaved = interleaved; };
@@ -620,10 +621,19 @@ class drawableObj {
                const std::string &name,
                const std::vector<glm::vec2> &data);
 
+  /// \brief Find a bounding box for the object.
+  void findBoundingBox();
+
   /// \brief Returns the upper limit of the bounding box.
-  glm::vec4 getBoundingBoxUpper() { return _vertexBoundingBoxUpper; }
+  glm::vec4 getBoundingBoxUpper() { 
+      if (!_haveBoundingBox) findBoundingBox();
+      return _vertexBoundingBoxUpper; 
+  }
   /// \brief Returns the lower limit of the bounding box.
-  glm::vec4 getBoundingBoxLower() { return _vertexBoundingBoxLower; }
+  glm::vec4 getBoundingBoxLower() { 
+    if (!_haveBoundingBox) findBoundingBox();
+    return _vertexBoundingBoxLower; 
+  }
 
   bool insideBoundingBox(const glm::vec4 &testPoint,
                          const glm::mat4 &modelMatrix);
@@ -932,6 +942,11 @@ class drawableCompound : public drawableMulti {
   void addObject(drawableObj &obj) {
     _objects.push_back(obj);
   };    
+
+  /// \brief Add an object's bounding box to a compound object.
+  ///
+  /// Does not add the object, but just an outline of its bounding box.
+  void addObjectBoundingBox(drawableObj &obj);
 
   int getNumObjects() { return _objects.size(); };
 

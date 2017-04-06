@@ -437,6 +437,7 @@ int main(int argc, char **argv) {
   tetrahedron = new bsg::drawableCompound(shader);
   tetrahedron->addObject(topShape);
   tetrahedron->addObject(bottomShape);
+  //tetrahedron->addObjectBoundingBox(bottomShape);
 
   scene.addObject(tetrahedron);
 

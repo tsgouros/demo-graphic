@@ -541,8 +541,48 @@ void drawableObj::_getAttribLocations(GLuint programID) {
   }
 }
 
+void drawableObj::findBoundingBox() {
+
+  // Find the bounding box for this object.
+  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0f);
+  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, 1.0f);
+
+  // Don't use a templated accessor to test the for loop (very slow).
+  std::vector<glm::vec4> data = _vertices.getData();
+
+  for (std::vector<glm::vec4>::iterator it = data.begin();
+       it != data.end(); it++) {
+
+    _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
+    _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
+    _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
+
+    _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
+    _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
+    _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
+  }
+
+  // We don't want any zero-width bounding boxes.
+  float littleBit = 0.2; // This should be adjustable.
+  if (_vertexBoundingBoxUpper.x == _vertexBoundingBoxLower.x) {
+    _vertexBoundingBoxUpper.x += littleBit;
+    _vertexBoundingBoxLower.x -= littleBit;
+  }
+  if (_vertexBoundingBoxUpper.y == _vertexBoundingBoxLower.y) {
+    _vertexBoundingBoxUpper.y += littleBit;
+    _vertexBoundingBoxLower.y -= littleBit;
+  }
+  if (_vertexBoundingBoxUpper.z == _vertexBoundingBoxLower.z) {
+    _vertexBoundingBoxUpper.z += littleBit;
+    _vertexBoundingBoxLower.z -= littleBit;
+  }
+
+  _haveBoundingBox = true;
+}
 
 void drawableObj::prepare(GLuint programID) {
+
+  if (!_haveBoundingBox) findBoundingBox();
 
   if (_interleaved) {
     _prepareInterleaved(programID);
@@ -572,12 +612,13 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
   }
   // End of calculating all the stride values.
 
+  // Prepare a data buffer for the interleaved data.
   glGenBuffers(1, &_interleavedData.bufferID);
 
   // Now interleave the data.
   for (int i = 0; i < _vertices.size(); i++) {
 
-    // Load the x,y,z vertices, and also grab the max and mins.
+    // Load the x,y,z vertices.
     _interleavedData.addData(_vertices[i].x);
     _interleavedData.addData(_vertices[i].y);
     _interleavedData.addData(_vertices[i].z);
@@ -605,30 +646,6 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
 }
 
 void drawableObj::_prepareSeparate(GLuint programID) {
-
-  // Find the bounding box for this object.
-  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0e35);
-  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
-
-  if (true) { //(_selectable) {
-    // Optimization here, so as not to use a templated accessor to test
-    // the for loop.
-    std::vector<glm::vec4> data = _vertices.getData();
-
-    for (std::vector<glm::vec4>::iterator it = data.begin();
-         it != data.end(); it++) {
-
-      _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
-      _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
-      _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
-      _vertexBoundingBoxUpper.w = fmax((*it).w, _vertexBoundingBoxUpper.w);
-
-      _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
-      _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
-      _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
-      _vertexBoundingBoxLower.w = fmin((*it).w, _vertexBoundingBoxLower.w);
-    }
-  }
 
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);  
@@ -883,6 +900,70 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
     it->draw();
   }  
 }
+
+void drawableCompound::addObjectBoundingBox(drawableObj &obj) {
+
+  obj.findBoundingBox();
+  
+  drawableObj bb;
+  std::vector<glm::vec4> bbCorners(24);
+  std::vector<glm::vec4> bbColors(24, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+  glm::vec4 bbLower = obj.getBoundingBoxLower();
+  glm::vec4 bbUpper = obj.getBoundingBoxUpper();
+
+  bbCorners[0] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[1] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[2] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+  bbCorners[3] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+
+  bbCorners[4] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[5] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[6] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+  bbCorners[7] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[8] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[9] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+
+  bbCorners[10] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[11] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[12] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[13] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+
+  bbCorners[14] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[15] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[16] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[17] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[18] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+  bbCorners[19] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[20] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[21] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[22] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+  bbCorners[23] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+
+  // This is a bit hackish; should query to use the same name as in
+  // obj._vertices, etc.
+  bb.addData(GLDATA_VERTICES, "position", bbCorners);
+  bb.addData(GLDATA_COLORS, "color", bbColors);
+  bb.setDrawType(GL_LINES);
+
+  // std::cout << bb << std::endl;
+
+  // for (int i = 0; i < 24; i++) {
+  //   std::cout << "corner:" << bbCorners[i].x << "," << bbCorners[i].y << "," << bbCorners[i].z << " color:" << bbColors[i].r << "," << bbColors[i].g << "," << bbColors[i].b << std::endl;
+  // }
+  
+  _objects.push_back(bb);
+}
+
+
 
 drawableCollection::drawableCollection() {
   // Seed a random number generator to generate default names randomly.
