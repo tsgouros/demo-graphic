@@ -74,25 +74,20 @@ void renderScene() {
 
   scene.getObject(desiredNames)->setRotation(0.0, 0.4, oscillator);
 
-  bsg::bsgNameList s = scene.insideBoundingBox(glm::vec3(5.0f, 5.0f, 0.1f));
+   bsg::bsgNameList s = scene.insideBoundingBox(glm::vec3(5.0f, 5.0f, 0.1f));
   
-  if (!s.empty()) {
-    for (bsg::bsgNameList::iterator it = s.begin(); it != s.end(); it++) {
-      std::cout << "s:";
-      for (bsg::bsgName::iterator jt = it->begin(); jt != it->end(); jt++) {
-	std::cout << *jt << "/" ;
-      }
-      std::cout << std::endl;
-    }
-  }
+   // if (!s.empty()) {
+   //   for (bsg::bsgNameList::iterator it = s.begin(); it != s.end(); it++) {
+   //     std::cout << "s:";
+   //     for (bsg::bsgName::iterator jt = it->begin(); jt != it->end(); jt++) {
+   //       std::cout << *jt << "/" ;
+   //     }
+   //     std::cout << std::endl;
+   //   }
+   // }
 
-  // std::cout << "checking:";
-  // for (bsg::ObjNameList::iterator it = s.begin(); it != s.end(); it++) {
-  //   std::cout << *it << ",";
-  // }
-  // std::cout << std::endl;
-
-  // scene.getObject(s)->setRotation(0.0, oscillator, 0.0);
+   // if (!s.empty())
+   //   scene.getObject(s.front())->setRotation(0.0, oscillator, 0.0);
   
   // Selecting an image with a world-space location.
 

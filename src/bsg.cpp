@@ -486,6 +486,8 @@ void drawableObj::addData(const GLDATATYPE type,
 bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
                                     const glm::mat4 &modelMatrix) {
 
+  if (!_selectable) return false;
+  
   glm::vec4 upper = modelMatrix * _vertexBoundingBoxUpper;
   glm::vec4 lower = modelMatrix * _vertexBoundingBoxLower;
   
@@ -1178,13 +1180,24 @@ void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) 
 
 bsgPtr<drawableMulti> scene::getObject(const std::string &name) {
 
-  return _sceneRoot.getObject(name);
-  
+  if (name.compare("sceneRoot") == 0) {
+
+    return NULL;
+
+  } else {
+    
+    return _sceneRoot.getObject(name);
+  }
 }
 
 bsgPtr<drawableMulti> scene::getObject(bsgName &name) {
 
-  return _sceneRoot.getObject(name);
+  if (name.empty()) return NULL;
+
+  bsgName localName = name;
+  if (localName.front().compare("sceneRoot") == 0) localName.pop_front();
+  
+  return _sceneRoot.getObject(localName);
   
 }
 

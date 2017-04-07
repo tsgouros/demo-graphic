@@ -557,6 +557,9 @@ class drawableObj {
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
 
   bool _loadedIntoBuffer;
+
+  /// Some data for selectability and managing of bounding boxes.
+  bool _selectable;
   bool _haveBoundingBox;
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
 
@@ -579,7 +582,8 @@ class drawableObj {
  public:
  drawableObj() : 
   _loadedIntoBuffer(false), 
-    _interleaved(false), 
+    _interleaved(false),
+    _selectable(true),
     _haveBoundingBox(false) {};
 
   /// \brief Set up the buffers to be interleaved,
@@ -621,6 +625,11 @@ class drawableObj {
                const std::string &name,
                const std::vector<glm::vec2> &data);
 
+  /// \brief Set whether the object is selectable.
+  ///
+  /// Often used for things like axes.
+  void setSelectable(const bool &selectable) { _selectable = selectable; };
+  
   /// \brief Find a bounding box for the object.
   void findBoundingBox();
 
@@ -967,7 +976,7 @@ class drawableCompound : public drawableMulti {
 
   bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
-  std::string printObj(const std::string &prefix) const { return ""; }
+  std::string printObj(const std::string &prefix) const { return _name; }
   
   /// \brief Gets ready for the drawing sequence.
   ///

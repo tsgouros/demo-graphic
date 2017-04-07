@@ -197,6 +197,9 @@ namespace bsg {
     // The axes are not triangles, but lines.
     _axes.setDrawType(GL_LINES);
 
+    // It's rarely what the user wants to select the axes.
+    _axes.setSelectable(false);
+    
     addObject(_axes);
   }
   
