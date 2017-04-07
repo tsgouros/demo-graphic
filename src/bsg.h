@@ -670,7 +670,16 @@ class drawableObj {
   void draw();
 };
 
-typedef std::list<std::string> ObjNameList;
+/// \brief The name of an object as it exists in the scene hierarchy.
+///
+/// One name specifies an object.
+typedef std::list<std::string> bsgName;
+
+/// \brief A list of qualified strings to identify an object.
+///
+/// Use this type to specify a collection of objects throughout the
+/// hierarchy of the scene graph.
+typedef std::list<bsgName> bsgNameList;
  
 /// \brief An abstract class to handle transformation matrices.
 ///
@@ -787,7 +796,7 @@ class drawableMulti {
   /// The calculation is to be done in world space, using all the
   /// available transformation matrices in place, but not the view or
   /// projection matrix.
-  virtual ObjNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+  virtual bsgNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
 
   /// \brief Retrieve an object by name.
   ///
@@ -797,11 +806,11 @@ class drawableMulti {
     return NULL;
   }
 
-  /// \brief Retrieve an object by a list of names.
+  /// \brief Retrieve an object by a fully-qualified names.
   ///
-  /// Used in drawableCollection.  If there is no name found, returns
+  /// Used in drawableCollection.  If there is no object found, returns
   /// NULL.  So be wary of segfaults.
-  virtual bsgPtr<drawableMulti> getObject(ObjNameList &names) {
+  virtual bsgPtr<drawableMulti> getObject(bsgName name) {
     return NULL;
   }  
 
@@ -956,7 +965,7 @@ class drawableCompound : public drawableMulti {
 
   int getNumObjects() { return _objects.size(); };
 
-  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
   std::string printObj(const std::string &prefix) const { return ""; }
   
@@ -1012,17 +1021,14 @@ class drawableCollection : public drawableMulti {
   ///
   /// Using the given name.  You can add objects without a name, too,
   /// in which case the name is randomly assigned.  Returns the name
-  /// assigned to the object.
+  /// assigned to the object.  If there is already a name for the
+  /// object, it is overwritten.
   std::string addObject(const std::string name,
                  const bsgPtr<drawableMulti> &pMultiObject);
 
-  /// \brief Add an object to our list with a random name.
+  /// \brief Add an object to our list.
   ///
-  /// Not all applications will need to access members of the scene
-  /// individually, so forcing everyone to give every object a name
-  /// should not be necessary.  But if you want, this version of
-  /// addObject() will come up with a random name, and will return it
-  /// to the calling program.  Some may find this useful.
+  /// Add an object to the list using the name it already has.
   std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Retrieve an object by name.
@@ -1039,13 +1045,17 @@ class drawableCollection : public drawableMulti {
   /// might be a drawableCollective.  That is, it might be a leaf
   /// node, and might be a branch.  Returns NULL if no match, so be
   /// careful.
-  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+  bsgPtr<drawableMulti> getObject(bsgName name);
   
   /// \brief Return a list of object names in the collection.
   std::list<std::string> getNames();
   
   /// \brief Returns the names of objects containing the test point.
-  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
+  ///
+  /// Returns a collection of the names of objects containing the test
+  /// point.  Note that a "name" is actually a vector of names, one
+  /// for each level of the hierarchy.
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
   std::string printObj(const std::string &prefix) const;
   
@@ -1106,6 +1116,7 @@ class scene {
   
  public:
   scene() {
+    _sceneRoot = drawableCollection("sceneRoot");
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
     _fov = M_PI / 2.0f;
@@ -1179,10 +1190,10 @@ class scene {
   /// \brief Retrieve an object by a list of names.
   ///
   /// 
-  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+  bsgPtr<drawableMulti> getObject(bsgName &name);
 
   /// \brief Retrieve an object name identified by a selected point.
-  ObjNameList insideBoundingBox(const glm::vec3 &testPoint);
+  bsgNameList insideBoundingBox(const glm::vec3 &testPoint);
   
   /// \brief Loads all the compound elements.
   void load();

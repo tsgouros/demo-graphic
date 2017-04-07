@@ -838,10 +838,10 @@ std::string drawableMulti::randomName(const std::string &nameRoot) {
   return out;
 }
 
-ObjNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
+bsgNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
 
-  ObjNameList out;
-  out.push_back(_name);
+  bsgName out;
+  bsgNameList outList;
   glm::mat4 modelMatrix = getModelMatrix();
   
   for (std::list<drawableObj>::iterator it = _objects.begin();
@@ -849,13 +849,17 @@ ObjNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
 
     if (it->insideBoundingBox(testPoint, modelMatrix)) {
       
-      return out;
+      // If we're here, the point is in the bounding box of at least
+      // one of the member objects of this compound object.  Create a
+      // one-element list of a one-element name.
+      out.push_back(_name);
+      outList.push_back(out);
+      return outList;
     }
   }
 
-  // If we're here, the answer is no, so return an empty list.
-  out.pop_front();
-  return out;
+  // If we're here, the answer is no, so return an empty name.
+  return outList;
 }        
 
   
@@ -1021,7 +1025,9 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
   } else {
     if (_collection.find(pMultiObject->getName()) != _collection.end()) {
 
-      std::cerr << "You have already used " << pMultiObject->getName() << " in " << getName() << ".  Assigning a random name." << std::endl;
+      std::cerr << "You have already used " << pMultiObject->getName() 
+		<< " in " << getName() 
+		<< ".  Assigning a random name." << std::endl;
 
       return addObject(randomName(pMultiObject->getName()), pMultiObject);
 
@@ -1043,11 +1049,11 @@ bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
   }
 }
 
-bsgPtr<drawableMulti> drawableCollection::getObject(ObjNameList &names) {
+bsgPtr<drawableMulti> drawableCollection::getObject(bsgName name) {
 
-  if (names.size() > 1) {
+  if (name.size() > 1) {
   
-    CollectionMap::iterator it = _collection.find(names.front());
+    CollectionMap::iterator it = _collection.find(name.front());
 
     if (it == _collection.end()) {
 
@@ -1057,13 +1063,13 @@ bsgPtr<drawableMulti> drawableCollection::getObject(ObjNameList &names) {
     } else {
 
       // Step down a level.
-      names.pop_front();
-      return it->second->getObject(names);
+      name.pop_front();
+      return it->second->getObject(name);
 
     }
-  } else if (names.size() > 0) {
+  } else if (name.size() > 0) {
 
-    return getObject(names.front());
+    return getObject(name.front());
 
   } else {
     
@@ -1083,18 +1089,24 @@ std::list<std::string> drawableCollection::getNames() {
   return out;
 }    
 
-ObjNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
+bsgNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
-  ObjNameList out;
+  bsgNameList out;
 
   for (CollectionMap::iterator it = _collection.begin();
        it != _collection.end(); it++) {
-    out = it->second->insideBoundingBox(testPoint);
+    bsgNameList sublist = it->second->insideBoundingBox(testPoint);
 
-    if (!out.empty()) {
-      out.push_front(_name);
-      return out;
+    if (!sublist.empty()) {
+      out.splice(out.end(), sublist);
     }
+  }
+
+  if (!out.empty()) {
+    for (bsgNameList::iterator it = out.begin(); it != out.end(); it++) {
+      it->push_front(_name);
+    }
+    return out;
   }
 
   // If we're here, the answer is no, so this should be an empty list.
@@ -1103,13 +1115,11 @@ ObjNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
 std::string drawableCollection::printObj (const std::string &prefix) const {
 
-  std::string out;
+  std::string out = _name;
 
   for (CollectionMap::const_iterator it = _collection.begin();
        it != _collection.end(); it++) {
-    out += prefix + it->first +
-      //" (" + it->second->getName() + ")" +
-      "\n" + it->second->printObj(prefix + "| ");
+    out += "\n" + prefix + it->second->printObj(prefix + "| ");
   }
 
   return out;
@@ -1172,13 +1182,13 @@ bsgPtr<drawableMulti> scene::getObject(const std::string &name) {
   
 }
 
-bsgPtr<drawableMulti> scene::getObject(ObjNameList &names) {
+bsgPtr<drawableMulti> scene::getObject(bsgName &name) {
 
-  return _sceneRoot.getObject(names);
+  return _sceneRoot.getObject(name);
   
 }
 
-ObjNameList scene::insideBoundingBox(const glm::vec3 &testPoint) {
+bsgNameList scene::insideBoundingBox(const glm::vec3 &testPoint) {
 
   return _sceneRoot.insideBoundingBox(glm::vec4(testPoint, 1.0));
 }

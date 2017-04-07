@@ -74,8 +74,18 @@ void renderScene() {
 
   scene.getObject(desiredNames)->setRotation(0.0, 0.4, oscillator);
 
-  bsg::ObjNameList s = scene.insideBoundingBox(glm::vec3(1.0f, 1.0f, 1.1f));
+  bsg::bsgNameList s = scene.insideBoundingBox(glm::vec3(5.0f, 5.0f, 0.1f));
   
+  if (!s.empty()) {
+    for (bsg::bsgNameList::iterator it = s.begin(); it != s.end(); it++) {
+      std::cout << "s:";
+      for (bsg::bsgName::iterator jt = it->begin(); jt != it->end(); jt++) {
+	std::cout << *jt << "/" ;
+      }
+      std::cout << std::endl;
+    }
+  }
+
   // std::cout << "checking:";
   // for (bsg::ObjNameList::iterator it = s.begin(); it != s.end(); it++) {
   //   std::cout << *it << ",";
