@@ -465,7 +465,6 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
                 << shaderFile
                 << ") does not care about number of lights." << std::endl;
     }
-    std::cout << "blurb" << std::endl;
   }
 }
 
@@ -883,7 +882,6 @@ void drawableObj::load() {
 }
 
 void drawableObj::_loadInterleaved() {
-std::cout << "loadInter" << std::endl;
   if (!_loadedIntoBuffer) {
 
     // Load it into a buffer.
@@ -899,8 +897,6 @@ std::cout << "loadInter" << std::endl;
 
 
 void drawableObj::_loadSeparate() { 
-  std::cout << "loadSep" << std::endl;
-  
   if (!_loadedIntoBuffer) {
     // Select a buffer to work on.
     glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
@@ -1103,7 +1099,6 @@ void drawableCompound::prepare() {
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
     it->prepare(_pShader->getProgram());
-    std::cout << "prepare - " << i << std::endl;
     i++;
   }
 }
@@ -1120,7 +1115,6 @@ void drawableCompound::load() {
   // Load each component object.
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
-      std::cout << "loading: drawableObj" << std::endl;
     it->load();
   }
 }
