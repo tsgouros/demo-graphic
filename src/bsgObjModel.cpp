@@ -327,9 +327,7 @@ void drawableObjModel::_processObjFile() {
   _backFace.setDrawType(GL_TRIANGLES, backFaceVertices.size());
   _backFace.addMaterial(materialLib[face_materials[matIndex]]);*/
 
-  std::cout << "numVertices:" << frontFaceVertices.size() << " numColors:" << frontFaceColors.size() << std::endl;
-
-
+  
   _frontFace.setInterleaved(true);
   addObject(_frontFace);
 

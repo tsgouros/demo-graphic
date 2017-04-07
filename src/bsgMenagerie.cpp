@@ -7,6 +7,8 @@ namespace bsg {
                                        const int nDivs) :
     drawableCompound(pShader), _height(height), _width(width) {
 
+    _name = randomName("rect");
+
     float w = _width/2.0f;
     float h = _height/2.0f;
     float wdiv = _width / nDivs;
@@ -74,6 +76,8 @@ namespace bsg {
   drawableRectangle::drawableRectangle(bsgPtr<shaderMgr> pShader,
                                        const float width, const float height) :
     drawableCompound(pShader), _height(height), _width(width) {
+
+    _name = randomName("rect");
 
     std::vector<glm::vec4> frontFaceVertices;
 
@@ -163,6 +167,8 @@ namespace bsg {
 
   drawableAxes::drawableAxes(bsgPtr<shaderMgr> pShader, const float length) :
     drawableCompound(pShader), _length(length) {
+
+    _name = randomName("axes");
     
     std::vector<glm::vec4> axesVertices;
     axesVertices.push_back(glm::vec4( -_length, 0.0f, 0.0f, 1.0f));
@@ -191,6 +197,9 @@ namespace bsg {
     // The axes are not triangles, but lines.
     _axes.setDrawType(GL_LINES);
 
+    // It's rarely what the user wants to select the axes.
+    _axes.setSelectable(false);
+    
     addObject(_axes);
   }
   

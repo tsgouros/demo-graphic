@@ -670,10 +670,10 @@ class drawableObj {
   /// must be toggled, so it can be reloaded.
   bool _loadedIntoBuffer;
 
-  // Corners used for user interaction -- simplified version of where
-  // this object is in space.
+  /// Some data for selectability and managing of bounding boxes.
+  bool _selectable;
+  bool _haveBoundingBox;
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
-
 
   // This data is for taking the component data and creating an
   // interleaved buffer with an index array.  This is supposed to be
@@ -705,8 +705,11 @@ class drawableObj {
   void _drawInterleaved();
   
  public:
- drawableObj() : _loadedIntoBuffer(false), _interleaved(false) {};
-
+ drawableObj() : 
+  _loadedIntoBuffer(false), 
+    _interleaved(false),
+    _selectable(true),
+    _haveBoundingBox(false) {};
 
   /// \brief Set up the buffers to be interleaved,
   void setInterleaved(bool interleaved) { _interleaved = interleaved; };
@@ -750,10 +753,24 @@ class drawableObj {
   void addMaterial(material mat);
   material getMaterial();
 
+  /// \brief Set whether the object is selectable.
+  ///
+  /// Often used for things like axes.
+  void setSelectable(const bool &selectable) { _selectable = selectable; };
+  
+  /// \brief Find a bounding box for the object.
+  void findBoundingBox();
+
   /// \brief Returns the upper limit of the bounding box.
-  glm::vec4 getBoundingBoxUpper() { return _vertexBoundingBoxUpper; }
+  glm::vec4 getBoundingBoxUpper() { 
+      if (!_haveBoundingBox) findBoundingBox();
+      return _vertexBoundingBoxUpper; 
+  }
   /// \brief Returns the lower limit of the bounding box.
-  glm::vec4 getBoundingBoxLower() { return _vertexBoundingBoxLower; }
+  glm::vec4 getBoundingBoxLower() { 
+    if (!_haveBoundingBox) findBoundingBox();
+    return _vertexBoundingBoxLower; 
+  }
 
   /// \brief Is a test point inside the object's bounding box.
   ///
@@ -800,7 +817,16 @@ class drawableObj {
   void draw();
 };
 
-typedef std::list<std::string> ObjNameList;
+/// \brief The name of an object as it exists in the scene hierarchy.
+///
+/// One name specifies an object.
+typedef std::list<std::string> bsgName;
+
+/// \brief A list of qualified strings to identify an object.
+///
+/// Use this type to specify a collection of objects throughout the
+/// hierarchy of the scene graph.
+typedef std::list<bsgName> bsgNameList;
  
 /// \brief An abstract class to handle transformation matrices.
 ///
@@ -917,21 +943,26 @@ class drawableMulti {
   /// The calculation is to be done in world space, using all the
   /// available transformation matrices in place, but not the view or
   /// projection matrix.
-  virtual ObjNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+  virtual bsgNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
 
   /// \brief Retrieve an object by name.
   ///
-  /// Used in drawableCollective.
+  /// Used in drawableCollection.  If there is no name found, returns
+  /// NULL.  So be wary of segfaults.
   virtual bsgPtr<drawableMulti> getObject(const std::string &name) {
     return NULL;
   }
 
-  /// \brief Retrieve an object by a list of names.
+  /// \brief Retrieve an object by a fully-qualified names.
   ///
-  /// Used in drawableCollective.
-  virtual bsgPtr<drawableMulti> getObject(ObjNameList &names) {
+  /// Used in drawableCollection.  If there is no object found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> getObject(bsgName name) {
     return NULL;
   }  
+
+  /// \brief A dopey static method to generate a random name.
+  static std::string randomName(const std::string &nameRoot);
 
   /// \brief Returns a printable version of the object.
   virtual std::string printObj(const std::string &prefix) const = 0;
@@ -1030,6 +1061,7 @@ class drawableCompound : public drawableMulti {
     _normalMatrixName("normalMatrix"),
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
+    _name = randomName("obj");
   };
  drawableCompound(const std::string name, bsgPtr<shaderMgr> pShader) :
   drawableMulti(name),
@@ -1078,12 +1110,11 @@ class drawableCompound : public drawableMulti {
   /// Does not add the object, but just an outline of its bounding box.
   void addObjectBoundingBox(drawableObj &obj);
 
-  
   int getNumObjects() { return _objects.size(); };
 
-  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
-  std::string printObj(const std::string &prefix) const { return ""; }
+  std::string printObj(const std::string &prefix) const { return _name; }
   
   /// \brief Gets ready for the drawing sequence.
   ///
@@ -1137,39 +1168,41 @@ class drawableCollection : public drawableMulti {
   ///
   /// Using the given name.  You can add objects without a name, too,
   /// in which case the name is randomly assigned.  Returns the name
-  /// assigned to the object.
+  /// assigned to the object.  If there is already a name for the
+  /// object, it is overwritten.
   std::string addObject(const std::string name,
                  const bsgPtr<drawableMulti> &pMultiObject);
 
-  /// \brief Add an object to our list with a random name.
+  /// \brief Add an object to our list.
   ///
-  /// Not all applications will need to access members of the scene
-  /// individually, so forcing everyone to give every object a name
-  /// should not be necessary.  But if you want, this version of
-  /// addObject() will come up with a random name, and will return it
-  /// to the calling program.  Some may find this useful.
+  /// Add an object to the list using the name it already has.
   std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Retrieve an object by name.
   ///
   /// You'll be getting something that might be a drawableCompound and
   /// might be a drawableCollective.  That is, it might be a leaf
-  /// node, and might be a branch.
+  /// node, and might be a branch.  Returns NULL if no match, so be
+  /// careful.
   bsgPtr<drawableMulti> getObject(const std::string &name);
 
   /// \brief Retrieve an object by a list of names.
   ///
-  /// 
-  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.  Returns NULL if no match, so be
+  /// careful.
+  bsgPtr<drawableMulti> getObject(bsgName name);
   
   /// \brief Return a list of object names in the collection.
   std::list<std::string> getNames();
   
-  /// \brief A dopey static method to generate a random name.
-  static std::string randomName();
-
   /// \brief Returns the names of objects containing the test point.
-  ObjNameList insideBoundingBox(const glm::vec4 &testPoint);
+  ///
+  /// Returns a collection of the names of objects containing the test
+  /// point.  Note that a "name" is actually a vector of names, one
+  /// for each level of the hierarchy.
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
   std::string printObj(const std::string &prefix) const;
   
@@ -1230,6 +1263,7 @@ class scene {
   
  public:
   scene() {
+    _sceneRoot = drawableCollection("sceneRoot");
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
     _fov = M_PI / 2.0f;
@@ -1271,7 +1305,7 @@ class scene {
 
   /// \brief Add a compound object to our scene with a random name.
   void addObject(const bsgPtr<drawableMulti> &pMultiObject) {
-    _sceneRoot.addObject(_sceneRoot.randomName(), pMultiObject);
+    _sceneRoot.addObject(pMultiObject->getName(), pMultiObject);
   }
 
   /// \brief Prepare the scene to be drawn.
@@ -1303,10 +1337,10 @@ class scene {
   /// \brief Retrieve an object by a list of names.
   ///
   /// 
-  bsgPtr<drawableMulti> getObject(ObjNameList &names);
+  bsgPtr<drawableMulti> getObject(bsgName &name);
 
   /// \brief Retrieve an object name identified by a selected point.
-  ObjNameList insideBoundingBox(const glm::vec3 &testPoint);
+  bsgNameList insideBoundingBox(const glm::vec3 &testPoint);
   
   /// \brief Loads all the compound elements.
   void load();

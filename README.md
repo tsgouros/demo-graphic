@@ -69,7 +69,7 @@ directory you just created.  You can put it somewhere else by adding
   better version to become part of the MinVR release, go to your MinVR
   repo and do this:
 
-    $ cd MinVR   # <-- you are at the root of the MinVR tree.
+    $ cd MinVR   # <-- the root of the MinVR tree.
     $ cp /path/to/my/demo-graphic/cmake/FindFreeGLUT.cmake plugins/FREEGLUT/cmake/
 
   This should copy the FindFreeGLUT file from the demo-graphic
@@ -106,7 +106,7 @@ On the yurt, you'll have to do these:
 
     $ module load centos-updates
     $ module load centos-libs
-    $ module load nvidia-driiver
+    $ module load nvidia-driver
     $ module load vrpn
     $ module load cave
     $ module load freeglut

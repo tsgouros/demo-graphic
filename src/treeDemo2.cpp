@@ -62,7 +62,7 @@ void renderScene() {
   std::list<std::string> desiredNames;
   desiredNames.push_front("small2");
   desiredNames.push_front("group3");
-  desiredNames.push_front("group2");
+  desiredNames.push_front("assorted");
 
   bsg::bsgPtr<bsg::drawableMulti> p = scene.getObject(desiredNames);
   if (p) p->setPosition(2.0 * cos(oscillator), 0.0, 3.0 * sin(oscillator));
@@ -70,19 +70,24 @@ void renderScene() {
   // Using a different name, living dangerously without the if.
   desiredNames.clear();
   desiredNames.push_front("group3");
-  desiredNames.push_front("group2");
+  desiredNames.push_front("assorted");
 
   scene.getObject(desiredNames)->setRotation(0.0, 0.4, oscillator);
 
-  bsg::ObjNameList s = scene.insideBoundingBox(glm::vec3(1.0f, 1.0f, 1.1f));
+   bsg::bsgNameList s = scene.insideBoundingBox(glm::vec3(5.0f, 5.0f, 0.1f));
   
-  // std::cout << "checking:";
-  // for (bsg::ObjNameList::iterator it = s.begin(); it != s.end(); it++) {
-  //   std::cout << *it << ",";
-  // }
-  // std::cout << std::endl;
+   // if (!s.empty()) {
+   //   for (bsg::bsgNameList::iterator it = s.begin(); it != s.end(); it++) {
+   //     std::cout << "s:";
+   //     for (bsg::bsgName::iterator jt = it->begin(); jt != it->end(); jt++) {
+   //       std::cout << *jt << "/" ;
+   //     }
+   //     std::cout << std::endl;
+   //   }
+   // }
 
-  // scene.getObject(s)->setRotation(0.0, oscillator, 0.0);
+   // if (!s.empty())
+   //   scene.getObject(s.front())->setRotation(0.0, oscillator, 0.0);
   
   // Selecting an image with a world-space location.
 
@@ -372,7 +377,7 @@ int main(int argc, char **argv) {
 
   rectGroup3 = new bsg::drawableCollection("more");
   
-  rectGroup3->addObject("big2", anotherBig);
+  rectGroup3->addObject(anotherBig);
   rectGroup3->addObject("small2", anotherSmall);
   rectGroup3->setPosition(2.3f, 3.2f, -2.0f);
   
@@ -384,7 +389,8 @@ int main(int argc, char **argv) {
   rectGroup2->addObject("group3", rectGroup3);
   rectGroup2->setPosition(1.0f, 1.0f, 1.1f);
   
-  scene.addObject("group2", rectGroup2);
+  // If you omit the name it is taken from the object.
+  scene.addObject(rectGroup2);
   
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 
