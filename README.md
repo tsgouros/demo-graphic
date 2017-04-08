@@ -1,6 +1,37 @@
 # demo-graphic
 
-A fairly simple 3D graphics program that use OpenGL shaders.
+A fairly simple 3D set of example graphics programs that use OpenGL
+shaders and the MinVR virtual reality library.  It's meant to provide
+a less painful introduction to programming VR with OpenGL than I had.
+
+You'll find example code in the examples directory, starting with the
+basics of OpenGL buffer objects and shaders.  There are some example
+shaders in the shaders directory.
+
+You'll also find code for a "baby scene graph" library in the src
+directory, and the example code rely on it.  This is a lightweight
+scene graph library that is built to illustrate how to do matrix
+manipulation and OpenGL buffer management.  The goal is to have
+something with which one can develop VR programs on a laptop and have
+them run equally well on a head-mounted display and an immersive
+environment, such as Brown University's YURT.  The MinVR SDK provides
+this kind of functionality, and the BSG library here will help you
+stay in-bounds of acceptable usage.
+
+The BSG code has lots of comments, and where it seemed appropriate, I
+chose clarity over optimization, so I make no promises about
+performance and features.  That is, if you find it's not fast enough,
+or missing reflection maps or something, you've outgrown the training
+wheels, and should be using a real scene graph package, like OSG.
+
+ -Tom Sgouros
+  April, 2017
+
+  Center for Computation and Visualization, Brown University
+
+
+
+## FreeGLUT
 
 This uses FreeGLUT, which can be installed on a Mac using Homebrew.
 It is, at least on my machine, limited to OpenGL 2.1 and GLSL 120.  It

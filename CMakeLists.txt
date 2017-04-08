@@ -51,6 +51,10 @@ if(BUILD_DOCUMENTATION)
 
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc)
 
+else()
+  message("-- NOT building BSG library documentation.")
+  message("   Use 'cmake -DBUILD_DOCUMENTATION=on' to build.")
+  
 endif()
 
 find_package(OpenGL REQUIRED)
