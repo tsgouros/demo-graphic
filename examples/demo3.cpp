@@ -413,7 +413,7 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp'");
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../config/desktop-freeglut.xml ../shaders/shader2.vp ../shaders/shader.fp'");
 
   }
 

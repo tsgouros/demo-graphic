@@ -10,9 +10,7 @@ bsg::scene scene = bsg::scene();
 // These are the shapes that make up the scene.  They are out here in
 // the global variables so they can be available in both the main()
 // function and the renderScene() function.
-bsg::drawableRectangle* bigRectangle;
-bsg::drawableRectangle* smallRectangle;
-bsg::drawableCollection* rectGroup;
+bsg::drawableRectangle* rectangle;
 bsg::drawableAxes* axes;
 
 // These are part of the animation stuff, and again are out here with
@@ -44,12 +42,11 @@ void renderScene() {
   // your scene, this is where to do that.  You could also animate the
   // camera or lookat position here, or anything else you want to mess
   // with in the scene.
-  glm::vec3 pos = rectGroup->getPosition();
+  glm::vec3 pos = rectangle->getPosition();
   oscillator += oscillationStep;
   pos.x = sin(oscillator);
   pos.y = 1.0f - cos(oscillator);
-  rectGroup->setPosition(pos);
-  rectGroup->getObject("small")->setPosition(cos(oscillator), 0.0, 1.0f);
+  rectangle->setPosition(pos);
 
   // Now the preliminaries are done, on to the actual drawing.
   
@@ -289,12 +286,12 @@ int main(int argc, char **argv) {
   shader->addLights(lights);
 
   // Add the shaders to the manager, first the vertex shader...
-  std::string vertexFile = std::string("../src/textureShader.vp");
+  std::string vertexFile = std::string("../shaders/textureShader.vp");
   shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
 
   // ... then the fragment shader.  You could potentially add a
   // geometry shader at this point.
-  std::string fragmentFile = std::string("../src/textureShader.fp");
+  std::string fragmentFile = std::string("../shaders/textureShader.fp");
   shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
   // The shaders are loaded, now compile them.
@@ -307,8 +304,8 @@ int main(int argc, char **argv) {
 
   // Do the same for the axes shader:
   bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
-  axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
-  axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+  axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
+  axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
   axesShader->compileShaders();
   
   // Here are the drawable objects that make up the compound object
@@ -317,17 +314,9 @@ int main(int argc, char **argv) {
   // We could put the axes and the rectangle in the same compound
   // shape, but we leave them separate so they can be moved
   // separately.
-  bigRectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f, 4);
-  smallRectangle = new bsg::drawableRectangle(shader, 3.0f, 5.0f, 2);
+  rectangle = new bsg::drawableRectangle(shader, 9.0f, 9.0f,3);
 
-  smallRectangle->setPosition(1.0f, 1.0f, 0.5f);
-  
-  rectGroup = new bsg::drawableCollection("rectangles");
-
-  rectGroup->addObject("big", bigRectangle);
-  rectGroup->addObject("small", smallRectangle);
-
-  scene.addObject(rectGroup);
+  scene.addObject(rectangle);
 
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 

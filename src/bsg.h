@@ -562,7 +562,8 @@ class drawableObj {
   bool _selectable;
   bool _haveBoundingBox;
   glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
-
+  float _boundingBoxMin;
+  
   // This data is for taking the component data and creating an
   // interleaved buffer with an index array.  This is supposed to be
   // an optimization.  The vertex position is always zero, and the
@@ -584,6 +585,7 @@ class drawableObj {
   _loadedIntoBuffer(false), 
     _interleaved(false),
     _selectable(true),
+    _boundingBoxMin(0.1),
     _haveBoundingBox(false) {};
 
   /// \brief Set up the buffers to be interleaved,
@@ -607,6 +609,15 @@ class drawableObj {
     _count = count;
   };
 
+  /// \brief Set bounding box minimum.
+  ///
+  /// This is for less-than-3D objects, like rectangles, points, or
+  /// lines, so their bounding box has some width.
+  void setBoundingBoxMin(const float &min) { _boundingBoxMin = min; };
+
+  /// \brief Get bounding box minimum.
+  float getBoundingBoxMin() { return _boundingBoxMin; };  
+  
   /// \brief Add some vec4 data.
   ///
   /// You can add vec4 data, including vertices, colors, and normal
@@ -807,6 +818,11 @@ class drawableMulti {
   /// projection matrix.
   virtual bsgNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
 
+  /// \brief Returns the names involved in this object.
+  ///
+  /// 
+  virtual bsgNameList getNames() = 0;
+  
   /// \brief Retrieve an object by name.
   ///
   /// Used in drawableCollection.  If there is no name found, returns
@@ -974,6 +990,10 @@ class drawableCompound : public drawableMulti {
 
   int getNumObjects() { return _objects.size(); };
 
+  /// \brief Returns the name of this object.
+  bsgNameList getNames() { bsgNameList out; return out;}
+  
+
   bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
   std::string printObj(const std::string &prefix) const { return _name; }
@@ -1057,7 +1077,7 @@ class drawableCollection : public drawableMulti {
   bsgPtr<drawableMulti> getObject(bsgName name);
   
   /// \brief Return a list of object names in the collection.
-  std::list<std::string> getNames();
+  bsgNameList getNames();
   
   /// \brief Returns the names of objects containing the test point.
   ///
@@ -1202,7 +1222,7 @@ class scene {
   bsgPtr<drawableMulti> getObject(bsgName &name);
 
   /// \brief Retrieve an object name identified by a selected point.
-  bsgNameList insideBoundingBox(const glm::vec3 &testPoint);
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
   
   /// \brief Loads all the compound elements.
   void load();

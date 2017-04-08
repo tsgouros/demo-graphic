@@ -12,14 +12,7 @@ bsg::scene scene = bsg::scene();
 // function and the renderScene() function.
 bsg::drawableRectangle* bigRectangle;
 bsg::drawableRectangle* smallRectangle;
-bsg::drawableCollection* rectGroup1;
-
-bsg::drawableRectangle* anotherBig;
-bsg::drawableRectangle* anotherSmall;
-bsg::drawableCollection* rectGroup2;
-
-bsg::drawableRectangle* mediumRectangle;
-bsg::drawableCollection* rectGroup3;
+bsg::drawableCollection* rectGroup;
 bsg::drawableAxes* axes;
 
 // These are part of the animation stuff, and again are out here with
@@ -51,47 +44,13 @@ void renderScene() {
   // your scene, this is where to do that.  You could also animate the
   // camera or lookat position here, or anything else you want to mess
   // with in the scene.
-  glm::vec3 pos = rectGroup1->getPosition();
+  glm::vec3 pos = rectGroup->getPosition();
   oscillator += oscillationStep;
   pos.x = sin(oscillator);
   pos.y = 1.0f - cos(oscillator);
-  rectGroup1->setPosition(pos);
-  rectGroup1->getObject("small")->setPosition(cos(oscillator), 0.0, 1.0f);
+  rectGroup->setPosition(pos);
+  rectGroup->getObject("small")->setPosition(cos(oscillator), 0.0, 1.0f);
 
-  // Choosing an object or group via the name hierarchy.
-  std::list<std::string> desiredNames;
-  desiredNames.push_front("small2");
-  desiredNames.push_front("group3");
-  desiredNames.push_front("assorted");
-
-  bsg::bsgPtr<bsg::drawableMulti> p = scene.getObject(desiredNames);
-  if (p) p->setPosition(2.0 * cos(oscillator), 0.0, 3.0 * sin(oscillator));
-
-  // Using a different name, living dangerously without the if.
-  desiredNames.clear();
-  desiredNames.push_front("group3");
-  desiredNames.push_front("assorted");
-
-  scene.getObject(desiredNames)->setRotation(0.0, 0.4, oscillator);
-
-   bsg::bsgNameList s = scene.insideBoundingBox(glm::vec3(5.0f, 5.0f, 0.1f));
-  
-   // if (!s.empty()) {
-   //   for (bsg::bsgNameList::iterator it = s.begin(); it != s.end(); it++) {
-   //     std::cout << "s:";
-   //     for (bsg::bsgName::iterator jt = it->begin(); jt != it->end(); jt++) {
-   //       std::cout << *jt << "/" ;
-   //     }
-   //     std::cout << std::endl;
-   //   }
-   // }
-
-   // if (!s.empty())
-   //   scene.getObject(s.front())->setRotation(0.0, oscillator, 0.0);
-  
-  // Selecting an image with a world-space location.
-
-  
   // Now the preliminaries are done, on to the actual drawing.
   
   // First clear the display.
@@ -330,12 +289,12 @@ int main(int argc, char **argv) {
   shader->addLights(lights);
 
   // Add the shaders to the manager, first the vertex shader...
-  std::string vertexFile = std::string("../src/textureShader.vp");
+  std::string vertexFile = std::string("../shaders/textureShader.vp");
   shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
 
   // ... then the fragment shader.  You could potentially add a
   // geometry shader at this point.
-  std::string fragmentFile = std::string("../src/textureShader.fp");
+  std::string fragmentFile = std::string("../shaders/textureShader.fp");
   shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
   // The shaders are loaded, now compile them.
@@ -348,8 +307,8 @@ int main(int argc, char **argv) {
 
   // Do the same for the axes shader:
   bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
-  axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
-  axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+  axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
+  axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
   axesShader->compileShaders();
   
   // Here are the drawable objects that make up the compound object
@@ -363,35 +322,13 @@ int main(int argc, char **argv) {
 
   smallRectangle->setPosition(1.0f, 1.0f, 0.5f);
   
-  rectGroup1 = new bsg::drawableCollection("rectangles");
+  rectGroup = new bsg::drawableCollection("rectangles");
 
-  rectGroup1->addObject("big", bigRectangle);
-  rectGroup1->addObject("small", smallRectangle);
+  rectGroup->addObject("big", bigRectangle);
+  rectGroup->addObject("small", smallRectangle);
 
-  scene.addObject("group1", rectGroup1);
+  scene.addObject(rectGroup);
 
-  anotherBig = new bsg::drawableRectangle(shader, 6.0f, 3.0f, 3);
-  anotherBig->setPosition(0.0, 1.0, -1.0);
-  
-  anotherSmall = new bsg::drawableRectangle(shader, 2.0f, 2.0f, 2);
-
-  rectGroup3 = new bsg::drawableCollection("more");
-  
-  rectGroup3->addObject(anotherBig);
-  rectGroup3->addObject("small2", anotherSmall);
-  rectGroup3->setPosition(2.3f, 3.2f, -2.0f);
-  
-  mediumRectangle = new bsg::drawableRectangle(shader, 4.0f, 4.0f, 3);
-
-  rectGroup2 = new bsg::drawableCollection("assorted");
-  
-  rectGroup2->addObject("medium", mediumRectangle);
-  rectGroup2->addObject("group3", rectGroup3);
-  rectGroup2->setPosition(1.0f, 1.0f, 1.1f);
-  
-  // If you omit the name it is taken from the object.
-  scene.addObject(rectGroup2);
-  
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 
   scene.addObject(axes);
@@ -399,8 +336,6 @@ int main(int argc, char **argv) {
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
   scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
-
-  std::cout << "Your Scene Graph:" << std::endl << scene << std::endl;
   
   // All the shapes are now added to the scene.
 

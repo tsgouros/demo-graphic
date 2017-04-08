@@ -565,18 +565,17 @@ void drawableObj::findBoundingBox() {
   }
 
   // We don't want any zero-width bounding boxes.
-  float littleBit = 0.2; // This should be adjustable.
   if (_vertexBoundingBoxUpper.x == _vertexBoundingBoxLower.x) {
-    _vertexBoundingBoxUpper.x += littleBit;
-    _vertexBoundingBoxLower.x -= littleBit;
+    _vertexBoundingBoxUpper.x += _boundingBoxMin;
+    _vertexBoundingBoxLower.x -= _boundingBoxMin;
   }
   if (_vertexBoundingBoxUpper.y == _vertexBoundingBoxLower.y) {
-    _vertexBoundingBoxUpper.y += littleBit;
-    _vertexBoundingBoxLower.y -= littleBit;
+    _vertexBoundingBoxUpper.y += _boundingBoxMin;
+    _vertexBoundingBoxLower.y -= _boundingBoxMin;
   }
   if (_vertexBoundingBoxUpper.z == _vertexBoundingBoxLower.z) {
-    _vertexBoundingBoxUpper.z += littleBit;
-    _vertexBoundingBoxLower.z -= littleBit;
+    _vertexBoundingBoxUpper.z += _boundingBoxMin;
+    _vertexBoundingBoxLower.z -= _boundingBoxMin;
   }
 
   _haveBoundingBox = true;
@@ -853,8 +852,7 @@ bsgNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
       
       // If we're here, the point is in the bounding box of at least
       // one of the member objects of this compound object.  Create a
-      // one-element list of a one-element name.
-      out.push_back(_name);
+      // one-element list of a zero-element name.
       outList.push_back(out);
       return outList;
     }
@@ -1080,12 +1078,29 @@ bsgPtr<drawableMulti> drawableCollection::getObject(bsgName name) {
   }  
 }
   
-std::list<std::string> drawableCollection::getNames() {
-  
-  std::list<std::string> out;
+bsgNameList drawableCollection::getNames() {
+
+  // Our output.
+  bsgNameList out;
+
+  // Loop through the collection, running getNames() on all the members.
   for (CollectionMap::iterator it = _collection.begin();
        it != _collection.end(); it++) {
-    out.push_back(it->first);
+    bsgNameList sublist = it->second->getNames();
+
+    if (!sublist.empty()) {
+      for (bsgNameList::iterator jt = sublist.begin();
+           jt != sublist.end(); jt++) {
+        jt->push_front(it->first);
+      }
+    } else {
+      bsgName b;
+      b.push_back(it->first);
+      sublist.push_back(b);
+    }
+        
+    // If any of them reply, add them to the output list.
+    out.splice(out.end(), sublist);
   }
 
   return out;
@@ -1099,16 +1114,18 @@ bsgNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
        it != _collection.end(); it++) {
     bsgNameList sublist = it->second->insideBoundingBox(testPoint);
 
+    // Check if the list is empty.  Note that the list might have one
+    // zero-length entry, if this child is a drawableCompound and the
+    // condition is met.
     if (!sublist.empty()) {
-      out.splice(out.end(), sublist);
-    }
-  }
 
-  if (!out.empty()) {
-    for (bsgNameList::iterator it = out.begin(); it != out.end(); it++) {
-      it->push_front(_name);
+      for (bsgNameList::iterator jt = sublist.begin();
+           jt != sublist.end(); jt++) {
+        jt->push_front(it->first);
+      }
     }
-    return out;
+
+    out.splice(out.end(), sublist);
   }
 
   // If we're here, the answer is no, so this should be an empty list.
@@ -1201,9 +1218,9 @@ bsgPtr<drawableMulti> scene::getObject(bsgName &name) {
   
 }
 
-bsgNameList scene::insideBoundingBox(const glm::vec3 &testPoint) {
+bsgNameList scene::insideBoundingBox(const glm::vec4 &testPoint) {
 
-  return _sceneRoot.insideBoundingBox(glm::vec4(testPoint, 1.0));
+  return _sceneRoot.insideBoundingBox(testPoint);
 }
   
   

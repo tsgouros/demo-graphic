@@ -149,8 +149,8 @@ private:
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
 
-    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
-    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../src/textureShader.vp ../src/textureShader.fp'");
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../shaders/textureShader.vp ../shaders/textureShader.fp'");
   }
     
   // Initialize the app.
