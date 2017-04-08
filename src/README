@@ -12,3 +12,25 @@ so please find the rest of the documentation there.
 To build the documentation, execute cmake and make like this:
 
     $ cmake .. -DBUILD_DOCUMENTATION
+
+
+
+
+
+TODO list:
+
+  This is a list limited by our desire not to construct a replacement
+  for real scene graph packages, but at the same time we want
+  something that will take care of most of the needs of new users.
+
+  - More basic shapes to the bsgMenagerie.
+
+  - OBJ file loader does not yet handle materials.
+  
+  - Only PNG textures currently supported.  Need other graphics file
+    formats to be available (JPG, BMP, TIF).
+
+  - Mipmap support in OpenGL?
+
+  - Better interactivity support with MinVR.  (Ray selection? Device
+    abstraction?)
