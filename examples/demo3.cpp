@@ -417,6 +417,13 @@ int main(int argc, char **argv) {
 
   }
 
+  if (getenv("MINVR_ROOT") == NULL) {
+    std::cout << "***** No MINVR_ROOT -- MinVR might not be found *****" << std::endl 
+              << "MinVR is found (at runtime) via the 'MINVR_ROOT' variable."
+              << std::endl << "Try 'export MINVR_ROOT=/my/path/to/MinVR'."
+              << std::endl;
+  }
+  
   std::string arg1 = std::string(argv[1]);
   
   if (arg1.find("xml") == std::string::npos) {

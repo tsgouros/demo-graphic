@@ -297,7 +297,14 @@ int main(int argc, char **argv) {
   if (argc < 4) {
     throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../shaders/textureShader.vp ../shaders/textureShader.fp'");
   }
-    
+
+  if (getenv("MINVR_ROOT") == NULL) {
+    std::cout << "***** No MINVR_ROOT -- MinVR might not be found *****" << std::endl 
+              << "MinVR is found (at runtime) via the 'MINVR_ROOT' variable."
+              << std::endl << "Try 'export MINVR_ROOT=/my/path/to/MinVR'."
+              << std::endl;
+  }
+  
   // Initialize the app.
 	DemoVRApp app(argc, argv, argv[1]);
 
