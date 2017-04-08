@@ -12,7 +12,7 @@ To install FreeGLUT, if needed, using Homebrew:
     $ brew install freeglut
 
 I am using 2.8.1. Version 3.0.0 should work, but I haven't tested
-that.  The older (2.8.1) version is the one supported in the yurt.
+that.  The older (2.8.1) version is the one supported in the CCV YURT.
 
 To install GLEW, if needed, using Homebrew:
 
@@ -33,7 +33,8 @@ will probably work, too, but someone else has to make the instructions
 for those, and I will happily include them here.
 
 If cmake finds libPNG it will build a demo2 binary, and if it also
-finds MinVR, it will create a demo3.
+finds MinVR, it will create a demo3.  You will find them in the bin
+subdirectory of your build directory.
 
 ## Downloading and installing MinVR
 
@@ -44,8 +45,7 @@ to it.
 
     $ git clone http://github.com/MinVR/MinVR.git
     $ cd MinVR
-    $ git checkout beta  #<-- tested with commit 376569e
-    $ mkdir build
+    $ mkdir build 
     $ cd build
     $ cmake .. -DBASE_PLUGINS=OFF -DMINVR_OPENGL_PLUGIN=ON -DMINVR_FREEGLUT_PLUGIN=ON
     $ make
@@ -55,26 +55,6 @@ to it.
 This will install MinVR in an "install" directory inside the "build"
 directory you just created.  You can put it somewhere else by adding
 "-DCMAKE_INSTALL_PREFIX=/my/path/to/install" to the cmake line above.
-
-    Note: The commands above are to use the "beta" branch on MinVR.
-          This is NOT the default when you clone the repo, so the 'git
-          checkout' line is important.  If something goes awry, try
-          doing git checkout to the specific commit listed above.
-
-* If this fails and the cmake command reports that it cannot find
-  FreeGLUT while building MinVR, try this hack.  The cmake program
-  uses a file with hints in it to try to figure out where to find your
-  freeglut installation.  The hints in the demo-graphic FindFreeGLUT
-  file are better than in the MinVR version.  While we wait for the
-  better version to become part of the MinVR release, go to your MinVR
-  repo and do this:
-
-    $ cd MinVR   # <-- you are at the root of the MinVR tree.
-    $ cp /path/to/my/demo-graphic/cmake/FindFreeGLUT.cmake plugins/FREEGLUT/cmake/
-
-  This should copy the FindFreeGLUT file from the demo-graphic
-  directory to the correct location in the MinVR directory.  Then try
-  the build again from the cmake step above.
 
 After successfully building the MinVR package and getting past the
 "make install" step (don't forget that part), you will need to rebuild
@@ -92,7 +72,8 @@ Add a space and remove it or something like that.  Dumb, but
 effective, like a lot of computing practice.
 
 To run a MinVR application, you'll need to set the MINVR_ROOT
-environment variable, and specify a configuration file.
+environment variable, and specify a configuration file.  There are
+some MinVR configuration files in the config directory.
 
     $ cd /path/to/my/MinVR
     $ export MINVR_ROOT=$(pwd)
@@ -100,19 +81,24 @@ environment variable, and specify a configuration file.
     $ bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp
 
 
-### Running on the yurt.
+### Running on the CCV YURT.
 
-On the yurt, you'll have to do these:
+On the OSCAR machines that run the YURT, you will not have to compile
+MinVR or set environment variables, but you will have to do these:
 
     $ module load centos-updates
     $ module load centos-libs
-    $ module load nvidia-driiver
+    $ module load nvidia-driver
     $ module load vrpn
     $ module load cave
     $ module load freeglut
     $ module load libpng
+    $ module load MinVR
 
-These commands can be put in a file called ~/.modules.
+These commands can be put in a file called ~/.modules.  You may find
+it convenient to copy my .modules file:
+
+    $ cp /gpfs/home/tsgouros/.modules ~/
 
 More to come...
 

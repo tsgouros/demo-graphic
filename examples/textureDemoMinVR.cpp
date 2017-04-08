@@ -31,6 +31,7 @@ private:
   // divided into several functions here, so they are class-wide
   // private data objects.
   bsg::bsgPtr<bsg::shaderMgr> _shader;
+  bsg::bsgPtr<bsg::shaderMgr> _axesShader;
   bsg::bsgPtr<bsg::lightList> _lights;
 
   // Here are the drawable objects that make up the compound object
@@ -96,6 +97,8 @@ private:
     // This is just a performance enhancement that allows OpenGL to
     // ignore faces that are facing away from the camera.
     glEnable(GL_CULL_FACE);
+    glLineWidth(4);
+    glEnable(GL_LINE_SMOOTH);
 
   }
 
@@ -117,10 +120,8 @@ private:
 
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
-    _lights->addLight(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
-                      glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-    // _lights->addLight(glm::vec4(0.0f, 0.0f,-1.0f, 1.0f),
-    //                   glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+    _lights->addLight(glm::vec4(0.0f, 0.0f, 3.0f, 1.0f),
+                      glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
@@ -134,48 +135,25 @@ private:
 
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
-  
 
-    // Now let's add a set of axes.
-    _axes = bsg::drawableObj();
-    std::vector<glm::vec4> axesVertices;
-    axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
-  
-    axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
-
-    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
-    axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
-
-    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
-
-    // With colors. (X = red, Y = green, Z = blue)
-    std::vector<glm::vec4> axesColors;
-    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-
-    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-
-    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-    axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
-
-    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
-
-    // The axes are not triangles, but lines.
-    _axes.setDrawType(GL_LINES);
-
+    // Add a texture to our shader manager object.
+    bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
+    texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
+    _shader->addTexture(texture);
+    
     // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
-    _rectangle = new bsg::drawableRectangle(_shader, 3.0f, 5.0f);
+    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
 
-    _axesSet = new bsg::drawableCompound(_shader);
-    _axesSet->addObject(_axes);
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
+    _axesShader->compileShaders();
+
+    _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
 
     // Now add the axes.
     _scene.addObject(_axesSet);
@@ -194,11 +172,12 @@ public:
     // These are tracked separately because multiple objects might use
     // them.
     _shader = new bsg::shaderMgr();
+    _axesShader = new bsg::shaderMgr();
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
-
+    
     _vertexFile = std::string(argv[2]);
     _fragmentFile = std::string(argv[3]);
 
@@ -208,7 +187,7 @@ public:
 	/// event to process.
 	void onVREvent(const MinVR::VREvent &event) {
         
-    //event.print();
+    // event.print();
         
     // This heartbeat event recurs at regular intervals, so you can do
     // animation with the model matrix here, as well as in the render
@@ -268,8 +247,9 @@ public:
       // your scene, you can do that here.
       glm::vec3 pos = _rectangle->getPosition();
       _oscillator += _oscillationStep;
-      pos.x = sin(_oscillator);
-      pos.y = 1.0f - cos(_oscillator);
+      pos.x = 2.0f * sin(_oscillator);
+      pos.y = 2.0f * cos(_oscillator);
+      pos.z = -4.0f;
       _rectangle->setPosition(pos);
 
       // Now the preliminaries are done, on to the actual drawing.
@@ -284,7 +264,6 @@ public:
                                         pm[4],  pm[5], pm[6], pm[7],
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
-      //bsg::bsgUtils::printMat("proj", projMatrix);
       _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
@@ -316,15 +295,9 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo4 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp'");
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/textureDemoMinVR ../config/desktop-freeglut.xml ../shaders/textureShader.vp ../shaders/textureShader.fp'");
   }
     
-  std::string arg1 = std::string(argv[1]);
-  
-  if (arg1.find("xml") == std::string::npos) {
-    throw std::runtime_error("\n** First arg should be a config file.  Try desktop-freeglut.xml.");
-  }
-
   // Initialize the app.
 	DemoVRApp app(argc, argv, argv[1]);
 

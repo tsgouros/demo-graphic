@@ -1,37 +1,11 @@
-
-# This is the path where cmake will look for files like "FindPNG.cmake".
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-
-find_package(FreeGLUT REQUIRED)
-message("-- FreeGLUT includes:" ${FREEGLUT_INCLUDE_DIR})
-message("-- FreeGLUT library: " ${FREEGLUT_LIBRARY})
-
-find_package(OpenGL REQUIRED)
-message("-- OpenGL includes:  " ${OPENGL_INCLUDE_DIR})
-message("-- OpenGL library:   " ${OPENGL_LIBRARY})
-
-find_package(GLEW REQUIRED)
-message("-- GLEW library:     " ${GLEW_LIBRARY})
-message("-- GLEW includes:    " ${GLEW_INCLUDE_DIRS})
-
-find_package(PNG 1.4 REQUIRED MODULE)
-message("-- PNG includes:     " ${PNG_INCLUDE_DIRS})
-message("-- PNG library:      " ${PNG_LIBRARIES})
-get_filename_component(PNG_LIBRARY_PATH ${PNG_LIBRARIES} DIRECTORY)
-message("-- PNG library is in:" ${PNG_LIBRARY_PATH})
-
-find_package(MinVR MODULE)
-message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
-message("-- MinVR library:    " ${MINVR_LIBRARY})
-
-set(GLM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/glm-0.9.7.1)
-message("-- GLM includes:     " ${GLM_INCLUDE_DIR})
+project(bsg)
 
 include_directories(
   ${OPENGL_INCLUDE_DIR}
   ${FREEGLUT_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
   ${GLEW_INCLUDE_DIRS}
+  ${PNG_INCLUDE_DIRS}
   )
 
 set(bsg_headers bsg.h bsgMenagerie.h bsgObjModel.h)
@@ -40,112 +14,6 @@ set(bsg_files ${bsg_headers} ${bsg_sources})
 
 add_library(bsg ${bsg_files})
 
-# Source files go here.
-add_executable (demo demo.cpp)
-
-target_link_libraries(demo
-  ${FREEGLUT_LIBRARY}
-  ${OPENGL_LIBRARY}
-  ${GLEW_LIBRARY}
-)
-
-if(PNG_FOUND)
-
-  # This is a goofy fix for a strange libpng linking problem on OSCAR.
-  if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${PNG_LIBRARY_PATH}")
-  endif()
-
-  include_directories(
-    ${OPENGL_INCLUDE_DIR}
-    ${FREEGLUT_INCLUDE_DIR}
-    ${GLM_INCLUDE_DIR}
-    ${GLEW_INCLUDE_DIRS}
-    ${PNG_INCLUDE_DIRS}
-    )
-
-  add_executable(demo2 demo2.cpp ${bsg_files})
-
-  target_link_libraries(demo2
-   ${FREEGLUT_LIBRARY}
-   ${OPENGL_LIBRARY}
-   ${GLEW_LIBRARY}
-   ${PNG_LIBRARIES})
-
-  add_executable(textureDemo textureDemo.cpp ${bsg_files})
-
-  target_link_libraries(textureDemo
-   ${FREEGLUT_LIBRARY}
-   ${OPENGL_LIBRARY}
-   ${GLEW_LIBRARY}
-   ${PNG_LIBRARIES})
-  
-  add_executable(treeDemo treeDemo.cpp ${bsg_files})
-
-  target_link_libraries(treeDemo
-    ${FREEGLUT_LIBRARY}
-    ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY}
-    ${PNG_LIBRARIES})
-  
-  if(MINVR_FOUND)
-
-    # Redefine the include directories to include MinVR.
-    include_directories(
-      ${OPENGL_INCLUDE_DIR}
-      ${FREEGLUT_INCLUDE_DIR}
-      ${GLM_INCLUDE_DIR}
-      ${GLEW_INCLUDE_DIRS}
-      ${PNG_INCLUDE_DIRS}
-      ${MINVR_INCLUDE_DIR}
-      )
-
-    add_executable(demo3 demo3.cpp ${bsg_files})
-  
-    target_link_libraries(demo3
-      ${MINVR_LIBRARY}
-      ${FREEGLUT_LIBRARY}
-      ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY}
-      ${PNG_LIBRARIES})
-
-    add_executable(demo4 demo4.cpp ${bsg_files})
-
-
-    target_link_libraries(demo4
-     ${MINVR_LIBRARY}
-     ${FREEGLUT_LIBRARY}
-     ${OPENGL_LIBRARY}
-     ${GLEW_LIBRARY}
-     ${PNG_LIBRARIES})
-    
-    add_executable(textureDemoMinVR textureDemoMinVR.cpp ${bsg_files})
-
-
-    target_link_libraries(textureDemoMinVR
-     ${MINVR_LIBRARY}
-     ${FREEGLUT_LIBRARY}
-     ${OPENGL_LIBRARY}
-     ${GLEW_LIBRARY}
-     ${PNG_LIBRARIES})
-
-    add_executable(objDemoMinVR objDemoMinVR.cpp ${bsg_files})
-
-    target_link_libraries(objDemoMinVR
-      ${MINVR_LIBRARY}
-      ${PNG_LIBRARIES}
-      ${FREEGLUT_LIBRARY}
-      ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY}
-      )
-
-  else(MINVR_FOUND)
-
-    message("** No MinVR for you!")
-    message("** See instructions and advice on the topic above.")
-
-  endif(MINVR_FOUND)
-endif(PNG_FOUND)
 
 install(TARGETS bsg
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib

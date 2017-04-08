@@ -83,8 +83,8 @@ float lookAtX, lookAtY, lookAtZ;
 float stepX, stepY, stepZ;
 
 // Shader file names
-std::string vertexFileName = "../src/shader.vp";
-std::string fragmentFileName = "../src/shader.fp";
+std::string vertexFileName = "../shaders/shader.vp";
+std::string fragmentFileName = "../shaders/shader.fp";
  
 // This is where the index numbers for each of the data buffers are
 // stored.  They are initialized in the setupBuffers() function below,

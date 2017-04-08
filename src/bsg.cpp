@@ -1,5 +1,7 @@
 #include "bsg.h"
 
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 namespace bsg {
 
 void bsgUtils::printMat(const std::string& name, const glm::mat4& mat) {
@@ -38,10 +40,10 @@ void lightList::draw() {
   // If there aren't any lights, don't bother.
   if (_lightPositions.size() > 0) {
     glUniform4fv(_lightPositions.ID,
-                 _lightPositions.getData().size(),
+                 _lightPositions.size(),
                  &_lightPositions.getData()[0].x);
     glUniform4fv(_lightColors.ID,
-                 _lightColors.getData().size(),
+                 _lightColors.size(),
                  &_lightColors.getData()[0].x);
   }
 }
@@ -481,14 +483,27 @@ void drawableObj::addData(const GLDATATYPE type,
   }
 }
 
+bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
+                                    const glm::mat4 &modelMatrix) {
 
+  if (!_selectable) return false;
   
-void drawableObj::prepare(GLuint programID) {
+  glm::vec4 upper = modelMatrix * _vertexBoundingBoxUpper;
+  glm::vec4 lower = modelMatrix * _vertexBoundingBoxLower;
+  
+  return
+    (testPoint.x <= upper.x) &&
+    (testPoint.x >= lower.x) &&
+    (testPoint.y <= upper.y) &&
+    (testPoint.y >= lower.y) &&
+    (testPoint.z <= upper.z) &&
+    (testPoint.z >= lower.z);  
+}
+
+void drawableObj::_getAttribLocations(GLuint programID) {
 
   bool badID = false;
-  
-  // Figure out which buffers we need and get IDs for them.
-  glGenBuffers(1, &_vertices.bufferID);  
+
   _vertices.ID = glGetAttribLocation(programID, _vertices.name.c_str());
 
   // Check to make sure the ID awarded is sane.  If not, probably the
@@ -498,8 +513,7 @@ void drawableObj::prepare(GLuint programID) {
     badID = true;
   }
   
-  if (!_colors.getData().empty()) {
-    glGenBuffers(1, &_colors.bufferID);
+  if (!_colors.empty()) {
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
     
     if (_colors.ID < 0) {
@@ -507,8 +521,7 @@ void drawableObj::prepare(GLuint programID) {
       badID = true;
     }
   }
-  if (!_normals.getData().empty()) {
-    glGenBuffers(1, &_normals.bufferID);
+  if (!_normals.empty()) {
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
     
     if (_normals.ID < 0) {
@@ -516,8 +529,7 @@ void drawableObj::prepare(GLuint programID) {
       badID = true;
     }
   }
-  if (!_uvs.getData().empty()) {
-    glGenBuffers(1, &_uvs.bufferID);
+  if (!_uvs.empty()) {
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
     
     if (_uvs.ID < 0) {
@@ -529,57 +541,255 @@ void drawableObj::prepare(GLuint programID) {
   if (badID) {
     std::cerr << "This can be caused either by a spelling error, or by not using the" << std::endl << "attribute within the shader code." << std::endl;
   }
+}
+
+void drawableObj::findBoundingBox() {
+
+  // Find the bounding box for this object.
+  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0f);
+  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, 1.0f);
+
+  // Don't use a templated accessor to test the for loop (very slow).
+  std::vector<glm::vec4> data = _vertices.getData();
+
+  for (std::vector<glm::vec4>::iterator it = data.begin();
+       it != data.end(); it++) {
+
+    _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
+    _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
+    _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
+
+    _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
+    _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
+    _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
+  }
+
+  // We don't want any zero-width bounding boxes.
+  if (_vertexBoundingBoxUpper.x == _vertexBoundingBoxLower.x) {
+    _vertexBoundingBoxUpper.x += _boundingBoxMin;
+    _vertexBoundingBoxLower.x -= _boundingBoxMin;
+  }
+  if (_vertexBoundingBoxUpper.y == _vertexBoundingBoxLower.y) {
+    _vertexBoundingBoxUpper.y += _boundingBoxMin;
+    _vertexBoundingBoxLower.y -= _boundingBoxMin;
+  }
+  if (_vertexBoundingBoxUpper.z == _vertexBoundingBoxLower.z) {
+    _vertexBoundingBoxUpper.z += _boundingBoxMin;
+    _vertexBoundingBoxLower.z -= _boundingBoxMin;
+  }
+
+  _haveBoundingBox = true;
+}
+
+void drawableObj::prepare(GLuint programID) {
+
+  if (!_haveBoundingBox) findBoundingBox();
+
+  if (_interleaved) {
+    _prepareInterleaved(programID);
+  } else {
+    _prepareSeparate(programID);
+  }
+}
+
+void drawableObj::_prepareInterleaved(GLuint programID) {
+
+  // Calculate the stride and offset for each vertex value.
+  _stride = 3 * sizeof(float); // We're cheating here, assuming only x,y,z.  
+
+  if (!_colors.empty()) {
+    _colorPos = _stride;  // The colors appear after the vertices.
+    _stride += 3 * sizeof(float);  // The next value appears after that.
+  }
+  
+  if (!_normals.empty()) {
+    _normalPos = _stride;
+    _stride += 3 * sizeof(float);
+  }
+  
+  if (!_uvs.empty()) {
+    _uvPos = _stride;
+    _stride += 2 * sizeof(float);
+  }
+  // End of calculating all the stride values.
+
+  // Prepare a data buffer for the interleaved data.
+  glGenBuffers(1, &_interleavedData.bufferID);
+
+  // Now interleave the data.
+  for (int i = 0; i < _vertices.size(); i++) {
+
+    // Load the x,y,z vertices.
+    _interleavedData.addData(_vertices[i].x);
+    _interleavedData.addData(_vertices[i].y);
+    _interleavedData.addData(_vertices[i].z);
+
+    // Now interleave the other vertex attributes, if any.
+    if (!_colors.empty()) {
+      _interleavedData.addData(_colors[i].r);
+      _interleavedData.addData(_colors[i].g);
+      _interleavedData.addData(_colors[i].b);
+    }
+    if (!_normals.empty()) {
+      _interleavedData.addData(_normals[i].x);
+      _interleavedData.addData(_normals[i].y);
+      _interleavedData.addData(_normals[i].z);
+    }
+    if (!_uvs.empty()) {
+      _interleavedData.addData(_uvs[i].s);
+      _interleavedData.addData(_uvs[i].t);
+    }      
+  }
+
+  _getAttribLocations(programID);
+
+  _loadInterleaved();  
+}
+
+void drawableObj::_prepareSeparate(GLuint programID) {
+
+  // Figure out which buffers we need and get IDs for them.
+  glGenBuffers(1, &_vertices.bufferID);  
+  if (!_colors.empty()) glGenBuffers(1, &_colors.bufferID);
+  if (!_normals.empty()) glGenBuffers(1, &_normals.bufferID);
+  if (!_uvs.empty()) glGenBuffers(1, &_uvs.bufferID);
+
+  _getAttribLocations(programID);
   
   // Put the data in its buffers, for practice.
-  load();
+  _loadSeparate();
 
 }
+
 
 void drawableObj::load() {
 
-  if(!_loadedToBuffer) {
-    glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
-    glBufferData(GL_ARRAY_BUFFER, _vertices.size(), &_vertices.getData()[0], GL_STATIC_DRAW);
-
-    if (!_colors.getData().empty()) {
-      glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, _colors.size(), &_colors.getData()[0], GL_STATIC_DRAW);
-    }
-    if (!_normals.getData().empty()) {
-      glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, _normals.size(), &_normals.getData()[0], GL_STATIC_DRAW);
-    }
-    if (!_uvs.getData().empty()) {
-      glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-      glBufferData(GL_ARRAY_BUFFER, _uvs.size(), &_uvs.getData()[0], GL_STATIC_DRAW);
-    }
-    _loadedToBuffer=true;
+  if (_interleaved) {
+    _loadInterleaved();
+  } else {
+    _loadSeparate();
   }
 }
 
+void drawableObj::_loadInterleaved() {
+
+  if (!_loadedIntoBuffer) {
+
+    // Load it into a buffer.
+    glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
+    glBufferData(GL_ARRAY_BUFFER, _interleavedData.byteSize(),
+                 _interleavedData.beginAddress(), GL_STATIC_DRAW);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    _loadedIntoBuffer = true;
+  }  
+}
+
+
+void drawableObj::_loadSeparate() {
+
+  if (!_loadedIntoBuffer) {
+    glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+    glBufferData(GL_ARRAY_BUFFER, _vertices.byteSize(), _vertices.beginAddress(),
+                 GL_STATIC_DRAW);
+
+    if (!_colors.empty()) {
+      glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
+      glBufferData(GL_ARRAY_BUFFER, _colors.byteSize(), _colors.beginAddress(),
+                   GL_STATIC_DRAW);
+    }
+    if (!_normals.empty()) {
+      glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
+      glBufferData(GL_ARRAY_BUFFER, _normals.byteSize(), _normals.beginAddress(),
+                   GL_STATIC_DRAW);
+    }
+    if (!_uvs.empty()) {
+      glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
+      glBufferData(GL_ARRAY_BUFFER, _uvs.byteSize(), _uvs.beginAddress(),
+                   GL_STATIC_DRAW);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    _loadedIntoBuffer = true;
+  }
+}
+
+ 
 void drawableObj::draw() {
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+  // Enable all the attribute arrays we'll use.
   glEnableVertexAttribArray(_vertices.ID);
-  glVertexAttribPointer(_vertices.ID, _vertices.intSize(), GL_FLOAT, 0, 0, 0);
+  if (!_colors.empty()) glEnableVertexAttribArray(_colors.ID);
+  if (!_normals.empty()) glEnableVertexAttribArray(_normals.ID);
+  if (!_uvs.empty()) glEnableVertexAttribArray(_uvs.ID);
+    
+  if (_interleaved) {
+    _drawInterleaved();
+  } else {
+    _drawSeparate();
+  }
 
-  if (!_colors.getData().empty()) {
-    glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
-    glEnableVertexAttribArray(_colors.ID);
-    glVertexAttribPointer(_colors.ID, _colors.intSize(), GL_FLOAT, 0, 0, 0);
+  // Now disable the attribute arrays so they won't interfere with the
+  // next draw.
+  glDisableVertexAttribArray(_vertices.ID);
+  if (!_colors.empty()) glDisableVertexAttribArray(_colors.ID);
+  if (!_normals.empty()) glDisableVertexAttribArray(_normals.ID);
+  if (!_uvs.empty()) glDisableVertexAttribArray(_uvs.ID);
+}
+
+void drawableObj::_drawInterleaved() {
+
+  glBindBuffer(GL_ARRAY_BUFFER, _interleavedData.bufferID);
+
+  // Since the point of the interleaving is to make the transfer of
+  // data more efficient, we are cheating in the following, and
+  // leaving out the w from the vec4 data and the a from rgba.  These
+  // are restored with default values by OpenGL.
+  glVertexAttribPointer(_vertices.ID, 3,//_vertices.componentsPerVertex() - 1,
+                        GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(0));
+
+  if (!_colors.empty()) {
+    glVertexAttribPointer(_colors.ID, 3,//_colors.componentsPerVertex() - 1,
+                            GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(_colorPos));
   }
-  if (!_normals.getData().empty()) {
-    glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
-    glEnableVertexAttribArray(_normals.ID);
-    glVertexAttribPointer(_normals.ID, _normals.intSize(), GL_FLOAT, 0, 0, 0);
+  if (!_normals.empty()) {
+    glVertexAttribPointer(_normals.ID, 3,//_normals.componentsPerVertex() - 1,
+                            GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(_normalPos));
   }
-  if (!_uvs.getData().empty()) {
-    glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
-    glEnableVertexAttribArray(_uvs.ID);
-    glVertexAttribPointer(_uvs.ID, _uvs.intSize(), GL_FLOAT, 0, 0, 0);
+  if (!_uvs.empty()) {
+    glVertexAttribPointer(_uvs.ID, 2,//_uvs.componentsPerVertex(),
+                            GL_FLOAT, GL_FALSE, _stride, BUFFER_OFFSET(_uvPos));
   }
 
   glDrawArrays(_drawType, 0, _count);
+}
+
+
+void drawableObj::_drawSeparate() {
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+  glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
+                        GL_FLOAT, 0, 0, 0);
+
+  if (!_colors.empty()) {
+    glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
+    glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
+                          GL_FLOAT, 0, 0, 0);
+  }
+  if (!_normals.empty()) {
+    glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
+    glVertexAttribPointer(_normals.ID, _normals.componentsPerVertex(),
+                          GL_FLOAT, 0, 0, 0);
+  }
+  if (!_uvs.empty()) {
+    glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
+    glVertexAttribPointer(_uvs.ID, _uvs.componentsPerVertex(),
+                          GL_FLOAT, 0, 0, 0);
+  }
+
+  glDrawArrays(_drawType, 0, _count);
+
 }
 
 glm::mat4 drawableMulti::getModelMatrix() {
@@ -608,6 +818,51 @@ glm::mat4 drawableMulti::getModelMatrix() {
     return _modelMatrix;
 }
 
+std::string drawableMulti::randomName(const std::string &nameRoot) {
+
+  // This is a pretty dopey method, but it seems to work, so long as
+  // the number of characters in each name is big enough.
+  std::string out = nameRoot;
+  for(int i = 0; i < 6; i++) {
+    switch(rand()%3) {
+    case 0:
+      out += ('0' + rand()%10);
+      break;
+    case 1:
+      out += ('A' + rand()%26);
+      break;
+    case 2:
+      out += ('a' + rand()%26);
+      break; 
+    }
+  }
+  return out;
+}
+
+bsgNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
+
+  bsgName out;
+  bsgNameList outList;
+  glm::mat4 modelMatrix = getModelMatrix();
+  
+  for (std::list<drawableObj>::iterator it = _objects.begin();
+       it != _objects.end(); it++) {
+
+    if (it->insideBoundingBox(testPoint, modelMatrix)) {
+      
+      // If we're here, the point is in the bounding box of at least
+      // one of the member objects of this compound object.  Create a
+      // one-element list of a zero-element name.
+      outList.push_back(out);
+      return outList;
+    }
+  }
+
+  // If we're here, the answer is no, so return an empty name.
+  return outList;
+}        
+
+  
 void drawableCompound::prepare() {
 
   _pShader->useProgram();
@@ -671,14 +926,79 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   }  
 }
 
+void drawableCompound::addObjectBoundingBox(drawableObj &obj) {
+
+  obj.findBoundingBox();
+  
+  drawableObj bb;
+  std::vector<glm::vec4> bbCorners(24);
+  std::vector<glm::vec4> bbColors(24, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+  glm::vec4 bbLower = obj.getBoundingBoxLower();
+  glm::vec4 bbUpper = obj.getBoundingBoxUpper();
+
+  bbCorners[0] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[1] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[2] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+  bbCorners[3] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+
+  bbCorners[4] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[5] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[6] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+  bbCorners[7] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[8] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[9] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+
+  bbCorners[10] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+  bbCorners[11] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[12] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[13] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+
+  bbCorners[14] = glm::vec4(bbLower.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[15] = glm::vec4(bbLower.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[16] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[17] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[18] = glm::vec4(bbUpper.x, bbLower.y, bbUpper.z, 1.0);
+  bbCorners[19] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
+
+  bbCorners[20] = glm::vec4(bbUpper.x, bbUpper.y, bbUpper.z, 1.0);
+  bbCorners[21] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+
+  bbCorners[22] = glm::vec4(bbUpper.x, bbUpper.y, bbLower.z, 1.0);
+  bbCorners[23] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
+
+  // This is a bit hackish; should query to use the same name as in
+  // obj._vertices, etc.
+  bb.addData(GLDATA_VERTICES, "position", bbCorners);
+  bb.addData(GLDATA_COLORS, "color", bbColors);
+  bb.setDrawType(GL_LINES);
+
+  // std::cout << bb << std::endl;
+
+  // for (int i = 0; i < 24; i++) {
+  //   std::cout << "corner:" << bbCorners[i].x << "," << bbCorners[i].y << "," << bbCorners[i].z << " color:" << bbColors[i].r << "," << bbColors[i].g << "," << bbColors[i].b << std::endl;
+  // }
+  
+  _objects.push_back(bb);
+}
+
+
+
 drawableCollection::drawableCollection() {
   // Seed a random number generator to generate default names randomly.
   struct timeval tp;
   gettimeofday(&tp, NULL);
   srand(tp.tv_usec);
+  _name = randomName("coll");
 }
 
-drawableCollection::drawableCollection(const std::string name) :
+drawableCollection::drawableCollection (const std::string name) :
   drawableMulti(name) {
   // Seed a random number generator to generate default names randomly.
   struct timeval tp;
@@ -690,6 +1010,7 @@ std::string drawableCollection::addObject(const std::string name,
                                    const bsgPtr<drawableMulti> &pMultiObject) {
   pMultiObject->setParent(this);
   _collection[name] = pMultiObject;
+  pMultiObject->setName(name);
 
   return name;
 }
@@ -698,14 +1019,17 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
 
   if (pMultiObject->getName().empty()) {
 
-    return addObject(randomName(), pMultiObject);
+    // This should not happen.
+    return addObject(randomName("err"), pMultiObject);
 
   } else {
     if (_collection.find(pMultiObject->getName()) != _collection.end()) {
 
-      std::cerr << "You have already used " << pMultiObject->getName() << " in " << getName() << ".  Assigning a random name." << std::endl;
+      std::cerr << "You have already used " << pMultiObject->getName() 
+		<< " in " << getName() 
+		<< ".  Assigning a random name." << std::endl;
 
-      return addObject(randomName(), pMultiObject);
+      return addObject(randomName(pMultiObject->getName()), pMultiObject);
 
     } else {
       
@@ -714,54 +1038,159 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
   }
 }
 
-bsgPtr<drawableMulti> drawableCollection::getObject(const std::string name) {
+bsgPtr<drawableMulti> drawableCollection::delObject(const std::string &name) {
 
   CollectionMap::iterator it = _collection.find(name);
 
-  // Throwing an error might be a little harsh.
   if (it == _collection.end()) {
-    throw std::runtime_error("what object is " + name + "?");
+    return NULL;
+  } else {
+    bsgPtr<drawableMulti> out = it->second;
+    _collection.erase(it);
+    return out;
+  }
+}
+  
+bsgPtr<drawableMulti> drawableCollection::delObject(bsgName name) {
+
+  if (name.size() > 0) {
+  
+    CollectionMap::iterator it = _collection.find(name.front());
+
+    if (it == _collection.end()) {
+
+      // No match.
+      return NULL;
+      
+    } else {
+
+      if (name.size() > 1) {
+      
+        // Step down a level.
+        name.pop_front();
+        return it->second->delObject(name);
+
+      } else {
+        
+        bsgPtr<drawableMulti> out = it->second;
+        _collection.erase(it);
+        return out;
+      }
+    }
+  } else {
+    
+    // This was called with an empty list for some reason.
+    return NULL;
+  }  
+}
+
+  
+bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
+
+  CollectionMap::iterator it = _collection.find(name);
+
+  if (it == _collection.end()) {
+    return NULL;
   } else {
     return it->second;
   }
 }
 
-std::list<std::string> drawableCollection::getNames() {
+bsgPtr<drawableMulti> drawableCollection::getObject(bsgName name) {
+
+  if (name.size() > 1) {
   
-  std::list<std::string> out;
+    CollectionMap::iterator it = _collection.find(name.front());
+
+    if (it == _collection.end()) {
+
+      // No match.
+      return NULL;
+      
+    } else {
+
+      // Step down a level.
+      name.pop_front();
+      return it->second->getObject(name);
+
+    }
+  } else if (name.size() > 0) {
+
+    return getObject(name.front());
+
+  } else {
+    
+    // This was called with an empty list for some reason.
+    return NULL;
+  }  
+}
+  
+bsgNameList drawableCollection::getNames() {
+
+  // Our output.
+  bsgNameList out;
+
+  // Loop through the collection, running getNames() on all the members.
   for (CollectionMap::iterator it = _collection.begin();
        it != _collection.end(); it++) {
-    out.push_back(it->first);
+    bsgNameList sublist = it->second->getNames();
+
+    if (!sublist.empty()) {
+      for (bsgNameList::iterator jt = sublist.begin();
+           jt != sublist.end(); jt++) {
+        jt->push_front(it->first);
+      }
+    } else {
+      bsgName b;
+      b.push_back(it->first);
+      sublist.push_back(b);
+    }
+        
+    // If any of them reply, add them to the output list.
+    out.splice(out.end(), sublist);
   }
 
   return out;
 }    
 
-std::string drawableCollection::randomName() {
+bsgNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
-  // This is a pretty dopey method, but it seems to work, so long as
-  // the number of characters in each name is big enough.
-  std::string out = "";
-  for(int i = 0; i < 6; i++) {
-    switch(rand()%3) {
-    case 0:
-      out += ('0' + rand()%10);
-      break;
-    case 1:
-      out += ('A' + rand()%26);
-      break;
-    case 2:
-      out += ('a' + rand()%26);
-      break; 
+  bsgNameList out;
+
+  for (CollectionMap::iterator it = _collection.begin();
+       it != _collection.end(); it++) {
+    bsgNameList sublist = it->second->insideBoundingBox(testPoint);
+
+    // Check if the list is empty.  Note that the list might have one
+    // zero-length entry, if this child is a drawableCompound and the
+    // condition is met.
+    if (!sublist.empty()) {
+
+      for (bsgNameList::iterator jt = sublist.begin();
+           jt != sublist.end(); jt++) {
+        jt->push_front(it->first);
+      }
     }
+
+    out.splice(out.end(), sublist);
   }
+
+  // If we're here, the answer is no, so this should be an empty list.
   return out;
 }
 
+std::string drawableCollection::printObj (const std::string &prefix) const {
 
+  std::string out = _name;
 
+  for (CollectionMap::const_iterator it = _collection.begin();
+       it != _collection.end(); it++) {
+    out += "\n" + prefix + it->second->printObj(prefix + "| ");
+  }
+
+  return out;
+}
   
-
   
 void drawableCollection::prepare() {
 
@@ -812,6 +1241,35 @@ void scene::addToCameraViewAngle(const float horizAngle, const float vertAngle) 
   // camera location.
   _cameraPosition = _lookAtPosition - glm::vec3(newDir.x, newDir.y, newDir.z);
 }
+
+bsgPtr<drawableMulti> scene::getObject(const std::string &name) {
+
+  if (name.compare("sceneRoot") == 0) {
+
+    return NULL;
+
+  } else {
+    
+    return _sceneRoot.getObject(name);
+  }
+}
+
+bsgPtr<drawableMulti> scene::getObject(bsgName &name) {
+
+  if (name.empty()) return NULL;
+
+  bsgName localName = name;
+  if (localName.front().compare("sceneRoot") == 0) localName.pop_front();
+  
+  return _sceneRoot.getObject(localName);
+  
+}
+
+bsgNameList scene::insideBoundingBox(const glm::vec4 &testPoint) {
+
+  return _sceneRoot.insideBoundingBox(testPoint);
+}
+  
   
 void scene::prepare() {
 

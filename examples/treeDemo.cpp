@@ -289,12 +289,12 @@ int main(int argc, char **argv) {
   shader->addLights(lights);
 
   // Add the shaders to the manager, first the vertex shader...
-  std::string vertexFile = std::string("../src/textureShader.vp");
+  std::string vertexFile = std::string("../shaders/textureShader.vp");
   shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
 
   // ... then the fragment shader.  You could potentially add a
   // geometry shader at this point.
-  std::string fragmentFile = std::string("../src/textureShader.fp");
+  std::string fragmentFile = std::string("../shaders/textureShader.fp");
   shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
   // The shaders are loaded, now compile them.
@@ -307,8 +307,8 @@ int main(int argc, char **argv) {
 
   // Do the same for the axes shader:
   bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
-  axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
-  axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+  axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
+  axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
   axesShader->compileShaders();
   
   // Here are the drawable objects that make up the compound object

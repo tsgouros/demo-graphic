@@ -1,0 +1,55 @@
+                      Baby Scene Graph Examples
+
+This directory contains examples of using OpenGL with MinVR.  It
+relies on the "baby scene graph" library included with these examples.
+See the demo-graphic/src directory for more about that library.
+
+ demo -- An ordinary dumb OpenGL program, showing how to use shaders
+        and basic geometry and projection matrices.  Some of the basic
+        matrix concepts are spelled out here, so you can see what they
+        look like.  And it goes through all the down-and-dirty details
+        of setting up your OpenGL array buffers, for those who want to
+        go that route.
+
+ demo2 -- A similar program, but at a higher level of abstraction.
+        This uses the BSG package included here, to simplify the code,
+        and leave in place the basic structure of a graphics program:
+        the initialization, the event handler(s), the render function,
+        the render loop and so on.  The OpenGL details are
+        encapsulated in the BSG library, and we use the same simple
+        shader as in the demo program.
+
+ demo3 -- A MinVR-enabled version of demo2, to show the necessary
+        changes to adapt the code to running in VR.  This program will
+        run equally well on any platform with an appropriate
+        configuration file.  Some configuration files are provided in
+        the demo-graphic/config directory.
+
+ demo4 -- Same as demo3, but using an object from the BSG menagerie of
+        pre-defined objects.  BSG comes with a small selection of
+        pre-defined geometric shapes, and an invitation to contribute
+        more.
+
+ textureDemo -- An application to use more complex shaders, that
+        include textures and lighting.  Uses a simple shape and a
+        simple texture.
+
+ textureDemoMinVR -- Same as textureDemo, but uses MinVR.
+
+ objDemoMinVR -- Uses MinVR and BSG to load a 3D model from an OBJ
+        file and move it around the screen.  This uses a simple scene
+        graph to rotate one object around another object while the
+        first one spins and tumbles.
+
+ treeDemo -- Demonstrates a simple scene graph, showing how motion of
+        one object can be defined relative to another.
+
+ treeDemo2 -- A more complicated scene graph, with complicated motions
+        making a big mess.  Prints out a rendition of the graph, so
+        you can see the structure.
+
+ selectDemo -- The BSG library contains a small number of facilities
+        for managing objects in a 3D environment.  This shows off the
+        bounding box facility, so you can test if some point is inside
+        the bounding box of an object.
+

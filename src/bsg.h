@@ -49,7 +49,15 @@ typedef enum {
   GLMATRIX_PROJECTION = 2,
   GLMATRIX_INVMODEL = 3
 } GLMATRIXTYPE;
-   
+
+// long gettimeusec() {
+//   struct timeval tp;
+//   gettimeofday(&tp, NULL);
+//   return tp.tv_usec;
+// }
+
+  
+
 
 /// \mainpage Baby Scene Graph
 ///
@@ -219,6 +227,11 @@ class drawableObjData {
 
   std::vector<T> getData() const { return _data; };
   void addData(T d) { _data.push_back(d); };
+  void setData(const std::vector<T> data) { _data = data; };
+
+  T* beginAddress() { return &_data[0]; };
+  
+  T operator[](const int i) { return _data[i]; };
   
   // The ID that goes with that name.
   GLint ID;
@@ -226,11 +239,17 @@ class drawableObjData {
   /// The ID of the buffer containing that data.
   GLuint bufferID;
 
-  /// A size calculator.
-  size_t size() { return _data.size() * sizeof(T); };
+  /// Is there any data in here?
+  bool empty() { return _data.empty(); };
+
+  /// A size calculator. Total number of bytes.
+  size_t byteSize() { return _data.size() * sizeof(T); };
 
   /// Another size calculator.
-  int intSize() { return sizeof(T) / sizeof(float); };
+  size_t size() { return _data.size(); };
+  
+  /// Yet another size calculator.
+  size_t componentsPerVertex() { return sizeof(T) / sizeof(float); };
 };
 
 /// \class lightList
@@ -295,29 +314,31 @@ class lightList {
     return addLight(position, white);
   };
   
-  int getNumLights() { return _lightPositions.getData().size(); };
+  int getNumLights() { return _lightPositions.size(); };
 
   // We have mutators and accessors for all the pieces...
   std::vector<glm::vec4> getPositions() { return _lightPositions.getData(); };
   void setPositions(const std::vector<glm::vec4> positions) {
-    _lightPositions.getData() = positions;
+    _lightPositions.setData(positions);
   };
   GLuint getPositionID() { return _lightPositions.ID; };
 
   std::vector<glm::vec4> getColors() { return _lightColors.getData(); };
-  void setColors(const std::vector<glm::vec4> &colors) { _lightColors.getData() = colors; };
+  void setColors(const std::vector<glm::vec4> &colors) {
+    _lightColors.setData(colors);
+  };
   GLuint getColorID() { return _lightColors.ID; };
 
   /// ... and also for individual lights.
   void setPosition(const int &i, const glm::vec4 &position) {
-    _lightPositions.getData()[i] = position;
+    _lightPositions[i] = position;
   };
-  glm::vec4 getPosition(const int &i) { return _lightPositions.getData()[i]; };
+  glm::vec4 getPosition(const int &i) { return _lightPositions[i]; };
 
   /// \brief Change a light's color.
   void setColor(const int &i, const glm::vec4 &color) {
-    _lightColors.getData()[i] = color; };
-  glm::vec4 getColor(const int &i) { return _lightColors.getData()[i]; };
+    _lightColors[i] = color; };
+  glm::vec4 getColor(const int &i) { return _lightColors[i]; };
 
   /// \brief Link the light data with whatever shader is in use.
   ///
@@ -517,7 +538,7 @@ class shaderMgr {
 /// All the drawableObj shapes in a compound object (see below) use the
 /// same shader, and the same model matrix.
 class drawableObj {
- private:
+ protected:
 
   // Specifies whether this is a triangle, a triangle strip, fan,
   // whatever.
@@ -534,11 +555,43 @@ class drawableObj {
   
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
+
+  bool _loadedIntoBuffer;
+
+  /// Some data for selectability and managing of bounding boxes.
+  bool _selectable;
+  bool _haveBoundingBox;
+  glm::vec4 _vertexBoundingBoxLower, _vertexBoundingBoxUpper;
+  float _boundingBoxMin;
+  
+  // This data is for taking the component data and creating an
+  // interleaved buffer with an index array.  This is supposed to be
+  // an optimization.  The vertex position is always zero, and the
+  // vertices array is not optional, so there is no vertexPos variable.
+  bool _interleaved;
+  GLshort _colorPos, _normalPos, _uvPos, _stride;
+  drawableObjData<float> _interleavedData;
+
+  void _getAttribLocations(GLuint programID);
+  void _prepareSeparate(GLuint programID);
+  void _prepareInterleaved(GLuint programID);
+  void _loadSeparate();
+  void _loadInterleaved();
+  void _drawSeparate();
+  void _drawInterleaved();
   
   bool _loadedToBuffer;
 
  public:
- drawableObj() : _loadedToBuffer(false) {};
+ drawableObj() : 
+  _loadedIntoBuffer(false), 
+    _interleaved(false),
+    _selectable(true),
+    _boundingBoxMin(0.1),
+    _haveBoundingBox(false) {};
+
+  /// \brief Set up the buffers to be interleaved,
+  void setInterleaved(bool interleaved) { _interleaved = interleaved; };
 
   /// \brief Specify the draw type of the shape.
   ///
@@ -558,6 +611,15 @@ class drawableObj {
     _count = count;
   };
 
+  /// \brief Set bounding box minimum.
+  ///
+  /// This is for less-than-3D objects, like rectangles, points, or
+  /// lines, so their bounding box has some width.
+  void setBoundingBoxMin(const float &min) { _boundingBoxMin = min; };
+
+  /// \brief Get bounding box minimum.
+  float getBoundingBoxMin() { return _boundingBoxMin; };  
+  
   /// \brief Add some vec4 data.
   ///
   /// You can add vec4 data, including vertices, colors, and normal
@@ -576,6 +638,28 @@ class drawableObj {
                const std::string &name,
                const std::vector<glm::vec2> &data);
 
+  /// \brief Set whether the object is selectable.
+  ///
+  /// Often used for things like axes.
+  void setSelectable(const bool &selectable) { _selectable = selectable; };
+  
+  /// \brief Find a bounding box for the object.
+  void findBoundingBox();
+
+  /// \brief Returns the upper limit of the bounding box.
+  glm::vec4 getBoundingBoxUpper() { 
+      if (!_haveBoundingBox) findBoundingBox();
+      return _vertexBoundingBoxUpper; 
+  }
+  /// \brief Returns the lower limit of the bounding box.
+  glm::vec4 getBoundingBoxLower() { 
+    if (!_haveBoundingBox) findBoundingBox();
+    return _vertexBoundingBoxLower; 
+  }
+
+  bool insideBoundingBox(const glm::vec4 &testPoint,
+                         const glm::mat4 &modelMatrix);
+  
   /// \brief One-time-only draw preparation.
   ///
   /// This generates the proper number of buffers for the shape data
@@ -608,6 +692,17 @@ class drawableObj {
   void draw();
 };
 
+/// \brief The name of an object as it exists in the scene hierarchy.
+///
+/// One name specifies an object.
+typedef std::list<std::string> bsgName;
+
+/// \brief A list of qualified strings to identify an object.
+///
+/// Use this type to specify a collection of objects throughout the
+/// hierarchy of the scene graph.
+typedef std::list<bsgName> bsgNameList;
+ 
 /// \brief An abstract class to handle transformation matrices.
 ///
 /// This class is the common root of drawableCompound and
@@ -660,7 +755,7 @@ class drawableMulti {
 
   void setName(const std::string name) { _name = name; };
   std::string getName() { return _name; };
-  
+
   /// \brief Calculate the model matrix.
   ///
   /// Uses the current position, rotation, and scale to calculate a
@@ -699,6 +794,14 @@ class drawableMulti {
     _orientation = glm::quat(pitchYawRoll);      
     _modelMatrixNeedsReset = true;
   };
+  /// \brief Set the rotation with Euler angles.
+  ///
+  /// Specifies the pitch (x), yaw (y), and roll (z) rotations
+  /// individually, in radians.
+  void setRotation(GLfloat pitch, GLfloat yaw, GLfloat roll) {
+    _orientation = glm::quat(glm::vec3(pitch, yaw, roll));      
+    _modelMatrixNeedsReset = true;
+  };
 
   /// \brief Returns the vector position.
   glm::vec3 getPosition() { return _position; };
@@ -709,6 +812,57 @@ class drawableMulti {
   /// \brief Returns the orienation as Euler angles.
   glm::vec3 getPitchYawRoll() { return glm::eulerAngles(_orientation); };
 
+  /// \brief Returns a vector of object names if the given point is
+  /// within this object's bounding box.
+  ///
+  /// The calculation is to be done in world space, using all the
+  /// available transformation matrices in place, but not the view or
+  /// projection matrix.
+  virtual bsgNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+
+  /// \brief Returns the names involved in this object.
+  ///
+  /// 
+  virtual bsgNameList getNames() = 0;
+  
+  /// \brief Retrieve an object by name.
+  ///
+  /// Used in drawableCollection.  If there is no name found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> getObject(const std::string &name) {
+    return NULL;
+  }
+
+  /// \brief Retrieve an object by a fully-qualified names.
+  ///
+  /// Used in drawableCollection.  If there is no object found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> getObject(bsgName name) {
+    return NULL;
+  }  
+
+  /// \brief Delete an object by name.
+  ///
+  /// Used in drawableCollection.  If there is no name found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> delObject(const std::string &name) {
+    return NULL;
+  }
+
+  /// \brief Delete an object by a fully-qualified names.
+  ///
+  /// Used in drawableCollection.  If there is no object found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> delObject(bsgName name) {
+    return NULL;
+  }  
+
+  /// \brief A dopey static method to generate a random name.
+  static std::string randomName(const std::string &nameRoot);
+
+  /// \brief Returns a printable version of the object.
+  virtual std::string printObj(const std::string &prefix) const = 0;
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   virtual void prepare() = 0;
@@ -744,6 +898,9 @@ class drawableMulti {
 /// and the projection matrix are used here, though they are generated
 /// and managed at the scene level.
 ///
+/// Important: We expect one of these will be the leaf nodes to every
+/// scene graph branch.
+///
 /// The shaders are included in this object as a pointer because many
 /// objects will use the same shader.  So the program that calls this
 /// should keep three separate lists: the objects in the scene, the
@@ -760,7 +917,8 @@ class drawableCompound : public drawableMulti {
  protected:
 
   /// The list of objects that make up this compound object.
-  std::list<drawableObj> _objects;
+  typedef std::list<drawableObj> ObjectList;
+  ObjectList _objects;
 
   /// The shader that will be used to render all the pieces of this
   /// compound object.  Or at least the one they will start with.  You
@@ -800,6 +958,7 @@ class drawableCompound : public drawableMulti {
     _normalMatrixName("normalMatrix"),
     _viewMatrixName("viewMatrix"),
     _projMatrixName("projMatrix") {
+    _name = randomName("obj");
   };
  drawableCompound(const std::string name, bsgPtr<shaderMgr> pShader) :
   drawableMulti(name),
@@ -811,6 +970,13 @@ class drawableCompound : public drawableMulti {
     _projMatrixName("projMatrix") {
   };
 
+  // The equipment to allow us to define an iterator over this class.
+  typedef ObjectList::iterator iterator;
+  typedef ObjectList::const_iterator const_iterator;
+  iterator begin() { return _objects.begin(); }
+  iterator end() { return _objects.end(); }
+
+  
   /// \brief Set the name of one of the matrices.
   ///
   /// This is the name by which this matrix will be known inside your
@@ -843,8 +1009,21 @@ class drawableCompound : public drawableMulti {
     _objects.push_back(obj);
   };    
 
+  /// \brief Add an object's bounding box to a compound object.
+  ///
+  /// Does not add the object, but just an outline of its bounding box.
+  void addObjectBoundingBox(drawableObj &obj);
+
   int getNumObjects() { return _objects.size(); };
 
+  /// \brief Returns the name of this object.
+  bsgNameList getNames() { bsgNameList out; return out;}
+  
+
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
+
+  std::string printObj(const std::string &prefix) const { return _name; }
+  
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();
@@ -892,32 +1071,69 @@ class drawableCollection : public drawableMulti {
  public:
   drawableCollection();
   drawableCollection(const std::string name);
-  
+
+  // The equipment to allow us to define an iterator over this class.
+  // The iterators are each a std::pair with a name and a pointer to a
+  // drawableMulti object.
+  typedef CollectionMap::iterator iterator;
+  typedef CollectionMap::const_iterator const_iterator;
+  iterator begin() { return _collection.begin(); }
+  iterator end() { return _collection.end(); }
+
   /// \brief Add an object to our list.
   ///
   /// Using the given name.  You can add objects without a name, too,
   /// in which case the name is randomly assigned.  Returns the name
-  /// assigned to the object.
+  /// assigned to the object.  If there is already a name for the
+  /// object, it is overwritten.
   std::string addObject(const std::string name,
-                 const bsgPtr<drawableMulti> &pMultiObject);
+                        const bsgPtr<drawableMulti> &pMultiObject);
 
-  /// \brief Add an object to our list with a random name.
+  /// \brief Add an object to our list.
   ///
-  /// Not all applications will need to access members of the scene
-  /// individually, so forcing everyone to give every object a name
-  /// should not be necessary.  But if you want, this version of
-  /// addObject() will come up with a random name, and will return it
-  /// to the calling program.  Some may find this useful.
+  /// Add an object to the list using the name it already has.
   std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
-  /// \brief Retrieve an object by name.
-  bsgPtr<drawableMulti> getObject(const std::string name);
+  /// \brief Remove an object from the list.
+  ///
+  /// Delete an object from the list. Returns a pointer to the removed
+  /// object, but it's not in the list any more.
+  bsgPtr<drawableMulti> delObject(const std::string &name);
 
-  /// \brief Return a list of object names in the collection.
-  std::list<std::string> getNames();
+  /// \brief Remove an object from somewhere in the graph.
+  ///
+  /// Delete an object from the subgraph represented by this
+  /// list. Returns a pointer to the removed object, but it's not in
+  /// the list any more.
+  bsgPtr<drawableMulti> delObject(bsgName name);
   
-  /// \brief A dopey static method to generate a random name.
-  static std::string randomName();
+  /// \brief Retrieve an object by name.
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.  Returns NULL if no match, so be
+  /// careful.
+  bsgPtr<drawableMulti> getObject(const std::string &name);
+
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.  Returns NULL if no match, so be
+  /// careful.
+  bsgPtr<drawableMulti> getObject(bsgName name);
+  
+  /// \brief Return a list of object names in the collection.
+  bsgNameList getNames();
+  
+  /// \brief Returns the names of objects containing the test point.
+  ///
+  /// Returns a collection of the names of objects containing the test
+  /// point.  Note that a "name" is actually a vector of names, one
+  /// for each level of the hierarchy.
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
+
+  std::string printObj(const std::string &prefix) const;
   
   /// \brief Gets ready for the drawing sequence.
   ///
@@ -961,9 +1177,22 @@ class scene {
   // Projection matrix inputs;
   float _fov, _aspect;
   float _nearClip, _farClip;
+
+  /// \brief Walks the scene graph.
+  ///
+  std::string _walkTree(const drawableCollection &root);
+  
+  /// \brief Returns a string representation of the scene graph.
+  ///
+  std::string _printTree() const { return _sceneRoot.printObj("| "); };
+  
+  friend std::ostream &operator<<(std::ostream &os, const scene &scene) {
+    return os << scene._printTree();
+  }
   
  public:
   scene() {
+    _sceneRoot = drawableCollection("sceneRoot");
     _cameraPosition = glm::vec3(10.0f, 10.0f, 10.0f);
     _lookAtPosition = glm::vec3( 0.0f,  0.0f,  0.0f);
     _fov = M_PI / 2.0f;
@@ -1005,7 +1234,7 @@ class scene {
 
   /// \brief Add a compound object to our scene with a random name.
   void addObject(const bsgPtr<drawableMulti> &pMultiObject) {
-    _sceneRoot.addObject(_sceneRoot.randomName(), pMultiObject);
+    _sceneRoot.addObject(pMultiObject->getName(), pMultiObject);
   }
 
   /// \brief Prepare the scene to be drawn.
@@ -1026,6 +1255,21 @@ class scene {
   /// generate a view matrix.  For use in desktop and other non-VR
   /// applications.
   glm::mat4 getViewMatrix();
+
+  /// \brief Retrieve an object by name.
+  ///
+  /// You'll be getting something that might be a drawableCompound and
+  /// might be a drawableCollective.  That is, it might be a leaf
+  /// node, and might be a branch.
+  bsgPtr<drawableMulti> getObject(const std::string &name);
+
+  /// \brief Retrieve an object by a list of names.
+  ///
+  /// 
+  bsgPtr<drawableMulti> getObject(bsgName &name);
+
+  /// \brief Retrieve an object name identified by a selected point.
+  bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
   
   /// \brief Loads all the compound elements.
   void load();
