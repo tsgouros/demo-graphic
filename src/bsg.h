@@ -839,6 +839,22 @@ class drawableMulti {
     return NULL;
   }  
 
+  /// \brief Delete an object by name.
+  ///
+  /// Used in drawableCollection.  If there is no name found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> delObject(const std::string &name) {
+    return NULL;
+  }
+
+  /// \brief Delete an object by a fully-qualified names.
+  ///
+  /// Used in drawableCollection.  If there is no object found, returns
+  /// NULL.  So be wary of segfaults.
+  virtual bsgPtr<drawableMulti> delObject(bsgName name) {
+    return NULL;
+  }  
+
   /// \brief A dopey static method to generate a random name.
   static std::string randomName(const std::string &nameRoot);
 
@@ -899,7 +915,8 @@ class drawableCompound : public drawableMulti {
  protected:
 
   /// The list of objects that make up this compound object.
-  std::list<drawableObj> _objects;
+  typedef std::list<drawableObj> ObjectList;
+  ObjectList _objects;
 
   /// The shader that will be used to render all the pieces of this
   /// compound object.  Or at least the one they will start with.  You
@@ -951,6 +968,13 @@ class drawableCompound : public drawableMulti {
     _projMatrixName("projMatrix") {
   };
 
+  // The equipment to allow us to define an iterator over this class.
+  typedef ObjectList::iterator iterator;
+  typedef ObjectList::const_iterator const_iterator;
+  iterator begin() { return _objects.begin(); }
+  iterator end() { return _objects.end(); }
+
+  
   /// \brief Set the name of one of the matrices.
   ///
   /// This is the name by which this matrix will be known inside your
@@ -1045,7 +1069,15 @@ class drawableCollection : public drawableMulti {
  public:
   drawableCollection();
   drawableCollection(const std::string name);
-  
+
+  // The equipment to allow us to define an iterator over this class.
+  // The iterators are each a std::pair with a name and a pointer to a
+  // drawableMulti object.
+  typedef CollectionMap::iterator iterator;
+  typedef CollectionMap::const_iterator const_iterator;
+  iterator begin() { return _collection.begin(); }
+  iterator end() { return _collection.end(); }
+
   /// \brief Add an object to our list.
   ///
   /// Using the given name.  You can add objects without a name, too,
@@ -1053,13 +1085,26 @@ class drawableCollection : public drawableMulti {
   /// assigned to the object.  If there is already a name for the
   /// object, it is overwritten.
   std::string addObject(const std::string name,
-                 const bsgPtr<drawableMulti> &pMultiObject);
+                        const bsgPtr<drawableMulti> &pMultiObject);
 
   /// \brief Add an object to our list.
   ///
   /// Add an object to the list using the name it already has.
   std::string addObject(const bsgPtr<drawableMulti> &pMultiObject);
 
+  /// \brief Remove an object from the list.
+  ///
+  /// Delete an object from the list. Returns a pointer to the removed
+  /// object, but it's not in the list any more.
+  bsgPtr<drawableMulti> delObject(const std::string &name);
+
+  /// \brief Remove an object from somewhere in the graph.
+  ///
+  /// Delete an object from the subgraph represented by this
+  /// list. Returns a pointer to the removed object, but it's not in
+  /// the list any more.
+  bsgPtr<drawableMulti> delObject(bsgName name);
+  
   /// \brief Retrieve an object by name.
   ///
   /// You'll be getting something that might be a drawableCompound and

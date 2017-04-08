@@ -70,18 +70,18 @@ void renderScene() {
   // Now generate them and add them to the group.
   std::vector<glm::vec3>::iterator jt = velocities.begin();
   std::vector<glm::vec3>::iterator kt = angVelocities.begin();
-  for (bsg::bsgNameList::iterator it = rectNames.begin();
-       it != rectNames.end(); it++, jt++, kt++) {
+  for (bsg::drawableCollection::iterator it = rectGroup->begin();
+       it != rectGroup->end(); it++, jt++, kt++) {
 
-    glm::vec3 rot = rectGroup->getObject(*it)->getPitchYawRoll();
-    rectGroup->getObject(*it)->setRotation(rot + (*kt));
+    glm::vec3 rot = it->second->getPitchYawRoll();
+    it->second->setRotation(rot + (*kt));
 
     // Move the rectangles, but confine them to a cube.
-    glm::vec3 pos = rectGroup->getObject(*it)->getPosition();
+    glm::vec3 pos = it->second->getPosition();
     if (fabs(pos.x) > 5.0f || fabs(pos.y) > 5.0f || fabs(pos.z) > 5.0f) {
       *jt = - (*jt);
     }
-    rectGroup->getObject(*it)->setPosition(pos + *jt);    
+    it->second->setPosition(pos + *jt);    
   }
 
   bsg::bsgNameList inside = rectGroup->insideBoundingBox(glm::vec4(0.0, 0.0, 0.0, 0.0));
@@ -394,6 +394,15 @@ int main(int argc, char **argv) {
                                       -0.05 + 0.001 * (rand()%100)));
   }
 
+  // You can define an iterator on a drawableCollection object.  Just
+  // print a few of the names in the object.
+  int i = 0;
+  for (bsg::drawableCollection::iterator it = rectGroup->begin();
+       it != rectGroup->end(); it++) {
+    if (++i < 10) std::cout << "name: " << it->first << " for "
+                            << it->second->getName() << std::endl;
+  }
+  
   scene.addObject(rectGroup);
   
   axes = new bsg::drawableAxes(axesShader, 100.0f);

@@ -102,7 +102,8 @@ environment variable, and specify a configuration file.
 
 ### Running on the yurt.
 
-On the yurt, you'll have to do these:
+On the OSCAR machines that run the yurt, you will not have to compile
+MinVR or set environment variables, but you will have to do these:
 
     $ module load centos-updates
     $ module load centos-libs
@@ -111,8 +112,12 @@ On the yurt, you'll have to do these:
     $ module load cave
     $ module load freeglut
     $ module load libpng
+    $ module load MinVR
 
-These commands can be put in a file called ~/.modules.
+These commands can be put in a file called ~/.modules.  You may find
+it convenient to copy my .modules file:
+
+    $ cp /gpfs/home/tsgouros/.modules ~/
 
 More to come...
 

@@ -1038,6 +1038,53 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
   }
 }
 
+bsgPtr<drawableMulti> drawableCollection::delObject(const std::string &name) {
+
+  CollectionMap::iterator it = _collection.find(name);
+
+  if (it == _collection.end()) {
+    return NULL;
+  } else {
+    bsgPtr<drawableMulti> out = it->second;
+    _collection.erase(it);
+    return out;
+  }
+}
+  
+bsgPtr<drawableMulti> drawableCollection::delObject(bsgName name) {
+
+  if (name.size() > 0) {
+  
+    CollectionMap::iterator it = _collection.find(name.front());
+
+    if (it == _collection.end()) {
+
+      // No match.
+      return NULL;
+      
+    } else {
+
+      if (name.size() > 1) {
+      
+        // Step down a level.
+        name.pop_front();
+        return it->second->delObject(name);
+
+      } else {
+        
+        bsgPtr<drawableMulti> out = it->second;
+        _collection.erase(it);
+        return out;
+      }
+    }
+  } else {
+    
+    // This was called with an empty list for some reason.
+    return NULL;
+  }  
+}
+
+  
 bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
 
   CollectionMap::iterator it = _collection.find(name);
