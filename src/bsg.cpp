@@ -1017,22 +1017,25 @@ std::string drawableCollection::addObject(const std::string name,
 
 std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObject) {
 
+  // Get the name of the input object.
   if (pMultiObject->getName().empty()) {
 
-    // This should not happen.
+    // All objects should have a name, so this should not happen.
     return addObject(randomName("err"), pMultiObject);
 
   } else {
+    // Is the name already used?
     if (_collection.find(pMultiObject->getName()) != _collection.end()) {
 
       std::cerr << "You have already used " << pMultiObject->getName() 
-		<< " in " << getName() 
-		<< ".  Assigning a random name." << std::endl;
+                << " in " << getName() 
+                << ".  Assigning a random name." << std::endl;
 
       return addObject(randomName(pMultiObject->getName()), pMultiObject);
 
     } else {
-      
+
+      // Add the object with the given name.
       return addObject(pMultiObject->getName(), pMultiObject);
     }
   }
