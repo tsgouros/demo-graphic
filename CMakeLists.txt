@@ -43,13 +43,14 @@ if(BUILD_DOCUMENTATION)
   set(doxyfile ${CMAKE_BINARY_DIR}/demo-graphic.doxygen)
   configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
-  add_custom_target(doc
+  add_custom_target(doc ALL
     COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Generating API documentation with Doxygen"
     VERBATIM)
 
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc)
+
 endif()
 
 find_package(OpenGL REQUIRED)
