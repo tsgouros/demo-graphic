@@ -1,0 +1,14 @@
+                     Baby Scene Graph Library
+
+The files in this directory make up the source code for the "baby
+scene graph" library.  This is sort of like training wheels for
+computer graphics.  It is a functional scene graph library, with a few
+nice features, and consistent handling of the various matrices.  But
+it is a baby package.  If you find a feature missing from it, perhaps
+consider that you're ready to graduate to a real scene graph package.
+Like OSG, for example.  The build is set up to create doxygen output,
+so please find the rest of the documentation there.
+
+To build the documentation, execute cmake and make like this:
+
+    $ cmake .. -DBUILD_DOCUMENTATION
