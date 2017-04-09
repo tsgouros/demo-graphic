@@ -190,6 +190,9 @@ void drawableObjModel::_processObjFile() {
   std::vector<glm::vec4> backFaceNormals = std::vector<glm::vec4>(nEntries);
   std::vector<glm::vec2> backFaceUVs = std::vector<glm::vec2>(nEntries);
 
+  _frontFace = new drawableObj();
+  if (_includeBackFace) _backFace = new drawableObj();
+  
   glm::vec2 genericUV = glm::vec2(0.0f, 0.0f);
 
   for (int i = 0; i < nEntries / 3; i++) {
@@ -278,24 +281,24 @@ void drawableObjModel::_processObjFile() {
     }
   }
 
-  _frontFace.addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
-  _frontFace.addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
-  _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
-  _frontFace.addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
-  _frontFace.setDrawType(GL_TRIANGLES, frontFaceVertices.size());
+  _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
+  _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+  _frontFace->addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
+  _frontFace->addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
+  _frontFace->setDrawType(GL_TRIANGLES, frontFaceVertices.size());
 
-  _backFace.addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
-  _backFace.addData(bsg::GLDATA_COLORS, "color", backFaceColors);
-  _backFace.addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
-  _backFace.addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
-  _backFace.setDrawType(GL_TRIANGLES, backFaceVertices.size());
+  _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
+  _backFace->addData(bsg::GLDATA_COLORS, "color", backFaceColors);
+  _backFace->addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
+  _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
+  _backFace->setDrawType(GL_TRIANGLES, backFaceVertices.size());
 
   
-  _frontFace.setInterleaved(true);
+  _frontFace->setInterleaved(true);
   addObject(_frontFace);
 
   if (_includeBackFace) {
-    _backFace.setInterleaved(true);
+    _backFace->setInterleaved(true);
     addObject(_backFace);
   }
 

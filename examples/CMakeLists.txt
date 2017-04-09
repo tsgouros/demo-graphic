@@ -109,6 +109,16 @@ if(PNG_FOUND)
       ${GLEW_LIBRARY}
       )
 
+    add_executable(kbDemoMinVR kbDemoMinVR.cpp)
+
+    target_link_libraries(kbDemoMinVR bsg
+      ${MINVR_LIBRARY}
+      ${PNG_LIBRARIES}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY}
+      )
+
   else(MINVR_FOUND)
 
     message("** No MinVR for you!")

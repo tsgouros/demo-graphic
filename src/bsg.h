@@ -143,9 +143,7 @@ class bsgPtr {
   bsgPtrRC* _reference; // The reference count.
 
  public:
- bsgPtr() : _pData(0) {
-
-    _reference = new bsgPtrRC(1); };
+ bsgPtr() : _pData(0) { _reference = new bsgPtrRC(1); };
  bsgPtr(T* pValue) : _pData(pValue) { _reference = new bsgPtrRC(1); };
   
   /// Copy constructor
@@ -166,7 +164,8 @@ class bsgPtr {
   
   T& operator*() { return *_pData; };
   T* operator->() const { return _pData; };
-
+  T* ptr() const { return _pData; }; // Use this for casts.
+  
   /// Assignment operator.
   bsgPtr<T>& operator=(const bsgPtr<T> &sp) {
     if (this != &sp) {
@@ -186,6 +185,8 @@ class bsgPtr {
     return *this;
   }
 };
+
+#define bPtr(T,P) dynamic_cast<T*>(P.ptr())
 
 /// \brief Just a place to park some random utilities.
 class bsgUtils {
@@ -604,8 +605,6 @@ class drawableObj {
   void _drawSeparate();
   void _drawInterleaved();
   
-  bool _loadedToBuffer;
-
  public:
  drawableObj() : 
   _loadedIntoBuffer(false), 
@@ -646,7 +645,7 @@ class drawableObj {
 
   /// \brief Get bounding box minimum dimension.
   float getBoundingBoxMin() { return _boundingBoxMin; };  
-  
+
   /// \brief Add some vec4 data.
   ///
   /// You can add vec4 data, including vertices, colors, and normal
@@ -665,6 +664,16 @@ class drawableObj {
                const std::string &name,
                const std::vector<glm::vec2> &data);
 
+  /// \brief Change the underlying data of an object.
+  ///
+  /// Use this to reset the vec4 data inside an object.
+  void setData(const GLDATATYPE type, const std::vector<glm::vec4>& data);
+
+  /// \brief Change the underlying data of an object.
+  ///
+  /// Use this to reset the vec2 data inside an object.
+  void setData(const GLDATATYPE type, const std::vector<glm::vec2>& data);
+  
   /// \brief Set whether the object is selectable.
   ///
   /// Often used for things like axes that you probably don't want to
@@ -962,8 +971,8 @@ class drawableCompound : public drawableMulti {
  protected:
 
   /// The list of objects that make up this compound object.
-  typedef std::list<drawableObj> ObjectList;
-  ObjectList _objects;
+  typedef std::list<bsgPtr<drawableObj> > DrawableObjList;
+  DrawableObjList _objects;
 
   /// The shader that will be used to render all the pieces of this
   /// compound object.  Or at least the one they will start with.  You
@@ -1016,8 +1025,8 @@ class drawableCompound : public drawableMulti {
   };
 
   // The equipment to allow us to define an iterator over this class.
-  typedef ObjectList::iterator iterator;
-  typedef ObjectList::const_iterator const_iterator;
+  typedef DrawableObjList::iterator iterator;
+  typedef DrawableObjList::const_iterator const_iterator;
 
   /// \brief Returns an iterator to the first element of the object.
   iterator begin() { return _objects.begin(); }
@@ -1047,21 +1056,21 @@ class drawableCompound : public drawableMulti {
       break;
     }
   };
- 
+
   /// \brief Adds an object to the compound object.
   ///
   /// We set the shader to each object to be the same shader for the
   /// whole compound object.  If you find that objectionable, you are
   /// probably ready for a more elaborate set of classes to do your
   /// rendering with.
-  void addObject(drawableObj &obj) {
-    _objects.push_back(obj);
+  void addObject(bsgPtr<drawableObj> &pObj) {
+    _objects.push_back(pObj);
   };    
 
   /// \brief Add an object's bounding box to a compound object.
   ///
   /// Does not add the object, but just an outline of its bounding box.
-  void addObjectBoundingBox(drawableObj &obj);
+  void addObjectBoundingBox(bsgPtr<drawableObj> &obj);
 
   /// \brief How many objects are in this compound?
   int getNumObjects() { return _objects.size(); };

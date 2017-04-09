@@ -11,7 +11,7 @@ class drawableObjModel : public drawableCompound {
 
 private:
   const std::string &_fileName;
-  drawableObj _frontFace, _backFace;
+  bsgPtr<drawableObj> _frontFace, _backFace;
 
   // Do we *want* to see the interior?  Set this to false to show only
   // the object exterior, a simple optimization for big models.

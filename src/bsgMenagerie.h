@@ -7,14 +7,14 @@ class drawableRectangle : public drawableCompound {
 
   float _width, _height;
 
-  drawableObj _frontFace, _backFace;
+  bsgPtr<drawableObj> _frontFace, _backFace;
 
  public:
   drawableRectangle(bsgPtr<shaderMgr> pShader,
-                    const float width, const float height);
+                    const float &width, const float &height);
   drawableRectangle(bsgPtr<shaderMgr> pShader,
-                    const float width, const float height,
-                    const int nDivs);
+                    const float &width, const float &height,
+                    const int &nDivs);
 
 };
 
@@ -27,10 +27,28 @@ class drawableAxes : public drawableCompound {
 
  private:
    float _length;
-   drawableObj _axes;
+   bsgPtr<drawableObj> _axes;
 
  public:
-   drawableAxes(bsgPtr<shaderMgr> pShader, const float length);
+   drawableAxes(bsgPtr<shaderMgr> pShader, const float &length);
 };
  
+
+
+/// \brief A line connecting two points.
+///
+/// A straight line with a single color.
+class drawableLine : public drawableCompound {
+
+ private:
+  bsgPtr<drawableObj> _line;
+
+ public:
+  drawableLine(bsgPtr<shaderMgr> pShader,
+               const glm::vec3 &start, const glm::vec3 &end,
+               const glm::vec4 &color);
+
+  void setLineEnds(const glm::vec3 &start, const glm::vec3 &end);
+};
+
 }

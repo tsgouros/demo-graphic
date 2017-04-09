@@ -15,9 +15,9 @@ private:
   // that make up the scene.
   bsg::scene _scene;
 
-  // These are the shapes that make up the scene.  They are out here in
-  // the global variables so they can be available in both the main()
-  // function and the renderScene() function.
+  // These are the shapes that make up the scene.  They are out here
+  // in the variables global to this object so they can be available
+  // in both the run() function and the renderScene() function.
   bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
 
@@ -33,11 +33,10 @@ private:
   bsg::bsgPtr<bsg::shaderMgr> _shader;
   bsg::bsgPtr<bsg::lightList> _lights;
 
-  // Here are the drawable objects that make up the compound object
-  // that make up the scene.
-  bsg::drawableObj _axes;
-  bsg::drawableObj _topShape;
-  bsg::drawableObj _bottomShape;
+  // This is the drawable object that makes up the compound _axesSet
+  // object.  There is a drawableAxes object in the bsg menagerie, but
+  // we are doing it this way for illustration.
+  bsg::bsgPtr<bsg::drawableObj> _axes;
 
   std::string _vertexFile;
   std::string _fragmentFile;
@@ -137,7 +136,7 @@ private:
   
 
     // Now let's add a set of axes.
-    _axes = bsg::drawableObj();
+    _axes = new bsg::drawableObj();
     std::vector<glm::vec4> axesVertices;
     axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
@@ -148,7 +147,7 @@ private:
     axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
 
-    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
+    _axes->addData(bsg::GLDATA_VERTICES, "position", axesVertices);
 
     // With colors. (X = red, Y = green, Z = blue)
     std::vector<glm::vec4> axesColors;
@@ -161,10 +160,10 @@ private:
     axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
     axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
-    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
+    _axes->addData(bsg::GLDATA_COLORS, "color", axesColors);
 
     // The axes are not triangles, but lines.
-    _axes.setDrawType(GL_LINES);
+    _axes->setDrawType(GL_LINES);
 
     // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved

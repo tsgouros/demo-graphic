@@ -465,6 +465,7 @@ void drawableObj::addData(const GLDATATYPE type,
     throw std::runtime_error("Do not use vec4 for texture coordinates.");
     break;
   }
+  _loadedIntoBuffer = false;
 }
 
 void drawableObj::addData(const GLDATATYPE type,
@@ -481,6 +482,43 @@ void drawableObj::addData(const GLDATATYPE type,
     throw std::runtime_error("Vec2 is only for texture coordinates.");
     break;
   }
+  _loadedIntoBuffer = false;
+}
+
+void drawableObj::setData(const GLDATATYPE type,
+                          const std::vector<glm::vec4>& data) {
+
+  switch(type) {
+  case(GLDATA_VERTICES):
+    _vertices.setData(data);
+    break;
+  case(GLDATA_COLORS):
+    _colors.setData(data);
+    break;
+  case(GLDATA_NORMALS):
+    _normals.setData(data);
+    break;
+  case(GLDATA_TEXCOORDS):
+    throw std::runtime_error("Do not use vec4 for texture coordinates.");
+    break;
+  }
+  _loadedIntoBuffer = false;
+}
+
+void drawableObj::setData(const GLDATATYPE type,
+             const std::vector<glm::vec2>& data) {
+
+  switch(type) {
+  case(GLDATA_TEXCOORDS):
+    _uvs.setData(data);
+    break;
+  case(GLDATA_COLORS):
+  case(GLDATA_NORMALS):
+  case(GLDATA_VERTICES):
+    throw std::runtime_error("Vec2 is only for texture coordinates.");
+    break;
+  }
+  _loadedIntoBuffer = false;
 }
 
 bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
@@ -664,6 +702,11 @@ void drawableObj::_prepareSeparate(GLuint programID) {
 
 void drawableObj::load() {
 
+  // if (_loadedIntoBuffer)
+  //   std::cout << "no need " << std::endl;
+  // else
+  //   std::cout << "load!!! " << std::endl;
+  
   if (_interleaved) {
     _loadInterleaved();
   } else {
@@ -771,7 +814,7 @@ void drawableObj::_drawSeparate() {
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
-
+  
   if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
     glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
@@ -845,10 +888,10 @@ bsgNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
   bsgNameList outList;
   glm::mat4 modelMatrix = getModelMatrix();
   
-  for (std::list<drawableObj>::iterator it = _objects.begin();
+  for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
 
-    if (it->insideBoundingBox(testPoint, modelMatrix)) {
+    if ((*it)->insideBoundingBox(testPoint, modelMatrix)) {
       
       // If we're here, the point is in the bounding box of at least
       // one of the member objects of this compound object.  Create a
@@ -874,9 +917,9 @@ void drawableCompound::prepare() {
   _projMatrixID = _pShader->getUniformID(_projMatrixName);
 
   // Prepare each component object.
-  for (std::list<drawableObj>::iterator it = _objects.begin();
+  for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
-    it->prepare(_pShader->getProgram());
+    (*it)->prepare(_pShader->getProgram());
   }
 }
   
@@ -890,9 +933,9 @@ void drawableCompound::load() {
   _totalModelMatrix = getModelMatrix();
   
   // Load each component object.
-  for (std::list<drawableObj>::iterator it = _objects.begin();
+  for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
-    it->load();
+    (*it)->load();
   }
 }
 
@@ -920,22 +963,22 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   // std::cout << "model" << glm::to_string(_modelMatrix) << std::endl;
   // std::cout << "proj" << glm::to_string(projMatrix) << std::endl;
   
-  for (std::list<drawableObj>::iterator it = _objects.begin();
+  for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
-    it->draw();
+    (*it)->draw();
   }  
 }
 
-void drawableCompound::addObjectBoundingBox(drawableObj &obj) {
+void drawableCompound::addObjectBoundingBox(bsgPtr<drawableObj> &obj) {
 
-  obj.findBoundingBox();
+  obj->findBoundingBox();
   
-  drawableObj bb;
+  bsgPtr<drawableObj> bb = new drawableObj();
   std::vector<glm::vec4> bbCorners(24);
   std::vector<glm::vec4> bbColors(24, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
-  glm::vec4 bbLower = obj.getBoundingBoxLower();
-  glm::vec4 bbUpper = obj.getBoundingBoxUpper();
+  glm::vec4 bbLower = obj->getBoundingBoxLower();
+  glm::vec4 bbUpper = obj->getBoundingBoxUpper();
 
   bbCorners[0] = glm::vec4(bbLower.x, bbLower.y, bbLower.z, 1.0);
   bbCorners[1] = glm::vec4(bbLower.x, bbLower.y, bbUpper.z, 1.0);
@@ -974,10 +1017,10 @@ void drawableCompound::addObjectBoundingBox(drawableObj &obj) {
   bbCorners[23] = glm::vec4(bbUpper.x, bbLower.y, bbLower.z, 1.0);
 
   // This is a bit hackish; should query to use the same name as in
-  // obj._vertices, etc.
-  bb.addData(GLDATA_VERTICES, "position", bbCorners);
-  bb.addData(GLDATA_COLORS, "color", bbColors);
-  bb.setDrawType(GL_LINES);
+  // obj->_vertices, etc.
+  bb->addData(GLDATA_VERTICES, "position", bbCorners);
+  bb->addData(GLDATA_COLORS, "color", bbColors);
+  bb->setDrawType(GL_LINES);
 
   // std::cout << bb << std::endl;
 
@@ -985,7 +1028,7 @@ void drawableCompound::addObjectBoundingBox(drawableObj &obj) {
   //   std::cout << "corner:" << bbCorners[i].x << "," << bbCorners[i].y << "," << bbCorners[i].z << " color:" << bbColors[i].r << "," << bbColors[i].g << "," << bbColors[i].b << std::endl;
   // }
   
-  _objects.push_back(bb);
+  addObject(bb);
 }
 
 

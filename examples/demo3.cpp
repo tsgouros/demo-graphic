@@ -14,9 +14,9 @@ private:
   // that make up the scene.
   bsg::scene _scene;
 
-  // These are the shapes that make up the scene.  They are out here in
-  // the global variables so they can be available in both the main()
-  // function and the renderScene() function.
+  // These are the shapes that make up the scene.  They are out here
+  // in the variables global to this object so they can be available
+  // in both the run() function and the renderScene() function.
   bsg::drawableCompound* _tetrahedron;
   bsg::drawableCompound* _axesSet;
 
@@ -34,9 +34,9 @@ private:
 
   // Here are the drawable objects that make up the compound object
   // that make up the scene.
-  bsg::drawableObj _axes;
-  bsg::drawableObj _topShape;
-  bsg::drawableObj _bottomShape;
+  bsg::bsgPtr<bsg::drawableObj> _axes;
+  bsg::bsgPtr<bsg::drawableObj> _topShape;
+  bsg::bsgPtr<bsg::drawableObj> _bottomShape;
 
   std::string _vertexFile;
   std::string _fragmentFile;
@@ -134,7 +134,8 @@ private:
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
   
-    _bottomShape = bsg::drawableObj();
+    _topShape = new bsg::drawableObj();
+    _bottomShape = new bsg::drawableObj();
 
     // Specify the vertices of the shapes we're drawing.  Note that the
     // faces are specified with a *counter-clockwise* winding order, the
@@ -161,7 +162,7 @@ private:
     topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
     topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
 
-    _topShape.addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
+    _topShape->addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
 
     // Here are the corresponding colors for the above vertices.
     std::vector<glm::vec4> topShapeColors;
@@ -181,10 +182,10 @@ private:
     topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
     topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
-    _topShape.addData(bsg::GLDATA_COLORS, "color", topShapeColors);
+    _topShape->addData(bsg::GLDATA_COLORS, "color", topShapeColors);
 
     // The vertices above are arranged into a set of triangles.
-    _topShape.setDrawType(GL_TRIANGLES);  
+    _topShape->setDrawType(GL_TRIANGLES);  
 
     // Same thing for the other tetrahedron.
     std::vector<glm::vec4> bottomShapeVertices;
@@ -205,7 +206,7 @@ private:
     bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
     bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
 
-    _bottomShape.addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
+    _bottomShape->addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
 
     // And the corresponding colors for the above vertices.
     std::vector<glm::vec4> bottomShapeColors;
@@ -225,13 +226,13 @@ private:
     bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
     bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
 
-    _bottomShape.addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
+    _bottomShape->addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
 
     // The vertices above are arranged into a set of triangles.
-    _bottomShape.setDrawType(GL_TRIANGLES);  
+    _bottomShape->setDrawType(GL_TRIANGLES);  
 
     // Now let's add a set of axes.
-    _axes = bsg::drawableObj();
+    _axes = new bsg::drawableObj();
     std::vector<glm::vec4> axesVertices;
     axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
@@ -242,7 +243,7 @@ private:
     axesVertices.push_back(glm::vec4( 0.0f, 0.0f, -100.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 0.0f, 0.0f, 100.0f, 1.0f));
 
-    _axes.addData(bsg::GLDATA_VERTICES, "position", axesVertices);
+    _axes->addData(bsg::GLDATA_VERTICES, "position", axesVertices);
 
     // With colors. (X = red, Y = green, Z = blue)
     std::vector<glm::vec4> axesColors;
@@ -255,10 +256,10 @@ private:
     axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
     axesColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
 
-    _axes.addData(bsg::GLDATA_COLORS, "color", axesColors);
+    _axes->addData(bsg::GLDATA_COLORS, "color", axesColors);
 
     // The axes are not triangles, but lines.
-    _axes.setDrawType(GL_LINES);
+    _axes->setDrawType(GL_LINES);
 
     // We could put the axes and the tetrahedron in the same compound
     // shape, but we leave them separate so they can be moved
