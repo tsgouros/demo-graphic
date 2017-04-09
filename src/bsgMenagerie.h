@@ -51,4 +51,24 @@ class drawableLine : public drawableCompound {
   void setLineEnds(const glm::vec3 &start, const glm::vec3 &end);
 };
 
+/// \brief A line connecting two points.
+///
+/// A straight line with a single color.
+class drawableLine : public drawableCompound {
+
+ private:
+  bsgPtr<drawableObj> _line;
+
+ public:
+  drawableLine(bsgPtr<shaderMgr> pShader,
+               const glm::vec3 &start, const glm::vec3 &end,
+               const glm::vec4 &color);
+
+  void setLineEnds(const glm::vec3 &start, const glm::vec3 &end);
+};
+
+
+
+
+ 
 }
