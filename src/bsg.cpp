@@ -722,28 +722,6 @@ void drawableObj::findBoundingBox() {
 
   _haveBoundingBox = true;
 }
-
-void drawableObj::findBoundingBox() {
-
-  // Find the bounding box for this object.
-  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0f);
-  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, 1.0f);
-
-  std::vector<glm::vec4> data = _vertices.getData();
-
-  for (std::vector<glm::vec4>::iterator it = data.begin();
-       it != data.end(); it++) {
-
-    _vertexBoundingBoxUpper.x = fmax((*it).x, _vertexBoundingBoxUpper.x);
-    _vertexBoundingBoxUpper.y = fmax((*it).y, _vertexBoundingBoxUpper.y);
-    _vertexBoundingBoxUpper.z = fmax((*it).z, _vertexBoundingBoxUpper.z);
-
-    _vertexBoundingBoxLower.x = fmin((*it).x, _vertexBoundingBoxLower.x);
-    _vertexBoundingBoxLower.y = fmin((*it).y, _vertexBoundingBoxLower.y);
-    _vertexBoundingBoxLower.z = fmin((*it).z, _vertexBoundingBoxLower.z);
-  }
-}
-  
   
 void drawableObj::prepare(GLuint programID) {
 

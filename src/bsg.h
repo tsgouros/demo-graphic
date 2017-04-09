@@ -757,9 +757,6 @@ class drawableObj {
   ///
   /// Often used for things like axes.
   void setSelectable(const bool &selectable) { _selectable = selectable; };
-  
-  /// \brief Find a bounding box for the object.
-  void findBoundingBox();
 
   /// \brief Returns the upper limit of the bounding box.
   glm::vec4 getBoundingBoxUpper() { 
