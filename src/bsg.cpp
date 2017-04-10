@@ -30,6 +30,8 @@ void lightList::load(const GLint programID) {
                                               _lightPositions.name.c_str());
     _lightColors.ID = glGetUniformLocation(programID,
                                            _lightColors.name.c_str());
+    _lightCoefficients.ID = glGetUniformLocation(programID,
+                                           _lightCoefficients.name.c_str());
   }
 }
 
@@ -45,7 +47,19 @@ void lightList::draw() {
     glUniform4fv(_lightColors.ID,
                  _lightColors.size(),
                  &_lightColors.getData()[0].x);
+
+    glUniform4fv(_lightCoefficients.ID,
+                 _lightCoefficients.getData().size(),
+                 &_lightCoefficients.getData()[0].x);
   }
+}
+
+void textureMgr::readFile(const std::string& fileName) {
+    if (fileName.size() > 3 && fileName.substr(fileName.size()-3, fileName.size()).compare("png") == 0) {
+        readFile(texturePNG, fileName);
+    } else {
+        readFile(textureCHK, fileName);
+    }
 }
 
 void textureMgr::readFile(const textureType& type, const std::string& fileName) {
@@ -257,18 +271,131 @@ void textureMgr::load(const GLuint programID) {
   // Get a handle for the texture uniform.
   _textureAttribID = glGetUniformLocation(programID,
                                           _textureAttribName.c_str());
+
+  for (std::map<std::string, GLint>::iterator it =_attribIDs.begin(); it != _attribIDs.end(); ++it) {
+      it->second = glGetUniformLocation(programID, it->first.c_str());
+  }
 }
 
 void textureMgr::draw() {
+    if (_attribIDs["colorDiffuse"] > -1) {
+        glUniform3f(_attribIDs["colorDiffuse"], 1.0, 1.0, 1.0);
+    }
 
-  // Bind the texture in Texture Unit 0
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, _textureBufferID);
-  
-  // Set our "myTextureSampler" sampler to user Texture Unit 0
-  glUniform1i(_textureAttribID, 0);
+    if (_attribIDs["diffuseTexture"] > -1) {
+        glUniform1i(_attribIDs["diffuseTexture"], false);
+    }
 
-  // The data is actually loaded into the buffer in the loadXX() method.
+}
+
+void textureMgr::drawMaterial(material mat) {
+
+  if (_attribIDs["colorAmbient"] > -1) {
+      glUniform3f(_attribIDs["colorAmbient"], mat.colorAmbient.r, mat.colorAmbient.g, mat.colorAmbient.b);
+  }
+
+  if (_attribIDs["colorDiffuse"] > -1) {
+      glUniform3f(_attribIDs["colorDiffuse"], mat.colorDiffuse.r, mat.colorDiffuse.g, mat.colorDiffuse.b);
+  }
+
+  if (_attribIDs["colorSpecular"] > -1) {
+      glUniform3f(_attribIDs["colorSpecular"], mat.colorSpecular.r, mat.colorSpecular.g, mat.colorSpecular.b);
+  }
+
+  if (_attribIDs["specularExp"] > -1) {
+      glUniform1f(_attribIDs["specularExp"], mat.specularExp);
+  }
+
+  if (_attribIDs["opacity"] > -1) {
+      glUniform1f(_attribIDs["opacity"], mat.opacity);
+  }
+
+  if (_attribIDs["texAmbient"] > -1 ) {
+      // Shader supports ambient texture
+      if(mat.textureIDAmbient > -1) {
+          // Material has an ambient texture
+          // Load texture to texture unit 0
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDAmbient);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexAmbient"], true);
+          glUniform1i(_attribIDs["texAmbient"], 0);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexDiffuse"], false);
+      }
+  }
+
+  if (_attribIDs["texDiffuse"] > -1 ) {
+      // Shader supports Diffuse texture
+      if(mat.textureIDDiffuse > -1) {
+          // Material has an Diffuse texture
+          // Load texture to texture unit 1
+          glActiveTexture(GL_TEXTURE1);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDDiffuse);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexDiffuse"], true);
+          glUniform1i(_attribIDs["texDiffuse"], 1);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexDiffuse"], false);
+      }
+  }
+
+  if (_attribIDs["texSpecular"] > -1 ) {
+      // Shader supports Specular texture
+      if(mat.textureIDSpecular > -1) {
+          // Material has an Specular texture
+          // Load texture to texture unit 2
+          glActiveTexture(GL_TEXTURE2);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDSpecular);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexSpecular"], true);
+          glUniform1i(_attribIDs["texSpecular"], 2);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexSpecular"], false);
+      }
+  }
+
+  if (_attribIDs["texSpecularExp"] > -1 ) {
+      // Shader supports SpecularExp texture
+      if(mat.textureIDSpecularExp > -1) {
+          // Material has an SpecularExp texture
+          // Load texture to texture unit 3
+          glActiveTexture(GL_TEXTURE3);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDSpecularExp);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexSpecularExp"], true);
+          glUniform1i(_attribIDs["texSpecularExp"], 3);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexSpecularExp"], false);
+      }
+  }
+
+  if (_attribIDs["texOpacity"] > -1 ) {
+      // Shader supports Opacity texture
+      if(mat.textureIDOpacity > -1) {
+          // Material has an Opacity texture
+          // Load texture to texture unit 4
+          glActiveTexture(GL_TEXTURE4);
+          glBindTexture(GL_TEXTURE_2D, mat.textureIDOpacity);
+
+          // Let the shader know
+          glUniform1i(_attribIDs["hasTexOpacity"], true);
+          glUniform1i(_attribIDs["texOpacity"], 4);
+      } else {
+          // Let the shader know that there is no texture
+          glUniform1i(_attribIDs["hasTexOpacity"], false);
+      }
+  }
+
+
 }
   
 std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
@@ -483,6 +610,15 @@ void drawableObj::addData(const GLDATATYPE type,
   }
 }
 
+
+void drawableObj::addMaterial(material mat) {
+    _material = mat;
+}
+
+material drawableObj::getMaterial() {
+    return _material;
+}
+
 bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
                                     const glm::mat4 &modelMatrix) {
 
@@ -509,7 +645,8 @@ void drawableObj::_getAttribLocations(GLuint programID) {
   // Check to make sure the ID awarded is sane.  If not, probably the
   // name does not match the name in the shader.
   if (_vertices.ID < 0) {
-    std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
+    std::cerr << "** Caution: Bad ID for vertices attribute '"
+              << _vertices.name << "'" << std::endl;
     badID = true;
   }
   
@@ -517,7 +654,8 @@ void drawableObj::_getAttribLocations(GLuint programID) {
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
     
     if (_colors.ID < 0) {
-      std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
+      std::cerr << "** Caution: Bad ID for colors attribute '"
+                << _colors.name << "'" << std::endl;
       badID = true;
     }
   }
@@ -525,7 +663,8 @@ void drawableObj::_getAttribLocations(GLuint programID) {
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
     
     if (_normals.ID < 0) {
-      std::cerr << "** Caution: Bad ID for normals attribute '" << _normals.name << "'" << std::endl;
+      std::cerr << "** Caution: Bad ID for normals attribute '"
+                << _normals.name << "'" << std::endl;
       badID = true;
     }
   }
@@ -533,13 +672,15 @@ void drawableObj::_getAttribLocations(GLuint programID) {
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
     
     if (_uvs.ID < 0) {
-      std::cerr << "** Caution: Bad ID for texture attribute '" << _uvs.name << "'" << std::endl;
+      std::cerr << "** Caution: Bad ID for texture attribute '"
+                << _uvs.name << "'" << std::endl;
       badID = true;
     }
   }
 
   if (badID) {
-    std::cerr << "This can be caused either by a spelling error, or by not using the" << std::endl << "attribute within the shader code." << std::endl;
+    std::cerr << "This can be caused either by a spelling error, or by not using"
+              << std::endl << "the attribute within the shader code." << std::endl;
   }
 }
 
@@ -581,7 +722,7 @@ void drawableObj::findBoundingBox() {
 
   _haveBoundingBox = true;
 }
-
+  
 void drawableObj::prepare(GLuint programID) {
 
   if (!_haveBoundingBox) findBoundingBox();
@@ -616,6 +757,7 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
 
   // Prepare a data buffer for the interleaved data.
   glGenBuffers(1, &_interleavedData.bufferID);
+  //  glGenBuffers(1, &_indices.bufferID);
 
   // Now interleave the data.
   for (int i = 0; i < _vertices.size(); i++) {
@@ -644,6 +786,43 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
 
   _getAttribLocations(programID);
 
+  // Find the bounding box for this object.
+  _vertexBoundingBoxLower = glm::vec4(1.0e35, 1.0e35, 1.0e35, 1.0e35);
+  _vertexBoundingBoxUpper = glm::vec4(-1.0e35, -1.0e35, -1.0e35, -1.0e35);
+  
+  // Now interleave the data.
+  for (int i = 0; i < _vertices.size(); i++) {
+
+    // Load the x,y,z vertices, and also grab the max and mins.
+    _interleavedData.addData(_vertices[i].x);
+    _vertexBoundingBoxUpper.x = fmax(_vertices[i].x, _vertexBoundingBoxUpper.x);
+    _vertexBoundingBoxLower.x = fmin(_vertices[i].x, _vertexBoundingBoxLower.x);
+    
+    _interleavedData.addData(_vertices[i].y);
+    _vertexBoundingBoxUpper.y = fmax(_vertices[i].y, _vertexBoundingBoxUpper.y);
+    _vertexBoundingBoxLower.y = fmin(_vertices[i].y, _vertexBoundingBoxLower.y);
+
+    _interleavedData.addData(_vertices[i].z);
+    _vertexBoundingBoxUpper.z = fmax(_vertices[i].z, _vertexBoundingBoxUpper.z);
+    _vertexBoundingBoxLower.z = fmin(_vertices[i].z, _vertexBoundingBoxLower.z);
+
+    // Now interleave the other vertex attributes, if any.
+    if (!_colors.empty()) {
+      _interleavedData.addData(_colors[i].r);
+      _interleavedData.addData(_colors[i].g);
+      _interleavedData.addData(_colors[i].b);
+    }
+    if (!_normals.empty()) {
+      _interleavedData.addData(_normals[i].x);
+      _interleavedData.addData(_normals[i].y);
+      _interleavedData.addData(_normals[i].z);
+    }
+    if (!_uvs.empty()) {
+      _interleavedData.addData(_uvs[i].s);
+      _interleavedData.addData(_uvs[i].t);
+    }      
+  }
+
   _loadInterleaved();  
 }
 
@@ -654,6 +833,14 @@ void drawableObj::_prepareSeparate(GLuint programID) {
   if (!_colors.empty()) glGenBuffers(1, &_colors.bufferID);
   if (!_normals.empty()) glGenBuffers(1, &_normals.bufferID);
   if (!_uvs.empty()) glGenBuffers(1, &_uvs.bufferID);
+
+  _getAttribLocations(programID);
+  
+  // Figure out which buffers we need and get IDs for them.
+  glGenBuffers(1, &_vertices.bufferID);
+  if (!_colors.empty()) { glGenBuffers(1, &_colors.bufferID);  }
+  if (!_normals.empty()) { glGenBuffers(1, &_normals.bufferID);  }
+  if (!_uvs.empty()) { glGenBuffers(1, &_uvs.bufferID);  }
 
   _getAttribLocations(programID);
   
@@ -673,7 +860,6 @@ void drawableObj::load() {
 }
 
 void drawableObj::_loadInterleaved() {
-
   if (!_loadedIntoBuffer) {
 
     // Load it into a buffer.
@@ -688,25 +874,35 @@ void drawableObj::_loadInterleaved() {
 }
 
 
-void drawableObj::_loadSeparate() {
-
+void drawableObj::_loadSeparate() { 
   if (!_loadedIntoBuffer) {
+    // Select a buffer to work on.
     glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
+
+    // Put something in it.
     glBufferData(GL_ARRAY_BUFFER, _vertices.byteSize(), _vertices.beginAddress(),
                  GL_STATIC_DRAW);
 
+    // What OpenGL-assigned ID does it have (corresponds to a shader
+    // attribute name)?
+    glEnableVertexAttribArray(_vertices.ID);
+
+    // Do the same for the other attributes, if they have any data.
     if (!_colors.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
       glBufferData(GL_ARRAY_BUFFER, _colors.byteSize(), _colors.beginAddress(),
                    GL_STATIC_DRAW);
+      //glEnableVertexAttribArray(_colors.ID);
     }
     if (!_normals.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _normals.bufferID);
+      //glEnableVertexAttribArray(_normals.ID);
       glBufferData(GL_ARRAY_BUFFER, _normals.byteSize(), _normals.beginAddress(),
                    GL_STATIC_DRAW);
     }
     if (!_uvs.empty()) {
       glBindBuffer(GL_ARRAY_BUFFER, _uvs.bufferID);
+      //glEnableVertexAttribArray(_uvs.ID);
       glBufferData(GL_ARRAY_BUFFER, _uvs.byteSize(), _uvs.beginAddress(),
                    GL_STATIC_DRAW);
     }
@@ -821,6 +1017,7 @@ glm::mat4 drawableMulti::getModelMatrix() {
 
 std::string drawableMulti::randomName(const std::string &nameRoot) {
 
+
   // This is a pretty dopey method, but it seems to work, so long as
   // the number of characters in each name is big enough.
   std::string out = nameRoot;
@@ -876,9 +1073,11 @@ void drawableCompound::prepare() {
   _projMatrixID = _pShader->getUniformID(_projMatrixName);
 
   // Prepare each component object.
+  int i = 1;
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
     it->prepare(_pShader->getProgram());
+    i++;
   }
 }
   
@@ -924,6 +1123,7 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   
   for (std::list<drawableObj>::iterator it = _objects.begin();
        it != _objects.end(); it++) {
+      _pShader->drawMaterial(it->getMaterial());
     it->draw();
   }  
 }

@@ -118,7 +118,8 @@ private:
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
     _lights->addLight(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
-                      glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+                      glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+                      glm::vec4(0.3f, 1.0f, 1.0f, 0.0f));
     // _lights->addLight(glm::vec4(0.0f, 0.0f,-1.0f, 1.0f),
     //                   glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 

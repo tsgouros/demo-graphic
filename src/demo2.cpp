@@ -273,8 +273,10 @@ int main(int argc, char **argv) {
   // lighting, and the shapes don't have textures, this is irrelevant.
   bsg::bsgPtr<bsg::lightList> lights = new bsg::lightList();
   lights->addLight(glm::vec4(10.0f, 10.0f, 10.0f, 1.0f),
-                   glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+                   glm::vec4(1.0f, 1.0f, 0.0f, 0.0f),
+                   glm::vec4(0.3f, 1.0f, 1.0f, 0.0f));
   lights->addLight(glm::vec4(10.0f,-10.0f, 10.0f, 1.0f),
+                   glm::vec4(0.0f, 1.0f, 1.0f, 0.0f),
                    glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
 
   // Now we load the shaders.  First check to see if any have been
@@ -434,6 +436,7 @@ int main(int argc, char **argv) {
   // We could put the axes and the tetrahedron in the same compound
   // shape, but we leave them separate so they can be moved
   // separately.
+  topShape.setInterleaved(true);
   tetrahedron = new bsg::drawableCompound(shader);
   tetrahedron->addObject(topShape);
   tetrahedron->addObject(bottomShape);

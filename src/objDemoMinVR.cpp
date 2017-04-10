@@ -3,6 +3,10 @@
 #include "bsgObjModel.h"
 
 #include <api/MinVR.h>
+#include <math/VRMath.h>
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/euler_angles.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 class DemoVRApp: public MinVR::VRApp {
 
@@ -45,6 +49,10 @@ private:
 
   std::string _vertexFile;
   std::string _fragmentFile;
+
+  bool _moving;
+  glm::mat4 _owm;
+  glm::mat4 _lastWandPos;
 
   
   // These functions from demo2.cpp are not needed here:
@@ -123,15 +131,16 @@ private:
 
     // Create a list of lights.  If the shader you're using doesn't use
     // lighting, and the shapes don't have textures, this is irrelevant.
-    _lights->addLight(glm::vec4(0.0f, 0.0f, 3.0f, 1.0f),
-                      glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+    _lights->addLight(glm::vec4(0.0f, 0.0f, -3.0f, 1.0f),
+                      glm::vec4(1.0f, 1.0f, 1.0f, 0.0f),
+                      glm::vec4(0.3f, 1.0f, 1.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
 
 
-    _vertexFile = "../src/textureShader.vp";
-    _fragmentFile = "../src/textureShader.fp";
+    _vertexFile = "../src/tex2.vp";
+    _fragmentFile = "../src/tex2.fp";
     
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
@@ -153,11 +162,12 @@ private:
     // shape, but we leave them separate so they can be moved
     // separately.
 
-    _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
+    _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj", false);
     //_model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
-    _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    _model = new bsg::drawableObjModel(_shader, "../../demo-graphic/data/CasA_Supernova_Remnant.obj", false);
     //_model = new bsg::drawableObjModel(_shader, "/Users/tomfool/tech/17/yurt/data/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant.obj", false);
-    
+
     _modelGroup = new bsg::drawableCollection();
 
     _orbiter->setPosition(-3.0, 3.0, 0.0);
@@ -166,9 +176,12 @@ private:
 
     _modelGroup->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_modelGroup);
- 
+
+    _axesShader->addLights(_lights);
     _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+    _axesShader->addTexture(texture);
+
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
@@ -212,6 +225,16 @@ public:
     //   return;
                 // }
 
+      if (event.getName() == "Wand_Move"){
+            MinVR::VRMatrix4 wandPosition(event.getDataAsFloatArray("Transform"));
+            glm::mat4 wandPos = glm::make_mat4(wandPosition.getArray());
+            //printMat4(wandPos);
+            if(_moving){
+              _owm = wandPos / _lastWandPos * _owm;
+            }
+            _lastWandPos = wandPos;
+          }
+
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
 
@@ -219,14 +242,20 @@ public:
     if (event.getName() == "KbdEsc_Down") {
       shutdown();
     } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
-               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
+               (event.getName().substr(4, std::string::npos).compare("_Down") == 0) &&
+               (event.getName() == "Wand_Down_Down")) {
       // Turn on and off the animation.
       if (_oscillationStep == 0.0f) {
         _oscillationStep = 0.03f;
       } else {
         _oscillationStep = 0.0f;
       }
-    }
+    } else if (event.getName() == "MouseBtnLeft_Down" || event.getName() == "Wand_Bottom_Trigger_Down"){
+        _moving = true;
+      }
+      else if (event.getName() == "MouseBtnLeft_Up" || event.getName() == "Wand_Bottom_Trigger_Up"){
+        _moving = false;
+      }
 
     // Print out where you are (where the camera is) and where you're
     // looking.
@@ -291,6 +320,9 @@ public:
                                         vm[4],  vm[5], vm[6], vm[7],
                                         vm[8],  vm[9],vm[10],vm[11],
                                         vm[12],vm[13],vm[14],vm[15]);
+
+      //in desktop mode, +x is away from camera, +z is right, +y is up
+      viewMatrix = _owm * viewMatrix;
 
       //bsg::bsgUtils::printMat("view", viewMatrix);
       _scene.draw(viewMatrix, projMatrix);
