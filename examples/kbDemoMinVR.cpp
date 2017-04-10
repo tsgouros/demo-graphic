@@ -4,6 +4,21 @@
 
 #include <api/MinVR.h>
 
+class myRand {
+private:
+  int _seed;
+  
+public:
+  myRand() : _seed(5) {};
+  
+  int get(const int x) {
+    _seed = (_seed * 7) % 101;
+    return (_seed - 1) % x;
+  }
+};
+  
+myRand mrand;
+
 class animLine {
 public:
   bsg::drawableSaggyLine* _line;
@@ -23,7 +38,7 @@ public:
            glm::vec4 startColor, glm::vec4 endColor) :
     _start(start), _end(end), _step(0.0), _increment(0.002), _startOrEnd(false) {
 
-    _step = rand()%10 * 0.1;
+    _step = mrand.get(10) * 0.1;
     _line = new bsg::drawableSaggyLine(shader, _start, _end,
                                        startColor, endColor,
                                        12, 1.1f);
@@ -249,8 +264,8 @@ private:
     for (int i = 0; i < 10; i++) {
     
       _lines.push_back(animLine(_axesShader,
-                                plugPos(rand()%10, rand()%10),
-                                plugPos(rand()%10, rand()%10),
+                                plugPos(mrand.get(10), mrand.get(10)),
+                                plugPos(mrand.get(10), mrand.get(10)),
                                 glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
                                 glm::vec4(0.0f, 0.5f, 1.0f, 1.0f)));
 
@@ -350,7 +365,7 @@ public:
     if (isRunning()) {
 
       for (int i = 0; i < _lines.size(); i++) {
-        _lines[i].startAnim(plugPos(rand()%10,rand()%10));
+        _lines[i].startAnim(plugPos(mrand.get(10),mrand.get(10)));
         _lines[i].step();
       }
       
