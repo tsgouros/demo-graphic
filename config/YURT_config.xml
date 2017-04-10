@@ -47,7 +47,7 @@
 			</Wand1>
 		  </Optitrack3>
 		  
-		    <Wand0Btns inputdeviceType="VRVRPNButtonDevice">
+                    <!--Wand0Btns inputdeviceType="VRVRPNButtonDevice">
 				<VRPNDeviceName type="string">Joystick0@172.20.160.21:3121</VRPNDeviceName>
 				<EventsToGenerate type="stringarray">Wand_Left_Btn,Wand_Right_Btn,Wand_Middle_
 Btn,B03,B04,B05,B06,B07,B08,B09,B10,B11,B12,B13,B14,B15,B16</EventsToGenerate>
@@ -56,7 +56,18 @@ Btn,B03,B04,B05,B06,B07,B08,B09,B10,B11,B12,B13,B14,B15,B16</EventsToGenerate>
 			<Wand0Analog inputdeviceType="VRVRPNAnalogDevice">
 				<VRPNDeviceName type="string">Joystick0@172.20.160.21:3121</VRPNDeviceName>
 				<EventsToGenerate type="stringarray">Wand_Joystick_Y,Wand_Joystick_X</EventsToGenerate>
-			</Wand0Analog>
+                        </Wand0Analog-->
+
+<WandAnalogs inputdeviceType="VRVRPNAnalogDevice">
+  <VRPNDeviceName type="string">Joystick0@172.20.160.21:3121</VRPNDeviceName>
+  <EventsToGenerate type="stringarray">Wand_Joystick_Y,Wand_Joystick_X,Wand_Trigger_Top</EventsToGenerate>
+</WandAnalogs>
+
+
+<Buttons inputdeviceType="VRVRPNButtonDevice">
+  <VRPNDeviceName type="string">Joystick0@172.20.160.21:3121</VRPNDeviceName>
+  <EventsToGenerate type="stringarray">Wand_Top_Trigger,Wand_Bottom_Trigger,Wand_Joystick_Press,Wand_Up,Wand_Down,Wand_Left,Wand_Right,Wand_Select,???,Mouse_Up,Mouse_Down,Mouse_Left,Mouse_Right,Mouse_Click</EventsToGenerate>
+</Buttons>
 	</ACaveServer>
 	
 	<RGBBits>8</RGBBits>
