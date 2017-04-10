@@ -4,6 +4,70 @@
 
 #include <api/MinVR.h>
 
+class animLine {
+public:
+  bsg::drawableSaggyLine* _line;
+  glm::vec3 _start, _end;           // current start and end
+
+  glm::vec3 _startStart, _startEnd;
+  glm::vec3 _targetStart, _targetEnd;
+
+  float _step;  // Goes from 0 to 1 for the animation.
+  float _increment;
+
+  bool _startOrEnd;
+  
+  animLine() {};
+  animLine(bsg::bsgPtr<bsg::shaderMgr> shader,
+           glm::vec3 start, glm::vec3 end,
+           glm::vec4 startColor, glm::vec4 endColor) :
+    _start(start), _end(end), _step(0.0), _increment(0.002), _startOrEnd(false) {
+
+    _step = rand()%10 * 0.1;
+    _line = new bsg::drawableSaggyLine(shader, _start, _end,
+                                       startColor, endColor,
+                                       12, 1.1f);
+    _targetStart = _start; _targetEnd = _end;
+    _startStart = _targetStart; _startEnd = _targetEnd;
+    
+  }
+
+  void step() {
+    _step += _increment;
+
+    if (_step >= 1.0) {
+
+      _step = 0.0;
+      _start = _targetStart; _end = _targetEnd;
+      _startStart = _targetStart; _startEnd = _targetEnd;
+
+    } else {
+
+      _start = _startStart + _step * (_targetStart - _startStart);
+      _end = _startEnd + _step * (_targetEnd - _startEnd);
+
+    }
+
+    _line->setLineEnds(_start, _end);
+  }
+
+  void startAnim(const glm::vec3 &newPos) {
+
+    if (_step == 0.0) {
+      if (_startOrEnd) {
+        _targetStart = newPos;
+        _targetStart.y += 0.5f;
+      } else {
+        _targetEnd = newPos;
+        _targetEnd.y += 0.5f;
+      }
+      _startOrEnd = !_startOrEnd;
+    }
+  }
+};
+
+
+
 class DemoVRApp: public MinVR::VRApp {
 
   // Data values that were global in the demo2.cpp file are defined as
@@ -20,10 +84,10 @@ private:
   // the global variables so they can be available in both the main()
   // function and the renderScene() function.
   bsg::drawableCompound* _axesSet;
-  bsg::drawableCollection* _modelGroup;
+  bsg::drawableCollection* _plugBoard;
   bsg::drawableObjModel* _model;
   bsg::drawableObjModel* _orbiter;
-  bsg::drawableSaggyLine* _line;
+  std::vector<animLine> _lines;
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
@@ -120,6 +184,10 @@ private:
               << _scene.getLookAtPosition().z << ")." << std::endl; 
   }
 
+  inline glm::vec3 plugPos(const float i, const float j) {
+    return glm::vec3(-10.0f + 2.0 * i, -5.0f, -10.0 + 2.0 * j);
+  }
+  
   void _initializeScene() {
 
     // Create a list of lights.  If the shader you're using doesn't use
@@ -158,26 +226,36 @@ private:
     _model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
     //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
 
-    _modelGroup = new bsg::drawableCollection();
+    _plugBoard = new bsg::drawableCollection();
 
-    _orbiter->setPosition(-3.0, 3.0, 0.0);
-    _modelGroup->addObject("model", _model);
-    _modelGroup->addObject("orbiter", _orbiter);
+    for (int i = 0; i < 10; i++) {
+      for (int j = 0; j < 10; j++) {
+        bsg::drawableObjModel* x =
+          new bsg::drawableObjModel(_shader, "../data/test-v.obj");
+        x->setPosition(plugPos(i, j));
+        _plugBoard->addObject(x);
+      }
+    }
 
-    _modelGroup->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
-    _scene.addObject(_modelGroup);
+    _plugBoard->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
+    _plugBoard->setRotation(1.57, 0.0, 0.0);
+    _scene.addObject(_plugBoard);
  
     _axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
     _axesShader->compileShaders();
 
-    _line = new bsg::drawableSaggyLine(_axesShader,
-                                       _orbiter->getPosition(),
-                                       _model->getPosition(),
-                                       glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
-                                       glm::vec4(0.0f, 0.5f, 1.0f, 1.0f),
-                                       12, 1.2f);
-    _modelGroup->addObject("line", _line);
+
+    for (int i = 0; i < 10; i++) {
+    
+      _lines.push_back(animLine(_axesShader,
+                                plugPos(rand()%10, rand()%10),
+                                plugPos(rand()%10, rand()%10),
+                                glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+                                glm::vec4(0.0f, 0.5f, 1.0f, 1.0f)));
+
+      _plugBoard->addObject(_lines.back()._line);
+    }
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
 
@@ -186,7 +264,7 @@ private:
 
     // All the shapes are now added to the scene.
 
-    std::cout << _scene << std::endl;
+    //std::cout << _scene << std::endl;
     
   }
 
@@ -205,7 +283,7 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
-    _oscillationStep = 0.03f;
+    _oscillationStep = 0.0f;
 
   }
 
@@ -271,21 +349,26 @@ public:
     // Only draw if the application is still running.
     if (isRunning()) {
 
+      for (int i = 0; i < _lines.size(); i++) {
+        _lines[i].startAnim(plugPos(rand()%10,rand()%10));
+        _lines[i].step();
+      }
+      
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       _oscillator += _oscillationStep;
       _orbiter->setPosition(3.0f * cos(_oscillator), 3.0, 3.0 * sin(_oscillator));
       _orbiter->setOrientation(glm::quat(0.5 * cos(_oscillator * 1.1f), 0.0, 
 					 cos(_oscillator), sin(_oscillator)));
-      _modelGroup->setPosition(cos(_oscillator / 1.2f), 
-			       -2.2f + sin(_oscillator / 1.2f), -10.0);
-      _modelGroup->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0, 
-					 cos(_oscillator * 0.2f), sin(_oscillator * 0.2f)));
+      // _plugBoard->setPosition(cos(_oscillator / 1.2f), 
+			//        -2.2f + sin(_oscillator / 1.2f), -10.0);
+      // _plugBoard->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0, 
+			// 		 cos(_oscillator * 0.2f), sin(_oscillator * 0.2f)));
 
 
-      bPtr(bsg::drawableSaggyLine,_modelGroup->getObject("line"))->
-        setLineEnds(_orbiter->getPosition(),
-                    _model->getPosition());
+      // bPtr(bsg::drawableSaggyLine,_plugBoard->getObject("line"))->
+      //   setLineEnds(_orbiter->getPosition(),
+      //               _model->getPosition());
 
       // Now the preliminaries are done, on to the actual drawing.
   

@@ -309,7 +309,7 @@ drawableSaggyLine::_calculateCatenary(const glm::vec3 &start,
   
   for (int i = 0; i <= _nSegments; i++) {
 
-    f = pow(len * float(i)/float(_nSegments) - len/2.0f, 2) - k;
+    f = sagFactor/len * (pow(len * float(i)/float(_nSegments) - len/2.0f, 2) - k);
     
     out.push_back(glm::vec4(start.x + i * span.x,
                             start.y + i * span.y - f,

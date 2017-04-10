@@ -192,6 +192,11 @@ class bsgPtr {
 class bsgUtils {
  public:
   static void printMat(const std::string &name, const glm::mat4 &mat);
+  static void printVec3(const std::string intro, const glm::vec3 in) {
+    std::cout << intro << "(" << in.x << "," << in.y << "," << in.z << ")" << std::endl;}
+  static void printVec4(const std::string intro, const glm::vec4 in) {
+    std::cout << intro << "(" << in.x << "," << in.y << "," << in.z << "," << in.w << ")" << std::endl;}
+  
 };
 
 /// \brief Some data for an OpenGL object.
