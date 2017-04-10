@@ -233,6 +233,7 @@ drawableLine::drawableLine(bsgPtr<shaderMgr> pShader,
   _line->setDrawType(GL_LINES);
 
   _line->setSelectable(false);
+  _line->setInterleaved(false);
 
   addObject(_line);
 }
@@ -243,18 +244,81 @@ void drawableLine::setLineEnds(const glm::vec3 &start, const glm::vec3 &end) {
   lineVertices.push_back(glm::vec4(start.x, start.y, start.z, 1.0f));
   lineVertices.push_back(glm::vec4(end.x, end.y, end.z, 1.0f));
   
-  std::vector<glm::vec4> lineColors;
-  lineColors.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-  lineColors.push_back(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-  _line->setData(bsg::GLDATA_COLORS, lineColors);
   _line->setData(bsg::GLDATA_VERTICES, lineVertices);
-
-  _line->setInterleaved(false);
 
 }
 
 
+drawableSaggyLine::drawableSaggyLine(bsgPtr<shaderMgr> pShader,
+                                     const glm::vec3 &start, const glm::vec3 &end,
+                                     const glm::vec4 &startColor,
+                                     const glm::vec4 &endColor,
+                                     const int &nSegments,
+                                     const float &sagFactor) :
+  drawableCompound(pShader),
+  _start(start), _end(end), _sagFactor(sagFactor), _nSegments(nSegments) {
+
+  _name = randomName("saggyLine");
+  _line = new drawableObj();
+  
+  std::vector<glm::vec4> lineVertices = _calculateCatenary(start, end,
+                                                           nSegments,
+                                                           sagFactor);
+
+  std::vector<glm::vec4> lineColors;
+  glm::vec4 spanColor = (endColor - startColor)/(float)nSegments;
+
+  for (int i = 0; i <= _nSegments; i++) {
+    lineColors.push_back(glm::vec4(startColor.r + i * spanColor.r,
+                                   startColor.g + i * spanColor.g,
+                                   startColor.b + i * spanColor.b,
+                                   1.0f));
+  }
+  
+  _line->addData(bsg::GLDATA_VERTICES, "position", lineVertices);
+  _line->addData(bsg::GLDATA_COLORS, "color", lineColors);
+
+  _line->setDrawType(GL_LINE_STRIP);
+
+  _line->setSelectable(false);
+  _line->setInterleaved(false);
+
+  addObject(_line);
+}
+
+void drawableSaggyLine::setLineEnds(const glm::vec3 &start, const glm::vec3 &end) {
+
+  std::vector<glm::vec4> lineVertices = _calculateCatenary(start, end,
+                                                           _nSegments,
+                                                           _sagFactor);
+  _line->setData(bsg::GLDATA_VERTICES, lineVertices);
+}
+
+std::vector<glm::vec4>
+drawableSaggyLine::_calculateCatenary(const glm::vec3 &start,
+                                      const glm::vec3 &end,
+                                      const int &nSegments,
+                                      const float &sagFactor) {
+
+  std::vector<glm::vec4> out;
+  glm::vec3 span = (end - start)/(float)nSegments;
+
+  float len = glm::distance(start, end);
+  float k = pow(len/2.0f, 2); // / sagFactor;
+  float f;
+  
+  for (int i = 0; i <= _nSegments; i++) {
+
+    f = pow(len * float(i)/float(_nSegments) - len/2.0f, 2) - k;
+    
+    out.push_back(glm::vec4(start.x + i * span.x,
+                            start.y + i * span.y - f,
+                            start.z + i * span.z,
+                            1.0f));
+  }
+
+  return out;
+}
 
   
 }

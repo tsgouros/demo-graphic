@@ -51,22 +51,32 @@ class drawableLine : public drawableCompound {
   void setLineEnds(const glm::vec3 &start, const glm::vec3 &end);
 };
 
-/// \brief A line connecting two points.
+/// \brief A saggy line connecting two points.
 ///
-/// A straight line with a single color.
-class drawableLine : public drawableCompound {
+/// A multiple-segment line with two colors that is longer than
+/// necessary.  Calculates a sag as if there is gravity in the
+/// negative Y direction.
+class drawableSaggyLine : public drawableCompound {
 
  private:
   bsgPtr<drawableObj> _line;
+  glm::vec3 _start, _end;
+  float _sagFactor;
+  int _nSegments;
+
+  std::vector<glm::vec4> _calculateCatenary(const glm::vec3 &start,
+                                            const glm::vec3 &end,
+                                            const int &nSegments,
+                                            const float &sagFactor);
 
  public:
-  drawableLine(bsgPtr<shaderMgr> pShader,
-               const glm::vec3 &start, const glm::vec3 &end,
-               const glm::vec4 &color);
+  drawableSaggyLine(bsgPtr<shaderMgr> pShader,
+                    const glm::vec3 &start, const glm::vec3 &end,
+                    const glm::vec4 &startColor, const glm::vec4 &endColor,
+                    const int &nSegments, const float &sagFactor);
 
   void setLineEnds(const glm::vec3 &start, const glm::vec3 &end);
 };
-
 
 
 

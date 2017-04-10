@@ -1002,6 +1002,10 @@ class drawableCompound : public drawableMulti {
 
   std::string _projMatrixName;
   GLuint _projMatrixID;
+
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const drawableCompound &comp) {
+    return os << comp.printObj("");  }
   
  public:
  drawableCompound(bsgPtr<shaderMgr> pShader) :
@@ -1086,7 +1090,8 @@ class drawableCompound : public drawableMulti {
   bsgNameList insideBoundingBox(const glm::vec4 &testPoint);
 
   /// \brief A printable representation of the object.
-  std::string printObj(const std::string &prefix) const { return _name; }
+  std::string printObj(const std::string &prefix) const {
+    return prefix + "<drawableCompound:" + _name + ">"; }
   
   /// \brief Gets ready for the drawing sequence.
   ///
@@ -1131,6 +1136,11 @@ class drawableCollection : public drawableMulti {
   /// use it here.
   typedef std::map<std::string, bsgPtr<drawableMulti> > CollectionMap;
   CollectionMap _collection;
+
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const drawableCollection &coll) {
+    return os << coll.printObj("| ");
+  }
   
  public:
   /// \brief The default constructor.
@@ -1210,7 +1220,7 @@ class drawableCollection : public drawableMulti {
 
   /// \brief Returns a printable display of the collection.
   std::string printObj(const std::string &prefix) const;
-  
+
   /// \brief Gets ready for the drawing sequence.
   ///
   void prepare();

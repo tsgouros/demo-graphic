@@ -23,7 +23,7 @@ private:
   bsg::drawableCollection* _modelGroup;
   bsg::drawableObjModel* _model;
   bsg::drawableObjModel* _orbiter;
-  bsg::drawableLine* _line;
+  bsg::drawableSaggyLine* _line;
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
@@ -171,10 +171,12 @@ private:
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
     _axesShader->compileShaders();
 
-    _line = new bsg::drawableLine(_axesShader,
-                                  _orbiter->getPosition(),
-                                  _model->getPosition(),
-                                  glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    _line = new bsg::drawableSaggyLine(_axesShader,
+                                       _orbiter->getPosition(),
+                                       _model->getPosition(),
+                                       glm::vec4(1.0f, 0.5f, 0.0f, 1.0f),
+                                       glm::vec4(0.0f, 0.5f, 1.0f, 1.0f),
+                                       12, 1.2f);
     _modelGroup->addObject("line", _line);
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
@@ -280,8 +282,8 @@ public:
       _modelGroup->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0, 
 					 cos(_oscillator * 0.2f), sin(_oscillator * 0.2f)));
 
-      
-      bPtr(bsg::drawableLine,_modelGroup->getObject("line"))->
+
+      bPtr(bsg::drawableSaggyLine,_modelGroup->getObject("line"))->
         setLineEnds(_orbiter->getPosition(),
                     _model->getPosition());
 
