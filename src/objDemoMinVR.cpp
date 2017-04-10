@@ -3,6 +3,10 @@
 #include "bsgObjModel.h"
 
 #include <api/MinVR.h>
+#include <math/VRMath.h>
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/euler_angles.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 class DemoVRApp: public MinVR::VRApp {
 
@@ -45,6 +49,10 @@ private:
 
   std::string _vertexFile;
   std::string _fragmentFile;
+
+  bool _moving;
+  glm::mat4 _owm;
+  glm::mat4 _lastWandPos;
 
   
   // These functions from demo2.cpp are not needed here:
@@ -217,6 +225,16 @@ public:
     //   return;
                 // }
 
+      if (event.getName() == "Wand_Move"){
+            MinVR::VRMatrix4 wandPosition(event.getDataAsFloatArray("Transform"));
+            glm::mat4 wandPos = glm::make_mat4(wandPosition.getArray());
+            //printMat4(wandPos);
+            if(_moving){
+              _owm = wandPos / _lastWandPos * _owm;
+            }
+            _lastWandPos = wandPos;
+          }
+
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
 
@@ -224,14 +242,20 @@ public:
     if (event.getName() == "KbdEsc_Down") {
       shutdown();
     } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
-               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
+               (event.getName().substr(4, std::string::npos).compare("_Down") == 0) &&
+               (event.getName() == "Wand_Down_Down")) {
       // Turn on and off the animation.
       if (_oscillationStep == 0.0f) {
         _oscillationStep = 0.03f;
       } else {
         _oscillationStep = 0.0f;
       }
-    }
+    } else if (event.getName() == "MouseBtnLeft_Down" || event.getName() == "Wand_Bottom_Trigger_Down"){
+        _moving = true;
+      }
+      else if (event.getName() == "MouseBtnLeft_Up" || event.getName() == "Wand_Bottom_Trigger_Up"){
+        _moving = false;
+      }
 
     // Print out where you are (where the camera is) and where you're
     // looking.
@@ -296,6 +320,9 @@ public:
                                         vm[4],  vm[5], vm[6], vm[7],
                                         vm[8],  vm[9],vm[10],vm[11],
                                         vm[12],vm[13],vm[14],vm[15]);
+
+      //in desktop mode, +x is away from camera, +z is right, +y is up
+      viewMatrix = _owm * viewMatrix;
 
       //bsg::bsgUtils::printMat("view", viewMatrix);
       _scene.draw(viewMatrix, projMatrix);
