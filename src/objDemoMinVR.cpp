@@ -154,7 +154,7 @@ private:
     // shape, but we leave them separate so they can be moved
     // separately.
 
-    _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
+    _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj", false);
     //_model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
     //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
     _model = new bsg::drawableObjModel(_shader, "../../demo-graphic/data/CasA_Supernova_Remnant.obj", false);
@@ -168,9 +168,12 @@ private:
 
     _modelGroup->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_modelGroup);
- 
-    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/tex2.vp");
-    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/tex2.fp");
+
+    _axesShader->addLights(_lights);
+    _axesShader->addShader(bsg::GLSHADER_VERTEX, "../src/shader2.vp");
+    _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../src/shader.fp");
+    _axesShader->addTexture(texture);
+
     _axesShader->compileShaders();
 
     _axesSet = new bsg::drawableAxes(_axesShader, 100.0f);
