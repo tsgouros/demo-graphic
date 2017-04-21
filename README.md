@@ -34,8 +34,12 @@ wheels, and should be using a real scene graph package, like OSG.
 
 
 The build instructions that follow work on Mac (command line) and
-Linux.  Please submit additions to this file for builds using Windows,
-Mac XCode, QtCreator, et cetera.
+Linux.  Please submit additions to this file for builds.  Current
+wishlist:
+
+  - Windows
+  - Mac XCode
+  - QtCreator
 
 
 ## FreeGLUT
@@ -52,9 +56,13 @@ To install FreeGLUT, if needed, using Homebrew:
 I am using 2.8.1. Version 3.0.0 should work, but I haven't tested
 that.  The older (2.8.1) version is the one supported in the CCV YURT.
 
+## GLEW
+
 To install GLEW, if needed, using Homebrew:
 
     $ brew install glew
+
+## Build instructions
 
 To build on a Mac or on Linux:
 
@@ -73,6 +81,13 @@ for those, and I will happily include them here.
 If cmake finds libPNG it will build a demo2 binary, and if it also
 finds MinVR, it will create a demo3.  You will find them in the bin
 subdirectory of your build directory.
+
+### Documentation
+
+There is a significant amount of documentation in the code, and you
+can get a doxygen dump of the API comments by adding
+'-DBUILD_DOCUMENTATION=ON' to the cmake invocation.
+
 
 ## Downloading and installing MinVR
 
@@ -105,9 +120,15 @@ issuing a command like this:
 The "make" command will only rebuild programs it perceives to have
 changed since the last time you built them.  In this case, since what
 has changed is something outside the demo-graphic realm, you might have
-to go edit some of the files to let make know they need to be rebuilt.
-Add a space and remove it or something like that.  Dumb, but
-effective, like a lot of computing practice.
+to use the '-B' option of make:
+
+    $ make -B
+
+This should rebuild everything.
+
+Alternatively, you can go edit some of the files to let make know they
+need to be rebuilt.  Add a space and remove it or something like that.
+Dumb, but effective, like a lot of computing practice.
 
 To run a MinVR application, you'll need to set the MINVR_ROOT
 environment variable, and specify a configuration file.  There are
