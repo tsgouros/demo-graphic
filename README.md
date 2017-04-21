@@ -1,15 +1,17 @@
 # demo-graphic
 
 A fairly simple 3D set of example graphics programs that use OpenGL
-shaders and the MinVR virtual reality library.  It's meant to provide
-a less painful introduction to programming VR with OpenGL than I had.
+shaders and the MinVR virtual reality library.  It's meant to provide,
+if not an easy introduction to programming VR with OpenGL, at least a
+less painful one.
 
 You'll find example code in the examples directory, starting with the
-basics of OpenGL buffer objects and shaders.  There are some example
-shaders in the shaders directory.
+basics of OpenGL buffer objects and shaders.  There are some simple
+shaders in the shaders directory that are used by the example
+applications.
 
-You'll also find code for a "baby scene graph" library in the src
-directory, and the example code rely on it.  This is a lightweight
+You'll also find code for a "Baby Scene Graph" library in the src
+directory, and the example code relies on it.  This is a lightweight
 scene graph library that is built to illustrate how to do matrix
 manipulation and OpenGL buffer management.  The goal is to have
 something with which one can develop VR programs on a laptop and have
@@ -27,8 +29,13 @@ wheels, and should be using a real scene graph package, like OSG.
  -Tom Sgouros
   April, 2017
 
-  Center for Computation and Visualization, Brown University
+  Center for Computation and Visualization,
+  Brown University
 
+
+The build instructions that follow work on Mac (command line) and
+Linux.  Please submit additions to this file for builds using Windows,
+Mac XCode, QtCreator, et cetera.
 
 
 ## FreeGLUT
@@ -76,7 +83,7 @@ to it.
 
     $ git clone http://github.com/MinVR/MinVR.git
     $ cd MinVR
-    $ mkdir build 
+    $ mkdir build
     $ cd build
     $ cmake .. -DBASE_PLUGINS=OFF -DMINVR_OPENGL_PLUGIN=ON -DMINVR_FREEGLUT_PLUGIN=ON
     $ make
@@ -110,6 +117,9 @@ some MinVR configuration files in the config directory.
     $ export MINVR_ROOT=$(pwd)
     $ cd /path/to/my/demo-graphic/build
     $ bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp
+
+Note that MINVR_ROOT points to the root of the MinVR *installation*,
+not the MinVR *repo*.
 
 
 ### Running on the CCV YURT.
