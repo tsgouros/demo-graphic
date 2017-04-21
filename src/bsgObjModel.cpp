@@ -313,7 +313,7 @@ void drawableObjModel::_processObjFile() {
   _frontFace.addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
   _frontFace.addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
   _frontFace.setDrawType(GL_TRIANGLES, frontFaceVertices.size());
-  if(materialLib.count(face_materials[matIndex]) == 0 && !face_materials[matIndex].compare("internal_default") == 0) {
+  if(materialLib.count(face_materials[matIndex]) == 0 && face_materials[matIndex].compare("internal_default") != 0) {
 	// The material was not present in the materialLibrary, using the internal default 
 	std::cout << "Material \"" << face_materials[matIndex] << "\" was not found, using default material" << std::endl;
         std::cout << "Check the mtllib entry of the \"" << _fileName << "\" file and its associated .mtl files for errors" << std::endl;

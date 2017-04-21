@@ -164,10 +164,8 @@ private:
 
     _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj", false);
     //_model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
-    //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
-    _model = new bsg::drawableObjModel(_shader, "../../demo-graphic/data/CasA_Supernova_Remnant.obj", false);
-    //_model = new bsg::drawableObjModel(_shader, "/Users/tomfool/tech/17/yurt/data/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant-print_ready/CasA_Supernova_Remnant.obj", false);
-
+    _model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
+    
     _modelGroup = new bsg::drawableCollection();
 
     _orbiter->setPosition(-3.0, 3.0, 0.0);
