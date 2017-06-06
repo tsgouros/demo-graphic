@@ -285,8 +285,8 @@ private:
 
   
 public:
-  DemoVRApp(int argc, char** argv, const std::string& configFile) :
-    MinVR::VRApp(argc, argv, configFile) {
+  DemoVRApp(int argc, char** argv) :
+    MinVR::VRApp(argc, argv) {
 
     // This is the root of the scene graph.
     bsg::scene _scene = bsg::scene();
@@ -428,7 +428,7 @@ int main(int argc, char **argv) {
   // If there weren't enough args, throw an error and explain what the
   // user should have done.
   if (argc < 2) {
-    throw std::runtime_error("\nNeed a config file.\nTry 'bin/objDemoMinVR ../config/desktop-freeglut.xml'");
+    throw std::runtime_error("\nNeed a config file.\nTry 'bin/kbDemoMinVR -c ../config/desktop-freeglut.xml'");
   }
 
   // Is the MINVR_ROOT variable set?  MinVR usually needs this to find
@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
   
   
   // Initialize the app.
-  DemoVRApp app(argc, argv, argv[1]);
+  DemoVRApp app(argc, argv);
 
   // Run it.
   app.run();

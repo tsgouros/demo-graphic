@@ -184,8 +184,8 @@ private:
 
   
 public:
-	DemoVRApp(int argc, char** argv, const std::string& configFile) :
-    MinVR::VRApp(argc, argv, configFile) {
+  DemoVRApp(int argc, char** argv) :
+    MinVR::VRApp(argc, argv) {
 
     // This is the root of the scene graph.
     bsg::scene _scene = bsg::scene();
@@ -198,14 +198,14 @@ public:
     _oscillator = 0.0f;
     _oscillationStep = 0.03f;
 
-    _vertexFile = std::string(argv[2]);
-    _fragmentFile = std::string(argv[3]);
+    _vertexFile = std::string(argv[1]);
+    _fragmentFile = std::string(argv[2]);
 
   }
 
-	/// The MinVR apparatus invokes this method whenever there is a new
-	/// event to process.
-	void onVREvent(const MinVR::VREvent &event) {
+  /// The MinVR apparatus invokes this method whenever there is a new
+  /// event to process.
+  void onVREvent(const MinVR::VREvent &event) {
         
     //event.print();
         
@@ -315,7 +315,7 @@ int main(int argc, char **argv) {
   // If there weren't enough args, throw an error and explain what the
   // user should have done.
   if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo4 ../config/desktop-freeglut.xml ../shaders/shader2.vp ../shaders/shader.fp'");
+    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo4 ../shaders/shader2.vp ../shaders/shader.fp -c ../config/desktop-freeglut.xml'");
   }
 
   // Is the MINVR_ROOT variable set?  MinVR usually needs this to find
@@ -327,14 +327,8 @@ int main(int argc, char **argv) {
               << std::endl;
   }
     
-  std::string arg1 = std::string(argv[1]);
-  
-  if (arg1.find("xml") == std::string::npos) {
-    throw std::runtime_error("\n** First arg should be a config file.  Try desktop-freeglut.xml.");
-  }
-
   // Initialize the app.
-	DemoVRApp app(argc, argv, argv[1]);
+	DemoVRApp app(argc, argv);
 
   // Run it.
 	app.run();

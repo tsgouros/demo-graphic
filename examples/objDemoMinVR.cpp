@@ -180,8 +180,8 @@ private:
 
   
 public:
-  DemoVRApp(int argc, char** argv, const std::string& configFile) :
-    MinVR::VRApp(argc, argv, configFile) {
+  DemoVRApp(int argc, char** argv) :
+    MinVR::VRApp(argc, argv) {
 
     // This is the root of the scene graph.
     bsg::scene _scene = bsg::scene();
@@ -327,7 +327,7 @@ int main(int argc, char **argv) {
   
   
   // Initialize the app.
-  DemoVRApp app(argc, argv, argv[1]);
+  DemoVRApp app(argc, argv);
 
   // Run it.
   app.run();
