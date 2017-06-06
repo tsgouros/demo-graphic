@@ -19,6 +19,33 @@ class drawableRectangle : public drawableCompound {
 };
 
 
+class drawableSphere : public drawableCompound {
+ private:
+
+  float _phi, _theta;
+
+  bsgPtr<drawableObj> _sphere;
+
+ public:
+  drawableSphere(bsgPtr<shaderMgr> pShader,
+                    const int &phi, const int &theta);
+
+};
+
+class drawableCone : public drawableCompound {
+ private:
+  
+  float _height, _theta;
+
+  bsgPtr<drawableObj> _cap;
+  bsgPtr<drawableObj> _base;
+
+  void makeCone(bsgPtr<drawableObj> cone, int heightTesselation, int thetaTesselation, float radius, float height, glm::vec4 color);
+
+ public:
+   drawableCone(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation);
+};
+
 /// \brief Some axes.
 ///
 /// There are no normals and textures for this one, so don't use a

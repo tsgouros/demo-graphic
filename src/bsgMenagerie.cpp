@@ -171,6 +171,162 @@ namespace bsg {
     addObject(_backFace);
   }
 
+  drawableSphere::drawableSphere(bsgPtr<shaderMgr> pShader,
+                                       const int &phiTesselation, const int &thetaTesselation) :
+    drawableCompound(pShader), _phi(phiTesselation), _theta(thetaTesselation) {
+
+    _name = randomName("sphere");
+
+    float pi = 3.14159265358979323;
+    float r = 0.5;
+    float thetaStep = 2 * pi/_theta;
+    float phiStep = pi/_phi;
+
+    std::vector<glm::vec4> verts(0);
+    std::vector<glm::vec2> uvs(0);
+    std::vector<glm::vec4> normals(0);
+    std::vector<glm::vec4> colors(0);
+
+    glm::vec4 color = glm::vec4(1.0, 0.0, 0.0, 1.0);
+
+    for (int j = 0; j < _phi; j++) {
+        for (int i = 0; i < (_theta + 1); i++) {
+            // Top vertex position
+            verts.push_back(glm::vec4(r * std::sin(phiStep * j) * std::cos(-thetaStep * i), r * std::cos(phiStep * j),
+              r * std::sin(phiStep * j) * std::sin(-thetaStep * i), 1.0f));
+
+            // Top vertex normal
+            glm::vec4 normal = glm::vec4(r * std::sin(phiStep * j) * std::cos(-thetaStep * i),
+                                         r * std::cos(phiStep * j),
+                                         r * std::sin(phiStep * j) * std::sin(-thetaStep * i), 0.0f);
+
+            normal = glm::normalize(normal);
+            normals.push_back(normal);
+
+            // Top UV
+            uvs.push_back(glm::vec2(static_cast<float>(i)/thetaTesselation, static_cast<float>(j)/phiTesselation));
+
+            // Bottom vertex position
+            verts.push_back(glm::vec4(r * std::sin(phiStep * (j + 1)) * std::cos(-thetaStep * i), r * std::cos(phiStep * (j + 1)),
+              r * std::sin(phiStep * (j + 1)) * std::sin(-thetaStep * i), 1.0f));
+
+            // Bottom vertex normal
+            normal = glm::vec4(r * std::sin(phiStep * (j + 1)) * std::cos(-thetaStep * i),
+                                r * std::cos(phiStep * (j + 1)),
+                                r * std::sin(phiStep * (j + 1)) * std::sin(-thetaStep * i), 0.0f);
+            normal = normalize(normal);
+            normals.push_back(normal);
+
+
+            // Bottom UV
+            uvs.push_back(glm::vec2(static_cast<float>(i)/thetaTesselation, static_cast<float>(j + 1)/phiTesselation));
+
+            // Color
+            colors.push_back(color);
+            colors.push_back(color);
+        }
+    }
+
+
+
+    _sphere = new drawableObj();
+
+    _sphere->addData(bsg::GLDATA_VERTICES, "position", verts);
+
+    _sphere->addData(bsg::GLDATA_COLORS, "color", colors);
+
+    _sphere->addData(bsg::GLDATA_NORMALS, "normal", normals);
+
+    _sphere->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
+    
+    // The vertices above are arranged into a set of triangles.
+    _sphere->setDrawType(GL_TRIANGLE_STRIP, verts.size());  
+
+    addObject(_sphere);
+  }
+
+  drawableCone::drawableCone(bsgPtr<shaderMgr> pShader,
+                                       const int &heightTesselation, const int &thetaTesselation) :
+    drawableCompound(pShader), _height(heightTesselation), _theta(thetaTesselation) {
+
+    _name = randomName("cone");
+
+
+
+
+
+    _cap = new drawableObj();
+    //_base = new drawableObj();
+    
+    // Store the vertex data and other values to be used later when constructing the VAO
+    float r = 0.5;
+
+    makeCone(_cap, _height, _theta, r, r, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    //makeCaps(_base, _height, _theta, r, -r/2, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));  
+
+    addObject(_cap);
+    //addObject(_base);
+  }
+
+
+  void drawableCone::makeCone(bsgPtr<drawableObj> cone, int heightTesselation, int thetaTesselation, float radius, float height, glm::vec4 color) {
+    float pi = 3.14159265358979323;
+    float thetaStep = 2 * pi/thetaTesselation;
+    float heightStep = 2 * height/heightTesselation;
+
+    std::vector<glm::vec4> verts(0);
+    std::vector<glm::vec2> uvs(0);
+    std::vector<glm::vec4> normals(0);
+    std::vector<glm::vec4> colors(0);
+
+
+
+    for (int i = 0; i < heightTesselation; i++) {
+        for (int j = 0; j < (thetaTesselation + 1); j++) {
+            int linearScale = heightTesselation - i;
+            // Top vertex position
+            verts.push_back(glm::vec4(radius*heightStep*(linearScale - 1) * std::cos(-thetaStep*j), heightStep * (i + 1) - height/2,
+              radius*heightStep*(linearScale - 1) * std::sin(-thetaStep*j), 1.0f));
+
+            // Top vertex normal
+            glm::vec4 normal = glm::vec4(2/(std::sqrt(5)) * std::cos(-thetaStep*j),
+                                         1/(std::sqrt(5)),
+                                         2/(std::sqrt(5)) * std::sin(-thetaStep*j), 0.0f);
+            normal = normalize(normal);
+            normals.push_back(normal);
+
+            // Top UV
+            uvs.push_back(glm::vec2(static_cast<float>(j)/thetaTesselation, static_cast<float>(i + 1)/heightTesselation));
+
+            // Bottom vertex position
+            verts.push_back(glm::vec4(radius*heightStep*linearScale * std::cos(-thetaStep*j), heightStep * i - height/2,
+              radius*heightStep*linearScale * std::sin(-thetaStep*j), 1.0f));
+
+            // Bottom vertex normal
+            normals.push_back(normal);
+
+            // Top UV
+            uvs.push_back(glm::vec2(static_cast<float>(j)/thetaTesselation, static_cast<float>(i)/heightTesselation));
+
+            // Color
+            colors.push_back(color);
+            colors.push_back(color);
+        }
+
+    }
+
+    cone->addData(bsg::GLDATA_VERTICES, "position", verts);
+
+    cone->addData(bsg::GLDATA_COLORS, "color", colors);
+
+    cone->addData(bsg::GLDATA_NORMALS, "normal", normals);
+
+    cone->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
+    
+    // The vertices above are arranged into a set of triangles.
+    cone->setDrawType(GL_TRIANGLE_STRIP, verts.size());  
+}
+
   drawableAxes::drawableAxes(bsgPtr<shaderMgr> pShader, const float &length) :
     drawableCompound(pShader), _length(length) {
 
