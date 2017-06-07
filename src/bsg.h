@@ -1144,7 +1144,7 @@ class drawableCollection : public drawableMulti {
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const drawableCollection &coll) {
-    return os << coll.printObj("| ");
+    return os << coll.printObj("  ");
   }
   
  public:
@@ -1291,7 +1291,7 @@ class scene {
 
   /// \brief Returns a string representation of the scene graph.
   ///
-  std::string _printTree() const { return _sceneRoot.printObj("| "); };
+  std::string _printTree() const { return _sceneRoot.printObj("  "); };
   
   friend std::ostream &operator<<(std::ostream &os, const scene &scene) {
     return os << scene._printTree();
