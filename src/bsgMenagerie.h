@@ -46,6 +46,32 @@ class drawableCone : public drawableCompound {
    drawableCone(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation);
 };
 
+class drawableCircle : public drawableCompound {
+ private:
+  
+  float _theta, _radius;
+
+  bsgPtr<drawableObj> _circle;
+
+ public:
+  drawableCircle(bsgPtr<shaderMgr> pShader, const int &thetaTesselation, const int &radiusTesselation, const float &normalDirection, const float &yPos);
+  static void getCircle(bsgPtr<drawableObj> circle, const int &thetaTesselation, const int &radiusTesselation, const float &normalDirection, const float &yPos, const glm::vec4 &color);
+
+};
+
+class drawableCylinder : public drawableCompound {
+ private:
+  
+  float _height, _theta;
+
+  bsgPtr<drawableObj> _base;
+  bsgPtr<drawableObj> _body;
+  bsgPtr<drawableObj> _top;
+
+ public:
+  drawableCylinder(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation, const glm::vec4 &color);
+};
+
 /// \brief Some axes.
 ///
 /// There are no normals and textures for this one, so don't use a

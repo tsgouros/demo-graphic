@@ -22,6 +22,7 @@ private:
   bsg::drawableCompound* _axesSet;
   bsg::drawableSphere* _sphere;
   bsg::drawableCone* _cone;
+  bsg::drawableCylinder* _cylinder;
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
@@ -176,6 +177,8 @@ private:
 
     _cone = new bsg::drawableCone(_shader, 25, 25);
 
+    _cylinder = new bsg::drawableCylinder(_shader, 25, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
 
 
     // Now add our rectangle to the scene.
@@ -184,6 +187,8 @@ private:
     _scene.addObject(_sphere);
 
     _scene.addObject(_cone);
+
+    _scene.addObject(_cylinder);
 
     _axesSet = new bsg::drawableCompound(_shader);
     _axesSet->addObject(_axes);
@@ -291,6 +296,11 @@ public:
       _sphere->setPosition(pos2);
 
       _cone->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
+
+      _cylinder->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
+      glm::vec3 pos3 = _cylinder->getPosition();
+      pos3.x = sin(_oscillator);
+      _cylinder->setPosition(pos3);
 
       // Now the preliminaries are done, on to the actual drawing.
   
