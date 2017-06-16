@@ -1,8 +1,6 @@
 #include "bsg.h"
 #include "bsgMenagerie.h"
 
-#include "sys/time.h"
-
 #include <api/MinVR.h>
 
 class DemoVRApp: public MinVR::VRApp {
