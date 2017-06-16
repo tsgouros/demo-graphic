@@ -28,6 +28,7 @@ private:
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
   float _oscillator;
+  float _oscillationStep;
 
   // These variables were not global before, but their scope has been
   // divided into several functions here, so they are class-wide
@@ -192,6 +193,8 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
+    _oscillationStep = 0.03f;
+
   }
 
   /// The MinVR apparatus invokes this method whenever there is a new
@@ -214,8 +217,14 @@ public:
     // Quit if the escape button is pressed
     if (event.getName() == "KbdEsc_Down") {
       shutdown();
-    } else if (event.getName() == "FrameStart") {
-      _oscillator = event.getDataAsFloat("ElapsedSeconds");
+    } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
+               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
+      // Turn on and off the animation.
+      if (_oscillationStep == 0.0f) {
+        _oscillationStep = 0.03f;
+      } else {
+        _oscillationStep = 0.0f;
+      }
     }
 
     // Print out where you are (where the camera is) and where you're
@@ -252,6 +261,7 @@ public:
 
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
+      _oscillator += _oscillationStep;
       _orbiter->setPosition(3.0f * cos(_oscillator), 3.0, 3.0 * sin(_oscillator));
       _orbiter->setOrientation(glm::quat(0.5 * cos(_oscillator * 1.1f), 0.0, 
 					 cos(_oscillator), sin(_oscillator)));

@@ -18,18 +18,14 @@ private:
   // These are the shapes that make up the scene.  They are out here in
   // the global variables so they can be available in both the main()
   // function and the renderScene() function.
-  //bsg::drawableRectangle* _rectangle;
-  //bsg::drawableSquare* _rectangle;
-  //bsg::drawableSphere* _rectangle;
-  //bsg::drawableCylinder* _rectangle;
-  //bsg::drawableCone* _rectangle;
-  bsg::drawableCube* _rectangle;
+  bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
   float _oscillator;
+  float _oscillationStep;
 
   // These variables were not global before, but their scope has been
   // divided into several functions here, so they are class-wide
@@ -148,14 +144,7 @@ private:
     // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
-
-    //_rectangle = new bsg::drawableSquare(_shader, 5, glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    //_rectangle = new bsg::drawableCylinder(_shader, 1, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-    _rectangle = new bsg::drawableCube(_shader, 10, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-    //_rectangle = new bsg::drawableSphere(_shader, 25, 25, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    //_rectangle = new bsg::drawableCone(_shader, 25, 25, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    _rectangle->setScale(5.0f);
-    //_rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
+    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
@@ -187,6 +176,7 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
+    _oscillationStep = 0.03f;
     
     _vertexFile = std::string(argv[1]);
     _fragmentFile = std::string(argv[2]);
@@ -213,9 +203,17 @@ public:
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
 			shutdown();
+    } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
+               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
+      // Turn on and off the animation.
+      if (_oscillationStep == 0.0f) {
+        _oscillationStep = 0.03f;
+      } else {
+        _oscillationStep = 0.0f;
+      }
     } else if (event.getName() == "FrameStart") {
-      _oscillator = event.getDataAsFloat("ElapsedSeconds");
-    }
+		_oscillator = event.getDataAsFloat("ElapsedSeconds");
+	}
 
     // Print out where you are (where the camera is) and where you're
     // looking.
@@ -250,13 +248,12 @@ public:
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       glm::vec3 pos = _rectangle->getPosition();
+      //_oscillator += _oscillationStep;
       pos.x = 2.0f * sin(_oscillator);
       pos.y = 2.0f * cos(_oscillator);
       pos.z = -4.0f;
       _rectangle->setPosition(pos);
-      //_rectangle->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
 
-      _rectangle->setRotation(glm::vec3(cos(_oscillator), cos(_oscillator) * M_PI, 0.0f));
       // Now the preliminaries are done, on to the actual drawing.
   
       // First clear the display.

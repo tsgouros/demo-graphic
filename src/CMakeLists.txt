@@ -9,7 +9,7 @@ include_directories(
   )
 
 set(bsg_headers bsg.h bsgMenagerie.h bsgObjModel.h)
-set(bsg_sources bsg.cpp bsgMenagerie.cpp bsgObjModel.cpp)
+set(bsg_sources bsg.cpp bsgMenagerie.cpp bsgObjModel.cpp sys/time.cpp)
 set(bsg_files ${bsg_headers} ${bsg_sources})
 
 add_library(bsg ${bsg_files})

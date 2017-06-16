@@ -18,36 +18,6 @@ class drawableRectangle : public drawableCompound {
 
 };
 
-class drawableSquare : public drawableCompound {
- private:
-
-  int _tess;
-
-  bsgPtr<drawableObj> _rect;
-
- public:
-  drawableSquare(bsgPtr<shaderMgr> pShader, const int &tesselation, const glm::vec3 &topLeft, const glm::vec3 &topRight, const glm::vec3 &bottomLeft, const glm::vec4 &color);
-  static void getRect(bsgPtr<drawableObj> rect, const int &tesselation, const glm::vec3 &topLeft, const glm::vec3 &topRight, const glm::vec3 &bottomLeft, const glm::vec4 &color);
-
-};
-
-class drawableCube : public drawableCompound {
- private:
-
-  int _tess;
-
-  bsgPtr<drawableObj> _front;
-  bsgPtr<drawableObj> _back;
-  bsgPtr<drawableObj> _top;
-  bsgPtr<drawableObj> _bottom;
-  bsgPtr<drawableObj> _left;
-  bsgPtr<drawableObj> _right;
-
- public:
-  drawableCube(bsgPtr<shaderMgr> pShader, const int &tesselation, const glm::vec4 &color);
-
-};
-
 
 class drawableSphere : public drawableCompound {
  private:
@@ -58,7 +28,7 @@ class drawableSphere : public drawableCompound {
 
  public:
   drawableSphere(bsgPtr<shaderMgr> pShader,
-                    const int &phi, const int &theta, const glm::vec4 &color);
+                    const int &phi, const int &theta);
 
 };
 
@@ -73,19 +43,19 @@ class drawableCone : public drawableCompound {
   void makeCone(bsgPtr<drawableObj> cone, int heightTesselation, int thetaTesselation, float radius, float height, glm::vec4 color);
 
  public:
-   drawableCone(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation, const glm::vec4 &color);
+   drawableCone(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation);
 };
 
 class drawableCircle : public drawableCompound {
  private:
   
-  float _theta;
+  float _theta, _radius;
 
   bsgPtr<drawableObj> _circle;
 
  public:
-  drawableCircle(bsgPtr<shaderMgr> pShader, const int &thetaTesselation, const float &normalDirection, const float &yPos);
-  static void getCircle(bsgPtr<drawableObj> circle, const int &thetaTesselation, const float &normalDirection, const float &yPos, const glm::vec4 &color);
+  drawableCircle(bsgPtr<shaderMgr> pShader, const int &thetaTesselation, const int &radiusTesselation, const float &normalDirection, const float &yPos);
+  static void getCircle(bsgPtr<drawableObj> circle, const int &thetaTesselation, const int &radiusTesselation, const float &normalDirection, const float &yPos, const glm::vec4 &color);
 
 };
 

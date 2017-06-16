@@ -1,8 +1,6 @@
 #include "bsg.h"
 #include "bsgMenagerie.h"
 
-#include "sys/time.h"
-
 #include <api/MinVR.h>
 
 class DemoVRApp: public MinVR::VRApp {
@@ -174,11 +172,13 @@ private:
     // separately.
     _rectangle = new bsg::drawableRectangle(_shader, 3.0f, 5.0f);
 
-    _sphere = new bsg::drawableSphere(_shader, 25, 25, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    _sphere = new bsg::drawableSphere(_shader, 25, 25);
 
-    _cone = new bsg::drawableCone(_shader, 25, 25, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    _cone = new bsg::drawableCone(_shader, 25, 25);
 
-    _cylinder = new bsg::drawableCylinder(_shader, 1, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    _cylinder = new bsg::drawableCylinder(_shader, 25, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+
 
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
@@ -235,12 +235,12 @@ public:
     //float step = 0.5f;
     //float stepAngle = 5.0f / 360.0f;
 
-		// Quit if the escape button is pressed
-		if (event.getName() == "KbdEsc_Down") {
+	// Quit if the escape button is pressed
+	if (event.getName() == "KbdEsc_Down") {
       shutdown();
-    } else if (event.getName() == "FrameStart") {
-      _oscillator = event.getDataAsFloat("ElapsedSeconds");
-    }
+	} else if (event.getName() == "FrameStart") {
+		_oscillator = event.getDataAsFloat("ElapsedSeconds");
+	}
 
     // Print out where you are (where the camera is) and where you're
     // looking.
@@ -275,6 +275,7 @@ public:
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       glm::vec3 pos = _rectangle->getPosition();
+      //_oscillator += _oscillationStep;
       pos.x = sin(_oscillator);
       pos.y = 1.0f - cos(_oscillator);
       _rectangle->setPosition(pos);
@@ -285,10 +286,6 @@ public:
       pos2.x = cos(_oscillator);
       pos2.y = 1.0f - sin(_oscillator);
       _sphere->setPosition(pos2);
-
-      _sphere->setRotation(glm::vec3(sin(_oscillator), cos(_oscillator),  cos(_oscillator)));
-
-      //_square->setRotation(glm::vec3(sin(_oscillator), cos(_oscillator),  cos(_oscillator)));
 
       _cone->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
 
@@ -328,7 +325,6 @@ public:
       // glutSwapBuffers();
     }
   }
-
 };
 
 // The main function is just a shell of its former self.  Just
