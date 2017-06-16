@@ -20,12 +20,14 @@ private:
   // in both the run() function and the renderScene() function.
   bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
+  bsg::drawableSphere* _sphere;
+  bsg::drawableCone* _cone;
+  bsg::drawableCylinder* _cylinder;
 
   // These are part of the animation stuff, and again are out here with
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
   float _oscillator;
-  float _oscillationStep;
 
   // These variables were not global before, but their scope has been
   // divided into several functions here, so they are class-wide
@@ -170,8 +172,20 @@ private:
     // separately.
     _rectangle = new bsg::drawableRectangle(_shader, 3.0f, 5.0f);
 
+    _sphere = new bsg::drawableSphere(_shader, 25, 25, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+    _cone = new bsg::drawableCone(_shader, 25, 25, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+    _cylinder = new bsg::drawableCylinder(_shader, 1, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
+
+    _scene.addObject(_sphere);
+
+    _scene.addObject(_cone);
+
+    _scene.addObject(_cylinder);
 
     _axesSet = new bsg::drawableCompound(_shader);
     _axesSet->addObject(_axes);
@@ -196,7 +210,6 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
-    _oscillationStep = 0.03f;
 
     _vertexFile = std::string(argv[1]);
     _fragmentFile = std::string(argv[2]);
@@ -217,20 +230,14 @@ public:
     //   return;
 		// }
 
-    float step = 0.5f;
-    float stepAngle = 5.0f / 360.0f;
+    //float step = 0.5f;
+    //float stepAngle = 5.0f / 360.0f;
 
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
-			shutdown();
-    } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
-               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
-      // Turn on and off the animation.
-      if (_oscillationStep == 0.0f) {
-        _oscillationStep = 0.03f;
-      } else {
-        _oscillationStep = 0.0f;
-      }
+      shutdown();
+    } else if (event.getName() == "FrameStart") {
+      _oscillator = event.getDataAsFloat("ElapsedSeconds");
     }
 
     // Print out where you are (where the camera is) and where you're
@@ -266,10 +273,27 @@ public:
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       glm::vec3 pos = _rectangle->getPosition();
-      _oscillator += _oscillationStep;
       pos.x = sin(_oscillator);
       pos.y = 1.0f - cos(_oscillator);
       _rectangle->setPosition(pos);
+      _rectangle->setScale(sin(_oscillator));
+
+
+      glm::vec3 pos2 = _sphere->getPosition();
+      pos2.x = cos(_oscillator);
+      pos2.y = 1.0f - sin(_oscillator);
+      _sphere->setPosition(pos2);
+
+      _sphere->setRotation(glm::vec3(sin(_oscillator), cos(_oscillator),  cos(_oscillator)));
+
+      //_square->setRotation(glm::vec3(sin(_oscillator), cos(_oscillator),  cos(_oscillator)));
+
+      _cone->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
+
+      _cylinder->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
+      glm::vec3 pos3 = _cylinder->getPosition();
+      pos3.x = sin(_oscillator);
+      _cylinder->setPosition(pos3);
 
       // Now the preliminaries are done, on to the actual drawing.
   
@@ -295,11 +319,14 @@ public:
 
       //bsg::bsgUtils::printMat("view", viewMatrix);
       _scene.draw(viewMatrix, projMatrix);
+      
+      //_scene.draw(_scene.getViewMatrix(), _scene.getProjMatrix());
 
       // We let MinVR swap the graphics buffers.
       // glutSwapBuffers();
     }
   }
+
 };
 
 // The main function is just a shell of its former self.  Just
