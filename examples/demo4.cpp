@@ -1,6 +1,8 @@
 #include "bsg.h"
 #include "bsgMenagerie.h"
 
+#include "sys/time.h"
+
 #include <api/MinVR.h>
 
 class DemoVRApp: public MinVR::VRApp {
@@ -28,7 +30,6 @@ private:
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
   float _oscillator;
-  float _oscillationStep;
 
   // These variables were not global before, but their scope has been
   // divided into several functions here, so they are class-wide
@@ -173,13 +174,11 @@ private:
     // separately.
     _rectangle = new bsg::drawableRectangle(_shader, 3.0f, 5.0f);
 
-    _sphere = new bsg::drawableSphere(_shader, 25, 25);
+    _sphere = new bsg::drawableSphere(_shader, 25, 25, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
-    _cone = new bsg::drawableCone(_shader, 25, 25);
+    _cone = new bsg::drawableCone(_shader, 25, 25, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-    _cylinder = new bsg::drawableCylinder(_shader, 25, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-
-
+    _cylinder = new bsg::drawableCylinder(_shader, 1, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
@@ -213,7 +212,6 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
-    _oscillationStep = 0.03f;
 
     _vertexFile = std::string(argv[1]);
     _fragmentFile = std::string(argv[2]);
@@ -240,14 +238,8 @@ public:
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
       shutdown();
-    } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
-               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
-      // Turn on and off the animation.
-      if (_oscillationStep == 0.0f) {
-        _oscillationStep = 0.03f;
-      } else {
-        _oscillationStep = 0.0f;
-      }
+    } else if (event.getName() == "FrameStart") {
+      _oscillator = event.getDataAsFloat("ElapsedSeconds");
     }
 
     // Print out where you are (where the camera is) and where you're
@@ -283,7 +275,6 @@ public:
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       glm::vec3 pos = _rectangle->getPosition();
-      _oscillator += _oscillationStep;
       pos.x = sin(_oscillator);
       pos.y = 1.0f - cos(_oscillator);
       _rectangle->setPosition(pos);
@@ -294,6 +285,10 @@ public:
       pos2.x = cos(_oscillator);
       pos2.y = 1.0f - sin(_oscillator);
       _sphere->setPosition(pos2);
+
+      _sphere->setRotation(glm::vec3(sin(_oscillator), cos(_oscillator),  cos(_oscillator)));
+
+      //_square->setRotation(glm::vec3(sin(_oscillator), cos(_oscillator),  cos(_oscillator)));
 
       _cone->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
 
@@ -333,6 +328,7 @@ public:
       // glutSwapBuffers();
     }
   }
+
 };
 
 // The main function is just a shell of its former self.  Just
