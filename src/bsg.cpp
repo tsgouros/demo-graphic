@@ -253,7 +253,6 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
   if (!data) {
 	  throw(stbi_failure_reason());
   }
-
   // Generate the OpenGL texture object
   GLuint texture;
   glGenTextures(1, &texture);
@@ -1054,14 +1053,22 @@ void drawableCompound::addObjectBoundingBox(bsgPtr<drawableObj> &obj) {
 
 drawableCollection::drawableCollection() {
   // Seed a random number generator to generate default names randomly.
+  #ifdef WIN32
+  srand(GetTickCount());
+  #else
   srand(time(NULL));
+  #endif
   _name = randomName("coll");
 }
 
 drawableCollection::drawableCollection (const std::string name) :
   drawableMulti(name) {
   // Seed a random number generator to generate default names randomly.
+  #ifdef WIN32
+  srand(GetTickCount());
+  #else
   srand(time(NULL));
+  #endif
 }
 
 std::string drawableCollection::addObject(const std::string name,
