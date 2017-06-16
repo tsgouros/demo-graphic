@@ -250,7 +250,7 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
 
   int width, height, components;
   unsigned char* data = stbi_load(imagePath.c_str(), &width, &height, &components, STBI_rgb_alpha);//STBI_default);
-  if (data == nullptr) {
+  if (!data) {
 	  throw(stbi_failure_reason());
   }
 
@@ -1054,18 +1054,14 @@ void drawableCompound::addObjectBoundingBox(bsgPtr<drawableObj> &obj) {
 
 drawableCollection::drawableCollection() {
   // Seed a random number generator to generate default names randomly.
-  struct timeval tp;
-  gettimeofday(&tp, NULL);
-  srand(tp.tv_usec);
+  srand(time(NULL));
   _name = randomName("coll");
 }
 
 drawableCollection::drawableCollection (const std::string name) :
   drawableMulti(name) {
   // Seed a random number generator to generate default names randomly.
-  struct timeval tp;
-  gettimeofday(&tp, NULL);
-  srand(tp.tv_usec);
+  srand(time(NULL));
 }
 
 std::string drawableCollection::addObject(const std::string name,
