@@ -59,7 +59,7 @@ void renderScene() {
   rectGroup1->getObject("small")->setPosition(cos(oscillator), 0.0, 1.0f);
 
   // Choosing an object or group via the name hierarchy.
-  std::list<std::string> desiredNames;
+  bsg::bsgName desiredNames;
   desiredNames.push_front("small2");
   desiredNames.push_front("group3");
   desiredNames.push_front("assorted");
@@ -75,10 +75,10 @@ void renderScene() {
   scene.getObject(desiredNames)->setRotation(0.0, 0.4, oscillator);
 
   // Now the preliminaries are done, on to the actual drawing.
-  
+
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
+
   // Second the load() step.  For a simple desktop display, it is a
   // bit mysterious to have separate load and draw steps, but it makes
   // sense when you have to render to a stereo display, where you only
@@ -104,7 +104,7 @@ void resizeWindow(int width, int height) {
   // Prevent a divide by zero, when window is too short (you cant make
   // a window of zero width).
   if(height == 0) height = 1;
- 
+
   // Set the viewport to be the entire window
   glViewport(0, 0, width, height);
 
@@ -126,7 +126,7 @@ void showCameraPosition() {
   std::cout << "looking at ("
             << scene.getLookAtPosition().x << ", "
             << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")." << std::endl; 
+            << scene.getLookAtPosition().z << ")." << std::endl;
 }
 
 // This is an event handler, designed to handle events issued by the
@@ -137,7 +137,7 @@ void processNormalKeys(unsigned char key, int x, int y) {
   // Each press of a key changes a dimension by this amount. If you
   // want things to go faster, increase this step.
   float step = 0.5f;
-  
+
   // This function processes only the 'normal' keys.  The arrow keys
   // don't appear here, nor mouse events.
   switch (key) {
@@ -202,7 +202,7 @@ void processSpecialKeys(int key, int x, int y) {
 
   float stepAngle = 5.0f / 360.0f;
 
-  switch(key) {    
+  switch(key) {
   case GLUT_KEY_UP:
     scene.addToCameraViewAngle(0.0f,  stepAngle);
     break;
@@ -333,7 +333,7 @@ int main(int argc, char **argv) {
   axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
   axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
   axesShader->compileShaders();
-  
+
   // Here are the drawable objects that make up the compound object
   // that make up the scene.
 
@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
   smallRectangle = new bsg::drawableRectangle(shader, 3.0f, 5.0f, 2);
 
   smallRectangle->setPosition(1.0f, 1.0f, 0.5f);
-  
+
   rectGroup1 = new bsg::drawableCollection("rectangles");
 
   rectGroup1->addObject("big", bigRectangle);
@@ -354,26 +354,26 @@ int main(int argc, char **argv) {
 
   anotherBig = new bsg::drawableRectangle(shader, 6.0f, 3.0f, 3);
   anotherBig->setPosition(0.0, 1.0, -1.0);
-  
+
   anotherSmall = new bsg::drawableRectangle(shader, 2.0f, 2.0f, 2);
 
   rectGroup3 = new bsg::drawableCollection("more");
-  
+
   rectGroup3->addObject(anotherBig);
   rectGroup3->addObject("small2", anotherSmall);
   rectGroup3->setPosition(2.3f, 3.2f, -2.0f);
-  
+
   mediumRectangle = new bsg::drawableRectangle(shader, 4.0f, 4.0f, 3);
 
   rectGroup2 = new bsg::drawableCollection("assorted");
-  
+
   rectGroup2->addObject("medium", mediumRectangle);
   rectGroup2->addObject("group3", rectGroup3);
   rectGroup2->setPosition(1.0f, 1.0f, 1.1f);
-  
+
   // If you omit the name it is taken from the object.
   scene.addObject(rectGroup2);
-  
+
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 
   scene.addObject(axes);
@@ -383,7 +383,7 @@ int main(int argc, char **argv) {
   scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
 
   std::cout << "Your Scene Graph:" << std::endl << scene << std::endl;
-  
+
   // All the shapes are now added to the scene.
 
   // Do the one-time things.  The every-render operations are done
@@ -396,5 +396,5 @@ int main(int argc, char **argv) {
 
   // We never get here, but the compiler is annoyed when you don't
   // exit from a function.
-  return(0); 
+  return(0);
 }

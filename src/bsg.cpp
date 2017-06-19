@@ -6,7 +6,7 @@ namespace bsg {
 
 void bsgUtils::printMat(const std::string& name, const glm::mat4& mat) {
 
-  std::cout << name << std::endl;  
+  std::cout << name << std::endl;
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
       printf("%8.4f ", mat[j][i]);
@@ -14,7 +14,7 @@ void bsgUtils::printMat(const std::string& name, const glm::mat4& mat) {
     std::cout << std::endl;
   }
 }
-  
+
 // Get a handle for our lighting uniforms.  We are not binding the
 // attribute to a known location, just asking politely for it.  Note
 // that what is going on here is that OpenGL is actually matching
@@ -25,7 +25,7 @@ void lightList::load(const GLint programID) {
 
   // If there aren't any lights, don't bother.
   if (_lightPositions.size() > 0) {
-  
+
     _lightPositions.ID = glGetUniformLocation(programID,
                                               _lightPositions.name.c_str());
     _lightColors.ID = glGetUniformLocation(programID,
@@ -66,7 +66,7 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
   case textureCHK:
     _textureBufferID = _loadCheckerBoard (64, 8);
     break;
-    
+
   default:
     throw std::runtime_error("What texture type is this?");
   }
@@ -103,7 +103,7 @@ GLuint textureMgr::_loadCheckerBoard (int size, int numFields) {
 
 
 GLuint textureMgr::_loadPNG(const std::string imagePath) {
-  
+
   // This function was originally written by David Grayson for
   // https://github.com/DavidEGrayson/ahrs-visualizer
 
@@ -178,7 +178,7 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
 
   _width = temp_width;
   _height = temp_height;
-  
+
   //printf("%s: %lux%lu %d\n", imagePath, temp_width, temp_height, color_type);
 
   if (bit_depth != 8) {
@@ -264,13 +264,13 @@ void textureMgr::draw() {
   // Bind the texture in Texture Unit 0
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, _textureBufferID);
-  
+
   // Set our "myTextureSampler" sampler to user Texture Unit 0
   glUniform1i(_textureAttribID, 0);
 
   // The data is actually loaded into the buffer in the loadXX() method.
 }
-  
+
 std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
   int infoLogLength = 0;
   int charsWritten  = 0;
@@ -278,7 +278,7 @@ std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
   GLint result = GL_FALSE;
   glGetShaderiv(obj, GL_COMPILE_STATUS, &result);
   glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infoLogLength);
- 
+
   if (infoLogLength > 1) {
     infoLog = (char *)malloc(infoLogLength);
     glGetShaderInfoLog(obj, infoLogLength, &charsWritten, infoLog);
@@ -289,12 +289,12 @@ std::string shaderMgr::_getShaderInfoLog(GLuint obj) {
 }
 
 std::string shaderMgr::_getProgramInfoLog(GLuint obj) {
-  
+
   int infologLength = 0;
   int charsWritten  = 0;
   char *infoLog;
   glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
- 
+
   if (infologLength > 1) {
     infoLog = (char *)malloc(infologLength);
     glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
@@ -303,7 +303,7 @@ std::string shaderMgr::_getProgramInfoLog(GLuint obj) {
     return std::string("");
   }
 }
-  
+
 void shaderMgr::addShader(const GLSHADERTYPE type,
                           const std::string& shaderFile) {
 
@@ -317,7 +317,7 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
 
     // Close the stream.
     shaderStream.close();
-    
+
   } else {
     throw std::runtime_error("Cannot open: " + shaderFile);
   }
@@ -372,8 +372,8 @@ void shaderMgr::compileShaders() {
               << std::endl << errorLog << std::endl;
     //std::cerr << _shaderText[GLSHADER_VERTEX] << std::endl;
   }
-  
-  
+
+
   glCompileShader(_shaderIDs[GLSHADER_FRAGMENT]);
   errorLog = _getShaderInfoLog(_shaderIDs[GLSHADER_FRAGMENT]);
   if (errorLog.size() > 1)
@@ -408,7 +408,7 @@ void shaderMgr::compileShaders() {
               << _shaderFiles[GLSHADER_FRAGMENT] << ", "
               << _shaderFiles[GLSHADER_GEOMETRY]
               << std::endl << errorLog << std::endl;
-  } 
+  }
 
   // The shaders are linked into the program, so we can delete the raw
   // shaders.
@@ -423,7 +423,7 @@ GLuint shaderMgr::getAttribID(const std::string& attribName) {
   glUseProgram(_programID);
   return glGetAttribLocation(_programID, attribName.c_str());
 }
- 
+
 GLuint shaderMgr::getUniformID(const std::string& unifName) {
   glUseProgram(_programID);
   return glGetUniformLocation(_programID, unifName.c_str());
@@ -525,17 +525,17 @@ bool drawableObj::insideBoundingBox(const glm::vec4 &testPoint,
                                     const glm::mat4 &modelMatrix) {
 
   if (!_selectable) return false;
-  
+
   glm::vec4 upper = modelMatrix * _vertexBoundingBoxUpper;
   glm::vec4 lower = modelMatrix * _vertexBoundingBoxLower;
-  
+
   return
     (testPoint.x <= upper.x) &&
     (testPoint.x >= lower.x) &&
     (testPoint.y <= upper.y) &&
     (testPoint.y >= lower.y) &&
     (testPoint.z <= upper.z) &&
-    (testPoint.z >= lower.z);  
+    (testPoint.z >= lower.z);
 }
 
 void drawableObj::_getAttribLocations(GLuint programID) {
@@ -550,10 +550,10 @@ void drawableObj::_getAttribLocations(GLuint programID) {
     std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
     badID = true;
   }
-  
+
   if (!_colors.empty()) {
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
-    
+
     if (_colors.ID < 0) {
       std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
       badID = true;
@@ -561,7 +561,7 @@ void drawableObj::_getAttribLocations(GLuint programID) {
   }
   if (!_normals.empty()) {
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
-    
+
     if (_normals.ID < 0) {
       std::cerr << "** Caution: Bad ID for normals attribute '" << _normals.name << "'" << std::endl;
       badID = true;
@@ -569,7 +569,7 @@ void drawableObj::_getAttribLocations(GLuint programID) {
   }
   if (!_uvs.empty()) {
     _uvs.ID = glGetAttribLocation(programID, _uvs.name.c_str());
-    
+
     if (_uvs.ID < 0) {
       std::cerr << "** Caution: Bad ID for texture attribute '" << _uvs.name << "'" << std::endl;
       badID = true;
@@ -633,18 +633,18 @@ void drawableObj::prepare(GLuint programID) {
 void drawableObj::_prepareInterleaved(GLuint programID) {
 
   // Calculate the stride and offset for each vertex value.
-  _stride = 3 * sizeof(float); // We're cheating here, assuming only x,y,z.  
+  _stride = 3 * sizeof(float); // We're cheating here, assuming only x,y,z.
 
   if (!_colors.empty()) {
     _colorPos = _stride;  // The colors appear after the vertices.
     _stride += 3 * sizeof(float);  // The next value appears after that.
   }
-  
+
   if (!_normals.empty()) {
     _normalPos = _stride;
     _stride += 3 * sizeof(float);
   }
-  
+
   if (!_uvs.empty()) {
     _uvPos = _stride;
     _stride += 2 * sizeof(float);
@@ -676,24 +676,24 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
     if (!_uvs.empty()) {
       _interleavedData.addData(_uvs[i].s);
       _interleavedData.addData(_uvs[i].t);
-    }      
+    }
   }
 
   _getAttribLocations(programID);
 
-  _loadInterleaved();  
+  _loadInterleaved();
 }
 
 void drawableObj::_prepareSeparate(GLuint programID) {
 
   // Figure out which buffers we need and get IDs for them.
-  glGenBuffers(1, &_vertices.bufferID);  
+  glGenBuffers(1, &_vertices.bufferID);
   if (!_colors.empty()) glGenBuffers(1, &_colors.bufferID);
   if (!_normals.empty()) glGenBuffers(1, &_normals.bufferID);
   if (!_uvs.empty()) glGenBuffers(1, &_uvs.bufferID);
 
   _getAttribLocations(programID);
-  
+
   // Put the data in its buffers, for practice.
   _loadSeparate();
 
@@ -706,7 +706,7 @@ void drawableObj::load() {
   //   std::cout << "no need " << std::endl;
   // else
   //   std::cout << "load!!! " << std::endl;
-  
+
   if (_interleaved) {
     _loadInterleaved();
   } else {
@@ -726,7 +726,7 @@ void drawableObj::_loadInterleaved() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     _loadedIntoBuffer = true;
-  }  
+  }
 }
 
 
@@ -758,7 +758,7 @@ void drawableObj::_loadSeparate() {
   }
 }
 
- 
+
 void drawableObj::draw() {
 
   // Enable all the attribute arrays we'll use.
@@ -766,7 +766,7 @@ void drawableObj::draw() {
   if (!_colors.empty()) glEnableVertexAttribArray(_colors.ID);
   if (!_normals.empty()) glEnableVertexAttribArray(_normals.ID);
   if (!_uvs.empty()) glEnableVertexAttribArray(_uvs.ID);
-    
+
   if (_interleaved) {
     _drawInterleaved();
   } else {
@@ -814,7 +814,7 @@ void drawableObj::_drawSeparate() {
   glBindBuffer(GL_ARRAY_BUFFER, _vertices.bufferID);
   glVertexAttribPointer(_vertices.ID, _vertices.componentsPerVertex(),
                         GL_FLOAT, 0, 0, 0);
-  
+
   if (!_colors.empty()) {
     glBindBuffer(GL_ARRAY_BUFFER, _colors.bufferID);
     glVertexAttribPointer(_colors.ID, _colors.componentsPerVertex(),
@@ -835,6 +835,17 @@ void drawableObj::_drawSeparate() {
 
 }
 
+std::string bsgName::printName() const {
+    std::string out;
+    for (std::list<std::string>::const_iterator it = this->begin();
+         it != this->end(); it++) {
+      out += *it + "/";
+    }
+    // The trailing slash is just confusing, so leave it out.
+    return out.substr(0, out.length() - 1);
+  }
+
+
 glm::mat4 drawableMulti::getModelMatrix() {
 
   if (_modelMatrixNeedsReset) {
@@ -846,7 +857,7 @@ glm::mat4 drawableMulti::getModelMatrix() {
     _modelMatrixNeedsReset = false;
 
     //    std::cout << glm::to_string(_modelMatrix) << std::endl;
-    
+
     // bsgUtils::printMat("trans:", translationMatrix);
     // bsgUtils::printMat("rotat:", rotationMatrix);
     // bsgUtils::printMat("scale:", scaleMatrix);
@@ -855,7 +866,7 @@ glm::mat4 drawableMulti::getModelMatrix() {
 
   // If there is a parent, get the parent transformation (model)
   // matrix and use it with this one.
-  if (_parent) 
+  if (_parent)
     return _parent->getModelMatrix() * _modelMatrix;
   else
     return _modelMatrix;
@@ -876,7 +887,7 @@ std::string drawableMulti::randomName(const std::string &nameRoot) {
       break;
     case 2:
       out += ('a' + rand()%26);
-      break; 
+      break;
     }
   }
   return out;
@@ -887,12 +898,12 @@ bsgNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
   bsgName out;
   bsgNameList outList;
   glm::mat4 modelMatrix = getModelMatrix();
-  
+
   for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
 
     if ((*it)->insideBoundingBox(testPoint, modelMatrix)) {
-      
+
       // If we're here, the point is in the bounding box of at least
       // one of the member objects of this compound object.  Create a
       // one-element list of a zero-element name.
@@ -903,9 +914,9 @@ bsgNameList drawableCompound::insideBoundingBox(const glm::vec4 &testPoint) {
 
   // If we're here, the answer is no, so return an empty name.
   return outList;
-}        
+}
 
-  
+
 void drawableCompound::prepare() {
 
   _pShader->useProgram();
@@ -922,7 +933,7 @@ void drawableCompound::prepare() {
     (*it)->prepare(_pShader->getProgram());
   }
 }
-  
+
 void drawableCompound::load() {
 
   _pShader->useProgram();
@@ -931,7 +942,7 @@ void drawableCompound::load() {
   // Review the current state of the transformation matrices, and pack
   // them all into the total model matrix.
   _totalModelMatrix = getModelMatrix();
-  
+
   // Load each component object.
   for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
@@ -944,7 +955,7 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
 
   _pShader->useProgram();
   _pShader->draw();
-  
+
   // Load the model matrix.  This adjusts the position of each object.
   // Remember that all the objects in a compound object use the same
   // shader and the same model matrix.
@@ -962,17 +973,17 @@ void drawableCompound::draw(const glm::mat4& viewMatrix,
   // std::cout << "normal" << glm::to_string(_normalMatrix) << std::endl;
   // std::cout << "model" << glm::to_string(_modelMatrix) << std::endl;
   // std::cout << "proj" << glm::to_string(projMatrix) << std::endl;
-  
+
   for (DrawableObjList::iterator it = _objects.begin();
        it != _objects.end(); it++) {
     (*it)->draw();
-  }  
+  }
 }
 
 void drawableCompound::addObjectBoundingBox(bsgPtr<drawableObj> &obj) {
 
   obj->findBoundingBox();
-  
+
   bsgPtr<drawableObj> bb = new drawableObj();
   std::vector<glm::vec4> bbCorners(24);
   std::vector<glm::vec4> bbColors(24, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
@@ -1027,7 +1038,7 @@ void drawableCompound::addObjectBoundingBox(bsgPtr<drawableObj> &obj) {
   // for (int i = 0; i < 24; i++) {
   //   std::cout << "corner:" << bbCorners[i].x << "," << bbCorners[i].y << "," << bbCorners[i].z << " color:" << bbColors[i].r << "," << bbColors[i].g << "," << bbColors[i].b << std::endl;
   // }
-  
+
   addObject(bb);
 }
 
@@ -1070,8 +1081,8 @@ std::string drawableCollection::addObject(const bsgPtr<drawableMulti> &pMultiObj
     // Is the name already used?
     if (_collection.find(pMultiObject->getName()) != _collection.end()) {
 
-      std::cerr << "You have already used " << pMultiObject->getName() 
-                << " in " << getName() 
+      std::cerr << "You have already used " << pMultiObject->getName()
+                << " in " << getName()
                 << ".  Assigning a random name." << std::endl;
 
       return addObject(randomName(pMultiObject->getName()), pMultiObject);
@@ -1096,41 +1107,41 @@ bsgPtr<drawableMulti> drawableCollection::delObject(const std::string &name) {
     return out;
   }
 }
-  
+
 bsgPtr<drawableMulti> drawableCollection::delObject(bsgName name) {
 
   if (name.size() > 0) {
-  
+
     CollectionMap::iterator it = _collection.find(name.front());
 
     if (it == _collection.end()) {
 
       // No match.
       return NULL;
-      
+
     } else {
 
       if (name.size() > 1) {
-      
+
         // Step down a level.
         name.pop_front();
         return it->second->delObject(name);
 
       } else {
-        
+
         bsgPtr<drawableMulti> out = it->second;
         _collection.erase(it);
         return out;
       }
     }
   } else {
-    
+
     // This was called with an empty list for some reason.
     return NULL;
-  }  
+  }
 }
 
-  
+
 bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
 
   CollectionMap::iterator it = _collection.find(name);
@@ -1145,14 +1156,14 @@ bsgPtr<drawableMulti> drawableCollection::getObject(const std::string &name) {
 bsgPtr<drawableMulti> drawableCollection::getObject(bsgName name) {
 
   if (name.size() > 1) {
-  
+
     CollectionMap::iterator it = _collection.find(name.front());
 
     if (it == _collection.end()) {
 
       // No match.
       return NULL;
-      
+
     } else {
 
       // Step down a level.
@@ -1165,12 +1176,12 @@ bsgPtr<drawableMulti> drawableCollection::getObject(bsgName name) {
     return getObject(name.front());
 
   } else {
-    
+
     // This was called with an empty list for some reason.
     return NULL;
-  }  
+  }
 }
-  
+
 bsgNameList drawableCollection::getNames() {
 
   // Our output.
@@ -1191,13 +1202,13 @@ bsgNameList drawableCollection::getNames() {
       b.push_back(it->first);
       sublist.push_back(b);
     }
-        
+
     // If any of them reply, add them to the output list.
     out.splice(out.end(), sublist);
   }
 
   return out;
-}    
+}
 
 bsgNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
@@ -1237,8 +1248,8 @@ std::string drawableCollection::printObj (const std::string &prefix) const {
 
   return out;
 }
-  
-  
+
+
 void drawableCollection::prepare() {
 
   for (CollectionMap::iterator it =  _collection.begin();
@@ -1296,7 +1307,7 @@ bsgPtr<drawableMulti> scene::getObject(const std::string &name) {
     return NULL;
 
   } else {
-    
+
     return _sceneRoot.getObject(name);
   }
 }
@@ -1307,17 +1318,17 @@ bsgPtr<drawableMulti> scene::getObject(bsgName &name) {
 
   bsgName localName = name;
   if (localName.front().compare("sceneRoot") == 0) localName.pop_front();
-  
+
   return _sceneRoot.getObject(localName);
-  
+
 }
 
 bsgNameList scene::insideBoundingBox(const glm::vec4 &testPoint) {
 
   return _sceneRoot.insideBoundingBox(testPoint);
 }
-  
-  
+
+
 void scene::prepare() {
 
   _sceneRoot.prepare();
@@ -1336,8 +1347,8 @@ glm::mat4 scene::getViewMatrix() {
   glm::vec3 up = glm::normalize(glm::cross(right, dir));
 
   return glm::lookAt(_cameraPosition, _lookAtPosition, up);
-}   
-  
+}
+
 void scene::load() {
 
   _sceneRoot.load();
@@ -1347,6 +1358,6 @@ void scene::draw(const glm::mat4 &viewMatrix,
                  const glm::mat4 &projMatrix) {
 
   _sceneRoot.draw(viewMatrix, projMatrix);
-}  
-  
+}
+
 }

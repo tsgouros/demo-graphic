@@ -66,7 +66,7 @@ void renderScene() {
    //   }
    // }
 
-  
+
   // Now generate them and add them to the group.
   std::vector<glm::vec3>::iterator jt = velocities.begin();
   std::vector<glm::vec3>::iterator kt = angVelocities.begin();
@@ -81,7 +81,7 @@ void renderScene() {
     if (fabs(pos.x) > 5.0f || fabs(pos.y) > 5.0f || fabs(pos.z) > 5.0f) {
       *jt = - (*jt);
     }
-    it->second->setPosition(pos + *jt);    
+    it->second->setPosition(pos + *jt);
   }
 
   bsg::bsgNameList inside = rectGroup->insideBoundingBox(glm::vec4(0.0, 0.0, 0.0, 0.0));
@@ -91,10 +91,7 @@ void renderScene() {
     // will only have a single element.  But you might want to change that.
     for (bsg::bsgNameList::iterator it = inside.begin();
          it != inside.end(); it++) {
-      std::cout << "test point is inside rectangle ";
-      for (bsg::bsgName::iterator jt = it->begin(); jt != it->end(); jt++) {
-        std::cout << *jt << "/" ;
-      }
+      std::cout << "test point is inside rectangle " << *it;
       glm::vec3 pos = rectGroup->getObject(*it)->getPosition();
       std::cout << " at position (" << pos.x << "," << pos.y << "," << pos.z << ")";
       std::cout << std::endl;
@@ -102,15 +99,15 @@ void renderScene() {
 
    // if (!s.empty())
    //   scene.getObject(s.front())->setRotation(0.0, oscillator, 0.0);
-  
+
   // Selecting an image with a world-space location.
 
-  
+
   // Now the preliminaries are done, on to the actual drawing.
-  
+
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
+
   // Second the load() step.  For a simple desktop display, it is a
   // bit mysterious to have separate load and draw steps, but it makes
   // sense when you have to render to a stereo display, where you only
@@ -136,7 +133,7 @@ void resizeWindow(int width, int height) {
   // Prevent a divide by zero, when window is too short (you cant make
   // a window of zero width).
   if(height == 0) height = 1;
- 
+
   // Set the viewport to be the entire window
   glViewport(0, 0, width, height);
 
@@ -158,7 +155,7 @@ void showCameraPosition() {
   std::cout << "looking at ("
             << scene.getLookAtPosition().x << ", "
             << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")." << std::endl; 
+            << scene.getLookAtPosition().z << ")." << std::endl;
 }
 
 // This is an event handler, designed to handle events issued by the
@@ -169,7 +166,7 @@ void processNormalKeys(unsigned char key, int x, int y) {
   // Each press of a key changes a dimension by this amount. If you
   // want things to go faster, increase this step.
   float step = 0.5f;
-  
+
   // This function processes only the 'normal' keys.  The arrow keys
   // don't appear here, nor mouse events.
   switch (key) {
@@ -234,7 +231,7 @@ void processSpecialKeys(int key, int x, int y) {
 
   float stepAngle = 5.0f / 360.0f;
 
-  switch(key) {    
+  switch(key) {
   case GLUT_KEY_UP:
     scene.addToCameraViewAngle(0.0f,  stepAngle);
     break;
@@ -322,7 +319,7 @@ void makeWindow(const int xOffset, const int yOffset,
 int main(int argc, char **argv) {
 
   std::cout << "This will display a bunch of floating rectangles, and when one of them" << std::endl << "happens over the worldspace origin, will print a message to that effect." << std::endl;
-  
+
   // Initialize the graphics context and...
   init(argc, argv);
 
@@ -367,7 +364,7 @@ int main(int argc, char **argv) {
   axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
   axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
   axesShader->compileShaders();
-  
+
   // Here are the drawable objects that make up the compound object
   // that make up the scene.
 
@@ -402,9 +399,9 @@ int main(int argc, char **argv) {
     if (++i < 10) std::cout << "name: " << it->first << " for "
                             << it->second->getName() << std::endl;
   }
-  
+
   scene.addObject(rectGroup);
-  
+
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 
   scene.addObject(axes);
@@ -414,7 +411,7 @@ int main(int argc, char **argv) {
   scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
 
   //std::cout << "Your Scene Graph:" << std::endl << scene << std::endl;
-  
+
   // All the shapes are now added to the scene.
 
   // Do the one-time things.  The every-render operations are done
@@ -427,5 +424,5 @@ int main(int argc, char **argv) {
 
   // We never get here, but the compiler is annoyed when you don't
   // exit from a function.
-  return(0); 
+  return(0);
 }
