@@ -15,9 +15,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#ifndef M_PI
-#define M_PI 3.141592653589793238
-#endif
+#ifdef WIN32
+#define M_PI 3.14159
+#endif // WIN32
+
 
 
 std::string textFileRead(std::string fileName) {

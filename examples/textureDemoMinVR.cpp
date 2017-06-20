@@ -18,6 +18,7 @@ private:
   // These are the shapes that make up the scene.  They are out here in
   // the global variables so they can be available in both the main()
   // function and the renderScene() function.
+  bsg::drawableCube* _cube;
   bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
 
@@ -25,7 +26,6 @@ private:
   // the big boy global variables so they can be available to both the
   // interrupt handler and the render function.
   float _oscillator;
-  float _oscillationStep;
 
   // These variables were not global before, but their scope has been
   // divided into several functions here, so they are class-wide
@@ -144,10 +144,14 @@ private:
     // We could put the axes and the rectangle in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
+
+    _cube = new bsg::drawableCube(_shader, 10, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    _cube->setScale(2.0f);
     _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
+	_scene.addObject(_cube);
 
     _axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
@@ -176,7 +180,6 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
-    _oscillationStep = 0.03f;
     
     _vertexFile = std::string(argv[1]);
     _fragmentFile = std::string(argv[2]);
@@ -203,17 +206,9 @@ public:
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
 			shutdown();
-    } else if ((event.getName().substr(0,3).compare("Kbd") == 0) &&
-               (event.getName().substr(4, std::string::npos).compare("_Down") == 0)) {
-      // Turn on and off the animation.
-      if (_oscillationStep == 0.0f) {
-        _oscillationStep = 0.03f;
-      } else {
-        _oscillationStep = 0.0f;
-      }
     } else if (event.getName() == "FrameStart") {
-		_oscillator = event.getDataAsFloat("ElapsedSeconds");
-	}
+      _oscillator = event.getDataAsFloat("ElapsedSeconds");
+    }
 
     // Print out where you are (where the camera is) and where you're
     // looking.
@@ -248,12 +243,19 @@ public:
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       glm::vec3 pos = _rectangle->getPosition();
-      //_oscillator += _oscillationStep;
       pos.x = 2.0f * sin(_oscillator);
       pos.y = 2.0f * cos(_oscillator);
       pos.z = -4.0f;
       _rectangle->setPosition(pos);
 
+	  // Move the cube forward and have it circle counterclockwise
+	  pos.z = 0.0f;
+	  float temp = pos.x;
+	  pos.x = pos.y;
+	  pos.y = temp;
+	  _cube->setPosition(pos);
+
+      _cube->setRotation(glm::vec3(cos(_oscillator), cos(_oscillator) * M_PI, 0.0f));
       // Now the preliminaries are done, on to the actual drawing.
   
       // First clear the display.

@@ -171,8 +171,9 @@ namespace bsg {
     addObject(_backFace);
   }
 
+  
   drawableSphere::drawableSphere(bsgPtr<shaderMgr> pShader,
-                                       const int &phiTesselation, const int &thetaTesselation) :
+                                       const int &phiTesselation, const int &thetaTesselation, const glm::vec4 &color) :
     drawableCompound(pShader), _phi(phiTesselation), _theta(thetaTesselation) {
 
     _name = randomName("sphere");
@@ -187,8 +188,8 @@ namespace bsg {
     std::vector<glm::vec4> normals(0);
     std::vector<glm::vec4> colors(0);
 
-    glm::vec4 color = glm::vec4(1.0, 0.0, 0.0, 1.0);
-
+    // Uses a triangle strip to draw the sphere, so two vertices are defined at a time and are automatically turned into
+    // a strip of triangles. (the / in |/|/|.../| are automatically filled in.)
     for (int j = 0; j < _phi; j++) {
         for (int i = 0; i < (_theta + 1); i++) {
             // Top vertex position
@@ -204,7 +205,7 @@ namespace bsg {
             normals.push_back(normal);
 
             // Top UV
-            uvs.push_back(glm::vec2(static_cast<float>(i)/thetaTesselation, static_cast<float>(j)/phiTesselation));
+            uvs.push_back(glm::vec2(static_cast<float>(i)/thetaTesselation, 1.0f - static_cast<float>(j)/phiTesselation));
 
             // Bottom vertex position
             verts.push_back(glm::vec4(r * std::sin(phiStep * (j + 1)) * std::cos(-thetaStep * i), r * std::cos(phiStep * (j + 1)),
@@ -219,8 +220,17 @@ namespace bsg {
 
 
             // Bottom UV
-            uvs.push_back(glm::vec2(static_cast<float>(i)/thetaTesselation, static_cast<float>(j + 1)/phiTesselation));
+            uvs.push_back(glm::vec2(static_cast<float>(i)/thetaTesselation, 1.0f - static_cast<float>(j + 1)/phiTesselation));
 
+            // float c1 = ((double) rand() / (RAND_MAX));
+            // float c2 = ((double) rand() / (RAND_MAX));
+            // float c3 = ((double) rand() / (RAND_MAX));
+            // float c4 = ((double) rand() / (RAND_MAX));
+            // float c5 = ((double) rand() / (RAND_MAX));
+            // float c6 = ((double) rand() / (RAND_MAX));
+            // glm::vec4 randColor = glm::vec4(c1, c2, c3, 1.0f);
+            // glm::vec4 randColor2 = glm::vec4(c4, c5, c6, 1.0f);
+            
             // Color
             colors.push_back(color);
             colors.push_back(color);
@@ -245,16 +255,17 @@ namespace bsg {
     addObject(_sphere);
   }
 
-  drawableCircle::drawableCircle(bsgPtr<shaderMgr> pShader, const int &thetaTesselation, const int &radiusTesselation, const float &normalDirection, const float &yPos) :
-    drawableCompound(pShader), _theta(thetaTesselation), _radius(radiusTesselation) {
+  drawableCircle::drawableCircle(bsgPtr<shaderMgr> pShader, const int &thetaTesselation, const float &normalDirection, const float &yPos) :
+    drawableCompound(pShader), _theta(thetaTesselation) {
       _name = randomName("circle");
       glm::vec4 color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
       _circle = new drawableObj();
-      getCircle(_circle, _theta, _radius, normalDirection, yPos, color);
+      getCircle(_circle, _theta, normalDirection, yPos, color);
       addObject(_circle);
     }
 
-  void drawableCircle::getCircle(bsgPtr<drawableObj> circle, const int &thetaTesselation, const int &radiusTesselation, const float &normalDirection, const float &yPos, const glm::vec4 &color) {
+  // Useful function for creating the caps for the cylinder and the bottom of the cone.
+  void drawableCircle::getCircle(bsgPtr<drawableObj> circle, const int &thetaTesselation, const float &normalDirection, const float &yPos, const glm::vec4 &color) {
       
 
       std::vector<glm::vec4> verts(0);
@@ -265,38 +276,37 @@ namespace bsg {
       float pi = 3.14159265358979323;
       float r = 0.5f;
       float thetaStep = 2 * pi/thetaTesselation;
-      float radiusStep = r/radiusTesselation;
 
-      for (int i = 0; i < radiusTesselation; i++) {
-          for (int j = 0; j < (thetaTesselation + 1); j++) {
-              // Top vertex position
-              verts.push_back(glm::vec4(radiusStep * i * glm::cos(-normalDirection * thetaStep*j), yPos, 
-                radiusStep * i * glm::sin(-normalDirection * thetaStep*j), 1.0f));
+      // Uses a triangle fan to draw the circle, so the central point is defined, followed by points
+      // around the perimiter of the circle. This could have been done with a strip, but that would mean
+      // redundantly including the center point many times.
 
-              // Top vertex normal
-              glm::vec4 normal = glm::vec4(0.0f, normalDirection, 0.0f, 0.0f);
-              normalize(normal);
-              normals.push_back(normal);
+      // Top vertex position
+      verts.push_back(glm::vec4(0.0f, yPos, 0.0f, 1.0f));
 
-              // Top UV
-              uvs.push_back(glm::vec2(radiusStep * i * glm::cos(-thetaStep*j) + 0.5f, radiusStep * i * glm::sin(-thetaStep*j) + 0.5f));
+      // Top vertex normal
+      glm::vec4 normal = glm::vec4(0.0f, normalDirection, 0.0f, 0.0f);
+      normalize(normal);
+      normals.push_back(normal);
 
-              // Bottom vertex position
-              verts.push_back(glm::vec4(radiusStep * (i + 1) * glm::cos(-normalDirection * thetaStep*j), yPos, 
-                radiusStep * (i + 1) * glm::sin(-normalDirection * thetaStep*j), 1.0f));
+      // Top UV
+      uvs.push_back(glm::vec2(0.5f, 0.5f));
 
-              // Bottom vertex normal
-              normal = glm::vec4(0.0f, normalDirection, 0.0f, 0.0f);
-              normalize(normal);
-              normals.push_back(normal);
+      colors.push_back(color);
 
-              // Bottom UV
-              uvs.push_back(glm::vec2(radiusStep * (i + 1) * glm::cos(-thetaStep*j) + 0.5f, radiusStep * (i + 1) * glm::sin(-thetaStep*j) + 0.5f));
+      for (int j = 0; j < (thetaTesselation + 1); j++) {
 
-              // Color
-              colors.push_back(color);
-              colors.push_back(color);
-          }
+          verts.push_back(glm::vec4(r * glm::cos(-normalDirection * thetaStep*j), yPos, 
+            r * glm::sin(-normalDirection * thetaStep*j), 1.0f));
+
+          normal = glm::vec4(0.0f, normalDirection, 0.0f, 0.0f);
+          normalize(normal);
+          normals.push_back(normal);
+
+          uvs.push_back(glm::vec2(r * glm::cos(thetaStep*j) + 0.5f, r * glm::sin(thetaStep*j) + 0.5f));
+
+          // Color
+          colors.push_back(color);
       }
       circle->addData(bsg::GLDATA_VERTICES, "position", verts);
 
@@ -307,36 +317,108 @@ namespace bsg {
       circle->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
     
       // The vertices above are arranged into a set of triangles.
-      circle->setDrawType(GL_TRIANGLE_STRIP, verts.size());
+      circle->setDrawType(GL_TRIANGLE_FAN, verts.size());
+    }
+
+
+  drawableSquare::drawableSquare(bsgPtr<shaderMgr> pShader, const int &tesselation, const glm::vec3 &topLeft, const glm::vec3 &topRight, const glm::vec3 &bottomLeft, const glm::vec4 &color) :
+    drawableCompound(pShader), _tess(tesselation) {
+      _name = randomName("square");
+      _rect = new drawableObj();
+      getRect(_rect, _tess, topLeft, topRight, bottomLeft, color);
+      addObject(_rect);
+    }
+  // Generalized rectangle shape, useful for defining the cube. A somewhat more flexible, but less directly definable version of drawableRectangle.
+  // the first argument is a shape to be filled in by this static function.
+  void drawableSquare::getRect(bsgPtr<drawableObj> rect, const int &tesselation, const glm::vec3 &topLeft, const glm::vec3 &topRight, const glm::vec3 &bottomLeft, const glm::vec4 &color) {
+      
+
+      std::vector<glm::vec4> verts(0);
+      std::vector<glm::vec2> uvs(0);
+      std::vector<glm::vec4> normals(0);
+      std::vector<glm::vec4> colors(0);
+
+      glm::vec3 horizontal = (topRight - topLeft) * (1.0f / tesselation);
+      glm::vec3 vertical = (bottomLeft - topLeft) * (1.0f / tesselation);
+
+      glm::vec3 n = glm::cross(horizontal, vertical);
+      glm::vec4 normal = glm::vec4(n, 0.0f);
+      glm::normalize(normal);
+
+      for (int i = 0; i < tesselation; ++i) {
+        for (int j = 0; j <= tesselation; ++j) {
+          // current vertex
+          glm::vec3 currPos = topLeft + ((float) i * vertical) + ((float) j * horizontal);
+          // next vertex, directly below current. GL_TRIANGLE_STRIP will fill in the / in the |/|/.../| pattern.
+          glm::vec3 v = currPos + vertical;
+          verts.push_back(glm::vec4(currPos, 1.0f));
+          verts.push_back(glm::vec4(v, 1.0f));
+
+          normals.push_back(normal);
+          normals.push_back(normal);
+          
+          uvs.push_back(glm::vec2(static_cast<float>(j)/tesselation, 1.0f - static_cast<float>(i)/tesselation));
+          uvs.push_back(glm::vec2(static_cast<float>(j)/tesselation, 1.0f - static_cast<float>(i + 1)/tesselation));
+          
+          colors.push_back(color);
+          colors.push_back(color);
+        }
+      }
+
+      
+      rect->addData(bsg::GLDATA_VERTICES, "position", verts);
+
+      rect->addData(bsg::GLDATA_COLORS, "color", colors);
+
+      rect->addData(bsg::GLDATA_NORMALS, "normal", normals);
+
+      rect->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
+    
+      // The vertices above are arranged into a set of triangles.
+      rect->setDrawType(GL_TRIANGLE_STRIP, verts.size());
+    }
+
+
+  drawableCube::drawableCube(bsgPtr<shaderMgr> pShader,
+                                       const int &tesselation, const glm::vec4 &color) :
+    drawableCompound(pShader), _tess(tesselation) {
+      _name = randomName("cube");
+
+      _front = new drawableObj;
+      _back = new drawableObj;
+      _left = new drawableObj;
+      _right = new drawableObj;
+      _top = new drawableObj;
+      _bottom = new drawableObj;
+
+      drawableSquare::getRect(_front, _tess, glm::vec3(-0.5, 0.5, 0.5), glm::vec3(0.5, 0.5, 0.5), glm::vec3(-0.5, -0.5, 0.5), color);
+      drawableSquare::getRect(_back, _tess, glm::vec3(0.5, 0.5, -0.5), glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.5, -0.5, -0.5), color);
+      drawableSquare::getRect(_left, _tess, glm::vec3(-0.5, 0.5, -0.5), glm::vec3(-0.5, 0.5, 0.5), glm::vec3(-0.5, -0.5, -0.5), color);
+      drawableSquare::getRect(_right, _tess, glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.5, -0.5, 0.5), color);
+      drawableSquare::getRect(_top, _tess, glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.5, 0.5, -0.5), glm::vec3(-0.5, 0.5, 0.5), color);
+      drawableSquare::getRect(_bottom, _tess, glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.5, -0.5, 0.5), glm::vec3(-0.5, -0.5, -0.5), color);
+      
+      addObject(_front);
+      addObject(_back);
+      addObject(_left);
+      addObject(_right);
+      addObject(_top);
+      addObject(_bottom);
     }
 
   drawableCone::drawableCone(bsgPtr<shaderMgr> pShader,
-                                       const int &heightTesselation, const int &thetaTesselation) :
+                                       const int &heightTesselation, const int &thetaTesselation, const glm::vec4 &color) :
     drawableCompound(pShader), _height(heightTesselation), _theta(thetaTesselation) {
 
     _name = randomName("cone");
 
-
-
-
-
     _cap = new drawableObj();
     _base = new drawableObj();
     
-    // Store the vertex data and other values to be used later when constructing the VAO
-    float r = 0.5;
-
-    makeCone(_cap, _height, _theta, r, r, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-    drawableCircle::getCircle(_base, _theta, _height, -1, -r/2.0f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-    //makeCaps(_base, _height, _theta, r, -r/2, glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));  
-
-    addObject(_cap);
-    addObject(_base);
-  }
+    float radius = 0.5;
+    float height = 0.5;
 
 
-  void drawableCone::makeCone(bsgPtr<drawableObj> cone, int heightTesselation, int thetaTesselation, float radius, float height, glm::vec4 color) {
     float pi = 3.14159265358979323;
     float thetaStep = 2 * pi/thetaTesselation;
     float heightStep = 2 * height/heightTesselation;
@@ -382,16 +464,26 @@ namespace bsg {
 
     }
 
-    cone->addData(bsg::GLDATA_VERTICES, "position", verts);
+    _cap->addData(bsg::GLDATA_VERTICES, "position", verts);
 
-    cone->addData(bsg::GLDATA_COLORS, "color", colors);
+    _cap->addData(bsg::GLDATA_COLORS, "color", colors);
 
-    cone->addData(bsg::GLDATA_NORMALS, "normal", normals);
+    _cap->addData(bsg::GLDATA_NORMALS, "normal", normals);
 
-    cone->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
+    _cap->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
     
     // The vertices above are arranged into a set of triangles.
-    cone->setDrawType(GL_TRIANGLE_STRIP, verts.size());  
+    _cap->setDrawType(GL_TRIANGLE_STRIP, verts.size());
+
+    drawableCircle::getCircle(_base, _theta, -1, -radius/2.0f, color);
+
+    addObject(_cap);
+    addObject(_base);
+  }
+
+
+  void drawableCone::makeCone(bsgPtr<drawableObj> cone, int heightTesselation, int thetaTesselation, float radius, float height, glm::vec4 color) {
+    
 }
 
   drawableCylinder::drawableCylinder(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation, const glm::vec4 &color) :
@@ -419,7 +511,7 @@ namespace bsg {
             normals.push_back(normal);
 
             // Top UV
-            uvs.push_back(glm::vec2(static_cast<float>(j)/thetaTesselation, -static_cast<float>(i + 1)/heightTesselation));
+            uvs.push_back(glm::vec2(static_cast<float>(j)/thetaTesselation, static_cast<float>(i + 1)/heightTesselation));
 
             // Bottom vertex position
             verts.push_back(glm::vec4(r * std::cos(-thetaStep * j), heightStep * i - r, r * std::sin(-thetaStep * j), 1.0f));
@@ -428,9 +520,9 @@ namespace bsg {
             normals.push_back(normal);
 
             // Bottom UV
-            uvs.push_back(glm::vec2(static_cast<float>(j)/thetaTesselation, -static_cast<float>(i)/heightTesselation));
+            uvs.push_back(glm::vec2(static_cast<float>(j)/thetaTesselation, static_cast<float>(i)/heightTesselation));
 
-            //Colors
+            // Colors
             colors.push_back(color);
             colors.push_back(color);
         }
@@ -448,11 +540,10 @@ namespace bsg {
 
     _body->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
     
-    // The vertices above are arranged into a set of triangles.
     _body->setDrawType(GL_TRIANGLE_STRIP, verts.size());
 
-    drawableCircle::getCircle(_top, _theta, _height, 1, r, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-    drawableCircle::getCircle(_base, _theta, _height, -1, -r, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
+    drawableCircle::getCircle(_top, _theta, 1, r, color);
+    drawableCircle::getCircle(_base, _theta, -1, -r, color);
 
     addObject(_base);
     addObject(_body);
