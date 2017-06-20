@@ -37,7 +37,6 @@ The build instructions that follow work on Mac (command line) and
 Linux.  Please submit additions to this file for builds.  Current
 wishlist:
 
-  - Windows
   - Mac XCode
   - QtCreator
 
@@ -164,5 +163,36 @@ it convenient to copy my .modules file:
 
 More to come...
 
+## Building and Running on Windows
+This guide uses Visual Studio (tested on VS2017), so you'll need to install that first. 
+You'll also need to install CMake for Windows, which you can find [here](https://cmake.org/).
+This guide is based on using cmake-gui, which is easy to use on Windows.
+### MinVR
+Download/clone MinVR (available [here](https://github.com/MinVR/MinVR)).
+Download and extract Freeglut (Windows version available [here](http://freeglut.sourceforge.net/)).
+Create a 'build' folder in the MinVR folder.
 
+Run CMake (cmake-gui), and designate the source directory as the MinVR folder, and the build directory as the 'build' folder you created.
+Click 'Configure', then select the default compiler. Check the boxes for the desired plugins (in this case, we'll only need Freeglut and OpenGL). Click 'Configure again, and new variables will appear for Freeglut. Set FREEGLUT_INCLUDE_DIR to <freeglut location>\include, and set FREEGLUT_LIBRARY to <freeglut location>\lib\freeglut.lib.
+Click 'Generate' and, assuming there weren't any errors, then click 'Open Project'. 
 
+Visual Studio should now be open. In the solution explorer, there should be a folder titled 'CMakePredefinedTargets'. Right click on one of the targets to build it. Build the INSTALL target.
+
+### demo-graphic
+Download/clone demo-graphic.
+Download and extract GLEW somewhere (available [here](http://glew.sourceforge.net/)). Get the win32 version.
+Create a 'build' folder in the demo-graphic folder.
+
+Run CMake (cmake-gui), and designate the source directory as the demo-graphic folder, and the build directory as the 'build' folder you created.
+Click 'Configure' and select the default compiler. There will be an error indicating that you need to fill in some of the variables. Like in MinVR, set those variables to their relevant \include folders or .lib files. After filling these in, keep clicking 'Configure' until no new variables show up. The MinVR include folder and library is in build\install in your MinVR folder. 
+Click 'Generate'. Then, assuming there weren't errors, click 'Open Project'. 
+
+Visual Studio should now be open to the demo-graphic project, which you can build using the targets under 'CMakePredefinedTargets' in the solution explorer. 
+
+In order for the examples to run, they'll need access to .dll files from the plugins you're using (in this case, glew and freeglut). There is a way to install these globally, but it's easier and safer to just copy them into the same folder as the exe files you're building. Copy glew32.dll from <glew folder>\bin and freeglut.dll from <freeglut folder>\bin into the folder with the .exe files (\build\bin\Debug\). 
+
+Visual Studio by default creates a Debug folder inside the build location, which means that hardcoded relative paths aren't consistent with what was expected. This will cause some of the examples to fail. A simple workaround for this is to copy the 'data', 'config', and 'shaders' folders into \build\bin, so that they are one level up from the .exe location. 
+
+Finally, most of the examples also require arguments, which can be specified in the command prompt. Hints about what files should be given are included in the code for the examples, but won't be obvious when run from the command prompt. 
+
+At this point, demo-graphic on Windows should be up and running.
