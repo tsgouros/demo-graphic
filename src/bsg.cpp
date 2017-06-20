@@ -1249,11 +1249,12 @@ bsgNameList drawableCollection::insideBoundingBox(const glm::vec4 &testPoint) {
 
 std::string drawableCollection::printObj (const std::string &prefix) const {
 
-  std::string out = "<drawableCollection:" + _name + ">";
+  std::string out = prefix + "<drawableCollection:" + _name + ">";
 
   for (CollectionMap::const_iterator it = _collection.begin();
        it != _collection.end(); it++) {
-    out += "\n" + prefix + it->second->printObj(prefix + "| ");
+
+    out += "\n" + it->second->printObj(prefix + "| ");
   }
 
   return out;

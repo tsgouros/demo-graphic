@@ -78,10 +78,10 @@ message("-- MinVR library:    " ${MINVR_LIBRARY})
 
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  # Linux specific code
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-  set(CMAKE_CXX_FLAGS_DEBUG "-lsvml -lirc ${CMAKE_CXX_FLAGS_DEBUG}")
-
+  # Linux specific code -- Not sure why pthreads or dl is required.  This
+  # is not necessary on all systems.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ldl -fPIC -lpthread")
+  
 #  set(CMAKE_C_COMPILER gcc)
 #  set(CMAKE_CXX_COMPILER g++)
 
