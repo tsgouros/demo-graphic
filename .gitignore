@@ -4,6 +4,7 @@
 # Stuff in build or if there's a CVS
 build/
 CVS/
+Win32/
 
 # Compiled Object files
 *.slo

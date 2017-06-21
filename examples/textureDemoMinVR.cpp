@@ -18,12 +18,8 @@ private:
   // These are the shapes that make up the scene.  They are out here in
   // the global variables so they can be available in both the main()
   // function and the renderScene() function.
-  //bsg::drawableRectangle* _rectangle;
-  //bsg::drawableSquare* _rectangle;
-  //bsg::drawableSphere* _rectangle;
-  //bsg::drawableCylinder* _rectangle;
-  //bsg::drawableCone* _rectangle;
-  bsg::drawableCube* _rectangle;
+  bsg::drawableCube* _cube;
+  bsg::drawableRectangle* _rectangle;
   bsg::drawableCompound* _axesSet;
 
   // These are part of the animation stuff, and again are out here with
@@ -149,16 +145,13 @@ private:
     // shape, but we leave them separate so they can be moved
     // separately.
 
-    //_rectangle = new bsg::drawableSquare(_shader, 5, glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    //_rectangle = new bsg::drawableCylinder(_shader, 1, 25, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-    _rectangle = new bsg::drawableCube(_shader, 10, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-    //_rectangle = new bsg::drawableSphere(_shader, 25, 25, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    //_rectangle = new bsg::drawableCone(_shader, 25, 25, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    _rectangle->setScale(5.0f);
-    //_rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
+    _cube = new bsg::drawableCube(_shader, 10, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    _cube->setScale(2.0f);
+    _rectangle = new bsg::drawableRectangle(_shader, 9.0f, 9.0f, 2);
 
     // Now add our rectangle to the scene.
     _scene.addObject(_rectangle);
+	_scene.addObject(_cube);
 
     _axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
@@ -254,9 +247,15 @@ public:
       pos.y = 2.0f * cos(_oscillator);
       pos.z = -4.0f;
       _rectangle->setPosition(pos);
-      //_rectangle->setRotation(glm::vec3(cos(_oscillator), 0.0f,  0.0f));
 
-      _rectangle->setRotation(glm::vec3(cos(_oscillator), cos(_oscillator) * M_PI, 0.0f));
+	  // Move the cube forward and have it circle counterclockwise
+	  pos.z = 0.0f;
+	  float temp = pos.x;
+	  pos.x = pos.y;
+	  pos.y = temp;
+	  _cube->setPosition(pos);
+
+      _cube->setRotation(glm::vec3(cos(_oscillator), cos(_oscillator) * M_PI, 0.0f));
       // Now the preliminaries are done, on to the actual drawing.
   
       // First clear the display.

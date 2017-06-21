@@ -1,8 +1,6 @@
 #ifndef BSGHEADER
 #define BSGHEADER
 
-#include <sys/time.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdexcept>
@@ -26,9 +24,12 @@
 #include <glm/gtx/string_cast.hpp>
 
 // Some miscellaneous dependencies.
-#include <png.h>
-#include <jpeglib.h>
-#include <jerror.h>
+//#include <jpeglib.h>
+//#include <jerror.h>
+
+#ifndef M_PI
+#define M_PI 3.141592653589793238
+#endif
 
 namespace bsg {
 
@@ -401,8 +402,8 @@ class textureMgr {
   GLuint _textureBufferID;
 
   GLuint _loadPNG(const std::string imagePath);
-  GLuint _loadCheckerBoard (int size, int numFields);
-
+  GLuint _loadCheckerBoard (const int size, int numFields);
+  
  public:
   textureMgr() { _setupDefaultNames(); };
 

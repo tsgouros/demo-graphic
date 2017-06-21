@@ -1,5 +1,9 @@
 #include "bsg.h"
 
+// Stb Image library
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 namespace bsg {
@@ -72,12 +76,13 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
   }
 }
 
-GLuint textureMgr::_loadCheckerBoard (int size, int numFields) {
+GLuint textureMgr::_loadCheckerBoard (const int size, int numFields) {
+  const int boardSize = 64;
   _width = size;
   _height = size;
   int fieldWidth = size/numFields;
 
-  GLubyte image[size][size][3];
+  GLubyte image[boardSize][boardSize][3];
 
   // Create a checkerboard pattern
   for ( int i = 0; i < size; i++ ) {
@@ -106,7 +111,11 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
 
   // This function was originally written by David Grayson for
   // https://github.com/DavidEGrayson/ahrs-visualizer
+	
 
+
+  /* load an image file directly as a new OpenGL texture */
+  /*
   png_byte header[8];
 
   FILE *fp = fopen(imagePath.c_str(), "rb");
@@ -234,21 +243,30 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
 
   // read the png into image_data through row_pointers
   png_read_image(png_ptr, row_pointers);
+  */
+	
+  // Neccessary as stb loads images upside down (as OpenGL sees it)
+  stbi_set_flip_vertically_on_load(true);
 
+  int width, height, components;
+  unsigned char* data = stbi_load(imagePath.c_str(), &width, &height, &components, STBI_rgb_alpha);//STBI_default);
+  if (!data) {
+	  throw(stbi_failure_reason());
+  }
   // Generate the OpenGL texture object
   GLuint texture;
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, format, temp_width, temp_height,
-               0, format, GL_UNSIGNED_BYTE, image_data);
+  if (components == 3) {
+	  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
+		  0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  } else if (components == 4) {
+	  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+		  0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  }
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-  // clean up
-  png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-  free(image_data);
-  free(row_pointers);
-  fclose(fp);
   return texture;
 }
 
@@ -1046,18 +1064,22 @@ void drawableCompound::addObjectBoundingBox(bsgPtr<drawableObj> &obj) {
 
 drawableCollection::drawableCollection() {
   // Seed a random number generator to generate default names randomly.
-  struct timeval tp;
-  gettimeofday(&tp, NULL);
-  srand(tp.tv_usec);
+  #ifdef WIN32
+  srand(GetTickCount());
+  #else
+  srand(time(NULL));
+  #endif
   _name = randomName("coll");
 }
 
 drawableCollection::drawableCollection (const std::string name) :
   drawableMulti(name) {
   // Seed a random number generator to generate default names randomly.
-  struct timeval tp;
-  gettimeofday(&tp, NULL);
-  srand(tp.tv_usec);
+  #ifdef WIN32
+  srand(GetTickCount());
+  #else
+  srand(time(NULL));
+  #endif
 }
 
 std::string drawableCollection::addObject(const std::string name,
