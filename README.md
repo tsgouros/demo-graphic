@@ -154,6 +154,7 @@ MinVR or set environment variables, but you will have to do these:
     $ module load cave
     $ module load freeglut
     $ module load libpng
+    $ module load glew
     $ module load MinVR
 
 These commands can be put in a file called ~/.modules.  You may find
