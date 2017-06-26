@@ -10,7 +10,10 @@ target_link_libraries(demo
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/src
-  )
+  ${OPENGL_INCLUDE_DIR}
+  ${FREEGLUT_INCLUDE_DIR}
+  ${GLM_INCLUDE_DIR}
+  ${GLEW_INCLUDE_DIRS})
 
 #if(PNG_FOUND)
 
@@ -32,14 +35,14 @@ include_directories(
    ${FREEGLUT_LIBRARY}
    ${OPENGL_LIBRARY}
    ${GLEW_LIBRARY})
-  
+
   add_executable(treeDemo treeDemo.cpp)
 
   target_link_libraries(treeDemo bsg
     ${FREEGLUT_LIBRARY}
     ${OPENGL_LIBRARY}
     ${GLEW_LIBRARY})
-  
+
   add_executable(treeDemo2 treeDemo2.cpp)
 
   target_link_libraries(treeDemo2 bsg
@@ -53,7 +56,7 @@ include_directories(
     ${FREEGLUT_LIBRARY}
     ${OPENGL_LIBRARY}
     ${GLEW_LIBRARY})
-  
+
   if(MINVR_FOUND)
 
     # Redefine the include directories to include MinVR.
@@ -65,7 +68,7 @@ include_directories(
       ${MINVR_INCLUDE_DIR})
 
     add_executable(demo3 demo3.cpp)
-  
+
     target_link_libraries(demo3 bsg
       ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
@@ -79,7 +82,7 @@ include_directories(
      ${FREEGLUT_LIBRARY}
      ${OPENGL_LIBRARY}
      ${GLEW_LIBRARY})
-    
+
     add_executable(textureDemoMinVR textureDemoMinVR.cpp)
 
 
@@ -114,4 +117,4 @@ include_directories(
 #endif(PNG_FOUND)
 
 
-                    
+

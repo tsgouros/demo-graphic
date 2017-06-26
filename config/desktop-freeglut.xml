@@ -1,5 +1,5 @@
 <MinVR>
-  <PluginPath>${MINVR_ROOT}/build/install/plugins</PluginPath>
+  <PluginPath>${MINVR_ROOT}/plugins</PluginPath>
   <FreeGLUTPlugin pluginType="MinVR_FreeGLUT"/>
   <OpenGLPlugin pluginType="MinVR_OpenGL"/>
 
