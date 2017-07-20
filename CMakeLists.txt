@@ -20,9 +20,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 # If you don't set one of these build types on the command line, with
 # 'cmake -DCMAKE_BUILD_TYPE=Debug' or something, the default is 'Debug'.
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE 
+  set(CMAKE_BUILD_TYPE
     Debug CACHE STRING
-    "The build options are: None Debug Release RelWithDebInfo MinSizeRel." 
+    "The build options are: None Debug Release RelWithDebInfo MinSizeRel."
     FORCE)
 endif()
 
@@ -37,7 +37,7 @@ if(BUILD_DOCUMENTATION)
   endif()
 
   message("-- Configured to build documentation.  Use 'make doc'.")
-  
+
   # Process the config file and put it in the build directory.
   set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/doc/demo-graphic.doxygen.in)
   set(doxyfile ${CMAKE_BINARY_DIR}/demo-graphic.doxygen)
@@ -54,7 +54,7 @@ if(BUILD_DOCUMENTATION)
 else()
   message("-- NOT building BSG library documentation.")
   message("   Use 'cmake -DBUILD_DOCUMENTATION=on' to build.")
-  
+
 endif()
 
 find_package(OpenGL REQUIRED)
@@ -81,7 +81,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # Linux specific code -- Not sure why pthreads or dl is required.  This
   # is not necessary on all systems.
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ldl -fPIC -lpthread")
-  
+
 #  set(CMAKE_C_COMPILER gcc)
 #  set(CMAKE_CXX_COMPILER g++)
 
@@ -98,6 +98,8 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 set(img_src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_definitions(-DDATAPATH="${CMAKE_SOURCE_DIR}")
 
 add_subdirectory(src)
 add_subdirectory(examples)
