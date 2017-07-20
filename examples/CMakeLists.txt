@@ -75,6 +75,14 @@ include_directories(
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})
 
+    add_executable(pointDemo pointDemo.cpp)
+
+    target_link_libraries(pointDemo bsg
+      ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY})
+
     add_executable(demo4 demo4.cpp)
 
     target_link_libraries(demo4 bsg

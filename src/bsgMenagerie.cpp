@@ -8,7 +8,7 @@ namespace bsg {
     drawableCompound(pShader), _height(height), _width(width) {
 
     _name = randomName("rect");
-    
+
     float w = _width/2.0f;
     float h = _height/2.0f;
     float wdiv = _width / nDivs;
@@ -44,7 +44,7 @@ namespace bsg {
                                     0.0 + (i * 1.0/nDivs));
         frontFaceUVs[k + 1] = glm::vec2(((j + 1) * 1.0/nDivs),
                                         0.0 + (i * 1.0/nDivs));
-        
+
         backFaceVertices[k] = glm::vec4(-w + ((j + 1) * wdiv),
                                         -h + (i * hdiv), 0.0f, 1.0f);
         backFaceVertices[k + 1] = glm::vec4(-w + (j * wdiv),
@@ -59,24 +59,24 @@ namespace bsg {
                                        0.0 + (i * 1.0/nDivs));
 
       }
-      
+
       _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
       _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
       _frontFace->addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
       _frontFace->addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
-      _frontFace->setDrawType(GL_TRIANGLE_STRIP, frontFaceVertices.size());  
+      _frontFace->setDrawType(GL_TRIANGLE_STRIP, frontFaceVertices.size());
 
       _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
       _backFace->addData(bsg::GLDATA_COLORS, "color", backFaceColors);
       _backFace->addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
       _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
-      _backFace->setDrawType(GL_TRIANGLE_STRIP, backFaceVertices.size());  
+      _backFace->setDrawType(GL_TRIANGLE_STRIP, backFaceVertices.size());
 
       addObject(_frontFace);
       addObject(_backFace);
     }
   }
-    
+
   drawableRectangle::drawableRectangle(bsgPtr<shaderMgr> pShader,
                                        const float &width, const float &height) :
     drawableCompound(pShader), _height(height), _width(width) {
@@ -123,9 +123,9 @@ namespace bsg {
     frontFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
     _frontFace->addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
-    
+
     // The vertices above are arranged into a set of triangles.
-    _frontFace->setDrawType(GL_TRIANGLE_STRIP);  
+    _frontFace->setDrawType(GL_TRIANGLE_STRIP);
 
     // Same thing for the other rectangle.
     std::vector<glm::vec4> backFaceVertices;
@@ -163,15 +163,15 @@ namespace bsg {
     backFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
     _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
-    
+
     // The vertices above are arranged into a set of triangles.
-    _backFace->setDrawType(GL_TRIANGLE_STRIP);  
+    _backFace->setDrawType(GL_TRIANGLE_STRIP);
 
     addObject(_frontFace);
     addObject(_backFace);
   }
 
-  
+
   drawableSphere::drawableSphere(bsgPtr<shaderMgr> pShader,
                                        const int &phiTesselation, const int &thetaTesselation, const glm::vec4 &color) :
     drawableCompound(pShader), _phi(phiTesselation), _theta(thetaTesselation) {
@@ -230,7 +230,7 @@ namespace bsg {
             // float c6 = ((double) rand() / (RAND_MAX));
             // glm::vec4 randColor = glm::vec4(c1, c2, c3, 1.0f);
             // glm::vec4 randColor2 = glm::vec4(c4, c5, c6, 1.0f);
-            
+
             // Color
             colors.push_back(color);
             colors.push_back(color);
@@ -248,9 +248,9 @@ namespace bsg {
     _sphere->addData(bsg::GLDATA_NORMALS, "normal", normals);
 
     _sphere->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
-    
+
     // The vertices above are arranged into a set of triangles.
-    _sphere->setDrawType(GL_TRIANGLE_STRIP, verts.size());  
+    _sphere->setDrawType(GL_TRIANGLE_STRIP, verts.size());
 
     addObject(_sphere);
   }
@@ -266,7 +266,7 @@ namespace bsg {
 
   // Useful function for creating the caps for the cylinder and the bottom of the cone.
   void drawableCircle::getCircle(bsgPtr<drawableObj> circle, const int &thetaTesselation, const float &normalDirection, const float &yPos, const glm::vec4 &color) {
-      
+
 
       std::vector<glm::vec4> verts(0);
       std::vector<glm::vec2> uvs(0);
@@ -296,7 +296,7 @@ namespace bsg {
 
       for (int j = 0; j < (thetaTesselation + 1); j++) {
 
-          verts.push_back(glm::vec4(r * glm::cos(-normalDirection * thetaStep*j), yPos, 
+          verts.push_back(glm::vec4(r * glm::cos(-normalDirection * thetaStep*j), yPos,
             r * glm::sin(-normalDirection * thetaStep*j), 1.0f));
 
           normal = glm::vec4(0.0f, normalDirection, 0.0f, 0.0f);
@@ -315,7 +315,7 @@ namespace bsg {
       circle->addData(bsg::GLDATA_NORMALS, "normal", normals);
 
       circle->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
-    
+
       // The vertices above are arranged into a set of triangles.
       circle->setDrawType(GL_TRIANGLE_FAN, verts.size());
     }
@@ -331,7 +331,7 @@ namespace bsg {
   // Generalized rectangle shape, useful for defining the cube. A somewhat more flexible, but less directly definable version of drawableRectangle.
   // the first argument is a shape to be filled in by this static function.
   void drawableSquare::getRect(bsgPtr<drawableObj> rect, const int &tesselation, const glm::vec3 &topLeft, const glm::vec3 &topRight, const glm::vec3 &bottomLeft, const glm::vec4 &color) {
-      
+
 
       std::vector<glm::vec4> verts(0);
       std::vector<glm::vec2> uvs(0);
@@ -356,16 +356,16 @@ namespace bsg {
 
           normals.push_back(normal);
           normals.push_back(normal);
-          
+
           uvs.push_back(glm::vec2(static_cast<float>(j)/tesselation, 1.0f - static_cast<float>(i)/tesselation));
           uvs.push_back(glm::vec2(static_cast<float>(j)/tesselation, 1.0f - static_cast<float>(i + 1)/tesselation));
-          
+
           colors.push_back(color);
           colors.push_back(color);
         }
       }
 
-      
+
       rect->addData(bsg::GLDATA_VERTICES, "position", verts);
 
       rect->addData(bsg::GLDATA_COLORS, "color", colors);
@@ -373,7 +373,7 @@ namespace bsg {
       rect->addData(bsg::GLDATA_NORMALS, "normal", normals);
 
       rect->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
-    
+
       // The vertices above are arranged into a set of triangles.
       rect->setDrawType(GL_TRIANGLE_STRIP, verts.size());
     }
@@ -397,7 +397,7 @@ namespace bsg {
       drawableSquare::getRect(_right, _tess, glm::vec3(0.5, 0.5, 0.5), glm::vec3(0.5, 0.5, -0.5), glm::vec3(0.5, -0.5, 0.5), color);
       drawableSquare::getRect(_top, _tess, glm::vec3(-0.5, 0.5, -0.5), glm::vec3(0.5, 0.5, -0.5), glm::vec3(-0.5, 0.5, 0.5), color);
       drawableSquare::getRect(_bottom, _tess, glm::vec3(-0.5, -0.5, 0.5), glm::vec3(0.5, -0.5, 0.5), glm::vec3(-0.5, -0.5, -0.5), color);
-      
+
       addObject(_front);
       addObject(_back);
       addObject(_left);
@@ -414,7 +414,7 @@ namespace bsg {
 
     _cap = new drawableObj();
     _base = new drawableObj();
-    
+
     float radius = 0.5;
     float height = 0.5;
 
@@ -471,7 +471,7 @@ namespace bsg {
     _cap->addData(bsg::GLDATA_NORMALS, "normal", normals);
 
     _cap->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
-    
+
     // The vertices above are arranged into a set of triangles.
     _cap->setDrawType(GL_TRIANGLE_STRIP, verts.size());
 
@@ -483,12 +483,12 @@ namespace bsg {
 
 
   void drawableCone::makeCone(bsgPtr<drawableObj> cone, int heightTesselation, int thetaTesselation, float radius, float height, glm::vec4 color) {
-    
+
 }
 
   drawableCylinder::drawableCylinder(bsgPtr<shaderMgr> pShader, const int &heightTesselation, const int &thetaTesselation, const glm::vec4 &color) :
     drawableCompound(pShader), _height(heightTesselation), _theta(thetaTesselation) {
-    
+
     float pi = 3.14159265358979323;
     float r = 0.5;
     float thetaStep = 2 * pi/thetaTesselation;
@@ -539,7 +539,7 @@ namespace bsg {
     _body->addData(bsg::GLDATA_NORMALS, "normal", normals);
 
     _body->addData(bsg::GLDATA_TEXCOORDS, "texture", uvs);
-    
+
     _body->setDrawType(GL_TRIANGLE_STRIP, verts.size());
 
     drawableCircle::getCircle(_top, _theta, 1, r, color);
@@ -555,11 +555,11 @@ namespace bsg {
 
     _name = randomName("axes");
     _axes = new drawableObj();
-    
+
     std::vector<glm::vec4> axesVertices;
     axesVertices.push_back(glm::vec4( -_length, 0.0f, 0.0f, 1.0f));
     axesVertices.push_back(glm::vec4(  _length, 0.0f, 0.0f, 1.0f));
-  
+
     axesVertices.push_back(glm::vec4( 0.0f, -_length, 0.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 0.0f,  _length, 0.0f, 1.0f));
 
@@ -570,7 +570,7 @@ namespace bsg {
     std::vector<glm::vec4> axesColors;
     axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
     axesColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
- 
+
     axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
     axesColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
 
@@ -585,7 +585,7 @@ namespace bsg {
 
     // It's rarely what the user wants to select the axes.
     _axes->setSelectable(false);
-    
+
     addObject(_axes);
   }
 
@@ -597,7 +597,7 @@ drawableLine::drawableLine(bsgPtr<shaderMgr> pShader,
 
   _name = randomName("line");
   _line = new drawableObj();
-  
+
   std::vector<glm::vec4> lineVertices;
   lineVertices.push_back(glm::vec4(start.x, start.y, start.z, 1.0f));
   lineVertices.push_back(glm::vec4(end.x, end.y, end.z, 1.0f));
@@ -622,7 +622,7 @@ void drawableLine::setLineEnds(const glm::vec3 &start, const glm::vec3 &end) {
   std::vector<glm::vec4> lineVertices;
   lineVertices.push_back(glm::vec4(start.x, start.y, start.z, 1.0f));
   lineVertices.push_back(glm::vec4(end.x, end.y, end.z, 1.0f));
-  
+
   _line->setData(bsg::GLDATA_VERTICES, lineVertices);
 
 }
@@ -639,7 +639,7 @@ drawableSaggyLine::drawableSaggyLine(bsgPtr<shaderMgr> pShader,
 
   _name = randomName("saggyLine");
   _line = new drawableObj();
-  
+
   std::vector<glm::vec4> lineVertices = _calculateCatenary(start, end,
                                                            nSegments,
                                                            sagFactor);
@@ -653,7 +653,7 @@ drawableSaggyLine::drawableSaggyLine(bsgPtr<shaderMgr> pShader,
                                    startColor.b + i * spanColor.b,
                                    1.0f));
   }
-  
+
   _line->addData(bsg::GLDATA_VERTICES, "position", lineVertices);
   _line->addData(bsg::GLDATA_COLORS, "color", lineColors);
 
@@ -685,11 +685,11 @@ drawableSaggyLine::_calculateCatenary(const glm::vec3 &start,
   float len = glm::distance(start, end);
   float k = pow(len/2.0f, 2); // / sagFactor;
   float f;
-  
+
   for (int i = 0; i <= _nSegments; i++) {
 
     f = sagFactor/len * (pow(len * float(i)/float(_nSegments) - len/2.0f, 2) - k);
-    
+
     out.push_back(glm::vec4(start.x + i * span.x,
                             start.y + i * span.y - f,
                             start.z + i * span.z,
@@ -699,5 +699,24 @@ drawableSaggyLine::_calculateCatenary(const glm::vec3 &start,
   return out;
 }
 
-  
+drawablePoints::drawablePoints(bsgPtr<shaderMgr> pShader,
+                               const std::vector<glm::vec4> &points,
+                               const std::vector<glm::vec4> &colors) :
+  drawableCompound(pShader) {
+
+  _name = randomName("points");
+  _points = new drawableObj();
+
+  _points->addData(bsg::GLDATA_VERTICES, "position", points);
+  _points->addData(bsg::GLDATA_COLORS, "color", colors);
+
+  _points->setDrawType(GL_POINTS);
+
+  _points->setSelectable(false);
+  _points->setInterleaved(false);
+
+  addObject(_points);
+}
+
+
 }

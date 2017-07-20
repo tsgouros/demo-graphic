@@ -1,7 +1,7 @@
 #include "bsg.h"
 
 namespace bsg {
-  
+
 class drawableRectangle : public drawableCompound {
  private:
 
@@ -64,7 +64,7 @@ class drawableSphere : public drawableCompound {
 
 class drawableCone : public drawableCompound {
  private:
-  
+
   float _height, _theta;
 
   bsgPtr<drawableObj> _cap;
@@ -78,7 +78,7 @@ class drawableCone : public drawableCompound {
 
 class drawableCircle : public drawableCompound {
  private:
-  
+
   float _theta;
 
   bsgPtr<drawableObj> _circle;
@@ -91,7 +91,7 @@ class drawableCircle : public drawableCompound {
 
 class drawableCylinder : public drawableCompound {
  private:
-  
+
   float _height, _theta;
 
   bsgPtr<drawableObj> _base;
@@ -115,7 +115,7 @@ class drawableAxes : public drawableCompound {
  public:
    drawableAxes(bsgPtr<shaderMgr> pShader, const float &length);
 };
- 
+
 
 
 /// \brief A line connecting two points.
@@ -161,7 +161,19 @@ class drawableSaggyLine : public drawableCompound {
   void setLineEnds(const glm::vec3 &start, const glm::vec3 &end);
 };
 
+/// \brief A collection of points.
+///
+/// A collection of arbitrarily-positioned points in 3D space.
+class drawablePoints : public drawableCompound {
+
+ private:
+  bsgPtr<drawableObj> _points;
+
+ public:
+  drawablePoints(bsgPtr<shaderMgr> pShader,
+                 const std::vector<glm::vec4> &points,
+                 const std::vector<glm::vec4> &colors);
+};
 
 
- 
 }
