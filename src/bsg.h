@@ -403,7 +403,7 @@ class textureMgr {
 
   GLuint _loadPNG(const std::string imagePath);
   GLuint _loadCheckerBoard (const int size, int numFields);
-  
+
  public:
   textureMgr() { _setupDefaultNames(); };
 
@@ -874,7 +874,16 @@ class drawableMulti {
   };
 
   /// \brief Returns the vector position.
+  ///
+  /// This is the object position relative to the origin of whatever
+  /// space contains this object.  This is seldom the world
+  /// coordinates.  You may want to use getWorldPosition() for that.
   glm::vec3 getPosition() { return _position; };
+  /// \brief Returns the object position in world coordinates.
+  glm::vec4 getWorldPosition() {
+    return getModelMatrix() * glm::vec4(_position, 1.0f);
+  }
+
   /// \brief Returns the vector scale.
   glm::vec3 getScale() { return _scale; };
   /// \brief Returns the orientation as a quaternion.
@@ -889,6 +898,9 @@ class drawableMulti {
   /// available transformation matrices in place, but not the view or
   /// projection matrix.
   virtual bsgNameList insideBoundingBox(const glm::vec4 &testPoint) = 0;
+  bsgNameList insideBoundingBox(const glm::vec3 &testPoint) {
+    return insideBoundingBox(glm::vec4(testPoint, 1.0));
+  }
 
   /// \brief Returns the names involved in this object.
   ///
