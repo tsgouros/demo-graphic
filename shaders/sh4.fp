@@ -33,6 +33,6 @@ void main()
 
   float ratio = 0.5;
 
-  //  color = baseColor * (ambient + diffuse * lambertian);
-  color = baseColor;
+  color = baseColor * (ambient + diffuse * lambertian);
+  //color = baseColor;
 }

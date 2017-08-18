@@ -169,7 +169,7 @@ private:
 
     _axesSet = new bsg::drawableAxes(axesShader, 100.0f);
 
-    //_scene.addObject(_pointSet);
+    _scene.addObject(_pointSet);
     _scene.addObject(_axesSet);
 
     // All the shapes are now added to the scene.
