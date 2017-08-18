@@ -40,7 +40,7 @@ private:
   std::string _vertexFile;
   std::string _fragmentFile;
 
-  
+
   // These functions from demo2.cpp are not needed here:
   //
   //    init()
@@ -53,7 +53,7 @@ private:
   // This contains a bunch of sanity checks from the graphics
   // initialization of demo2.cpp.  They are still useful with MinVR.
   void _checkContext() {
-    
+
     // There is one more graphics library used here, called GLEW.  This
     // library sorts through the various OpenGL updates and changes and
     // allows a user to pretend that it's all a consistent and simple
@@ -108,7 +108,7 @@ private:
     std::cout << "looking at ("
               << _scene.getLookAtPosition().x << ", "
               << _scene.getLookAtPosition().y << ", "
-              << _scene.getLookAtPosition().z << ")." << std::endl; 
+              << _scene.getLookAtPosition().z << ")." << std::endl;
   }
 
   void _initializeScene() {
@@ -132,7 +132,7 @@ private:
 
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
-  
+
     _topShape = new bsg::drawableObj();
     _bottomShape = new bsg::drawableObj();
 
@@ -152,7 +152,7 @@ private:
     topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
     topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
     topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
- 
+
     topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
     topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
     topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
@@ -184,7 +184,7 @@ private:
     _topShape->addData(bsg::GLDATA_COLORS, "color", topShapeColors);
 
     // The vertices above are arranged into a set of triangles.
-    _topShape->setDrawType(GL_TRIANGLES);  
+    _topShape->setDrawType(GL_TRIANGLES);
 
     // Same thing for the other tetrahedron.
     std::vector<glm::vec4> bottomShapeVertices;
@@ -228,14 +228,14 @@ private:
     _bottomShape->addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
 
     // The vertices above are arranged into a set of triangles.
-    _bottomShape->setDrawType(GL_TRIANGLES);  
+    _bottomShape->setDrawType(GL_TRIANGLES);
 
     // Now let's add a set of axes.
     _axes = new bsg::drawableObj();
     std::vector<glm::vec4> axesVertices;
     axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
-  
+
     axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
     axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
 
@@ -279,7 +279,7 @@ private:
     // All the shapes are now added to the scene.
   }
 
-  
+
 public:
   DemoVRApp(int argc, char** argv) :
     MinVR::VRApp(argc, argv) {
@@ -293,21 +293,27 @@ public:
     _lights = new bsg::lightList();
 
     _oscillator = 0.0f;
-    
-    _vertexFile = std::string(argv[1]);
-    _fragmentFile = std::string(argv[2]);
 
+    // MinVR requires that some data be specified using the command
+    // line.  These getLeftoverArgc() and getLeftoverArgv() methods
+    // return argc and argv without the parts that MinVR used, so your
+    // application's use of the command line can remain unchanged.
+    if (getLeftoverArgc() > 2) _fragmentFile = std::string(getLeftoverArgv()[2]);
+    else _fragmentFile = std::string(DATAPATH) + "/shaders/shader.fp";
+
+    if (getLeftoverArgc() > 1) _vertexFile = std::string(getLeftoverArgv()[1]);
+    else _vertexFile = std::string(DATAPATH) + "/shaders/shader2.vp";
   }
 
 	/// The MinVR apparatus invokes this method whenever there is a new
 	/// event to process.
 	void onVREvent(const MinVR::VREvent &event) {
-        
+
     //event.print();
-        
+
     // This heartbeat event recurs at regular intervals, so you can do
     // animation with the model matrix here, as well as in the render
-    // function.  
+    // function.
 		// if (event.getName() == "FrameStart") {
     //   const double time = event.getDataAsDouble("ElapsedSeconds");
     //   return;
@@ -326,7 +332,7 @@ public:
     // Print out where you are (where the camera is) and where you're
     // looking.
     // _showCameraPosition();
-    
+
 	}
 
   /// \brief Set the render context.
@@ -337,7 +343,7 @@ public:
   /// context.
   void onVRRenderGraphicsContext(const MinVR::VRGraphicsState &renderState) {
 
-    // Check if this is the first call.  If so, do some initialization. 
+    // Check if this is the first call.  If so, do some initialization.
     if (renderState.isInitialRenderCall()) {
       _checkContext();
       _initializeScene();
@@ -362,10 +368,10 @@ public:
       _tetrahedron->setPosition(pos);
 
       // Now the preliminaries are done, on to the actual drawing.
-  
+
       // First clear the display.
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-  
+
       // Second the load() step.  We let MinVR give us the projection
       // matrix from the render state argument to this method.
       const float* pm = renderState.getProjectionMatrix();
@@ -402,22 +408,23 @@ int main(int argc, char **argv) {
     std::cout << "argv[" << i << "]: " << std::string(argv[i]) << std::endl;
   }
 
-  // If there weren't enough args, throw an error and explain what the
-  // user should have done.
-  if (argc < 4) {
-    throw std::runtime_error("\nNeed three args, including the names of a vertex and fragment shader.\nTry 'bin/demo3 ../shaders/shader2.vp ../shaders/shader.fp -c ../config/desktop-freeglut.xml'");
-
+  // Now we load the shaders.  First check to see if any have been
+  // specified on the command line.
+  if (argc < 3) {
+    std::cerr << "Should have two args: the names of a vertex and fragment shader." << std::endl
+              << "Try 'bin/demo3 ../shaders/shader2.vp ../shaders/shader.fp -c ../config/desktop-freeglut.xml'." << std::endl
+              << "We will soldier on with the default shaders." << std::endl ;
   }
 
   // Is the MINVR_ROOT variable set?  MinVR usually needs this to find
   // some important things.
   if (getenv("MINVR_ROOT") == NULL) {
-    std::cout << "***** No MINVR_ROOT -- MinVR might not be found *****" << std::endl 
+    std::cout << "***** No MINVR_ROOT -- MinVR might not be found *****" << std::endl
               << "MinVR is found (at runtime) via the 'MINVR_ROOT' variable."
               << std::endl << "Try 'export MINVR_ROOT=/my/path/to/MinVR'."
               << std::endl;
   }
-  
+
   // Initialize the app.
 	DemoVRApp app(argc, argv);
 
@@ -430,5 +437,5 @@ int main(int argc, char **argv) {
 
 
 
-  
+
 

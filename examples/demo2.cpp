@@ -49,10 +49,10 @@ void renderScene() {
   tetrahedron->setPosition(pos);
 
   // Now the preliminaries are done, on to the actual drawing.
-  
+
   // First clear the display.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
+
   // Second the load() step.  For a simple desktop display, it is a
   // bit mysterious to have separate load and draw steps, but it makes
   // sense when you have to render to a stereo display, where you only
@@ -78,7 +78,7 @@ void resizeWindow(int width, int height) {
   // Prevent a divide by zero, when window is too short (you cant make
   // a window of zero width).
   if(height == 0) height = 1;
- 
+
   // Set the viewport to be the entire window
   glViewport(0, 0, width, height);
 
@@ -100,7 +100,7 @@ void showCameraPosition() {
   std::cout << "looking at ("
             << scene.getLookAtPosition().x << ", "
             << scene.getLookAtPosition().y << ", "
-            << scene.getLookAtPosition().z << ")." << std::endl; 
+            << scene.getLookAtPosition().z << ")." << std::endl;
 }
 
 // This is an event handler, designed to handle events issued by the
@@ -111,7 +111,7 @@ void processNormalKeys(unsigned char key, int x, int y) {
   // Each press of a key changes a dimension by this amount. If you
   // want things to go faster, increase this step.
   float step = 0.5f;
-  
+
   // This function processes only the 'normal' keys.  The arrow keys
   // don't appear here, nor mouse events.
   switch (key) {
@@ -176,7 +176,7 @@ void processSpecialKeys(int key, int x, int y) {
 
   float stepAngle = 5.0f / 360.0f;
 
-  switch(key) {    
+  switch(key) {
   case GLUT_KEY_UP:
     scene.addToCameraViewAngle(0.0f,  stepAngle);
     break;
@@ -280,20 +280,28 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 3) {
-    throw std::runtime_error("\nNeed two args: the names of a vertex and fragment shader.\nTry 'bin/demo2 ../shaders/shader2.vp ../shaders/shader.fp'.");
+    std::cerr << "Should have two args: the names of a vertex and fragment shader." << std::endl
+              << "Try 'bin/demo2 ../shaders/shader2.vp ../shaders/shader.fp'." << std::endl
+              << "We will soldier on with the default shaders." << std::endl ;
   }
+
+  std::string fragmentFile;
+  if (argc > 2) fragmentFile = std::string(argv[2]);
+  else fragmentFile = std::string(DATAPATH) + "/shaders/shader.fp";
+
+  std::string vertexFile;
+  if (argc > 1) vertexFile = std::string(argv[1]);
+  else vertexFile = std::string(DATAPATH) + "/shaders/shader2.vp";
 
   // Create a shader manager and load the light list.
   bsg::bsgPtr<bsg::shaderMgr> shader = new bsg::shaderMgr();
   shader->addLights(lights);
 
   // Add the shaders to the manager, first the vertex shader...
-  std::string vertexFile = std::string(argv[1]);
   shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
 
   // ... then the fragment shader.  You could potentially add a
   // geometry shader at this point.
-  std::string fragmentFile = std::string(argv[2]);
   shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
   // The shaders are loaded, now compile them.
@@ -303,7 +311,7 @@ int main(int argc, char **argv) {
   // that make up the scene.
   bsg::bsgPtr<bsg::drawableObj> topShape = new bsg::drawableObj();
   bsg::bsgPtr<bsg::drawableObj> bottomShape = new bsg::drawableObj();
-  
+
   // Specify the vertices of the shapes we're drawing.  Note that the
   // faces are specified with a *counter-clockwise* winding order, the
   // OpenGL default.  You can make your faces wind the other
@@ -352,7 +360,7 @@ int main(int argc, char **argv) {
   topShape->addData(bsg::GLDATA_COLORS, "color", topShapeColors);
 
   // The vertices above are arranged into a set of triangles.
-  topShape->setDrawType(GL_TRIANGLES);  
+  topShape->setDrawType(GL_TRIANGLES);
 
   // Same thing for the other tetrahedron.
   std::vector<glm::vec4> bottomShapeVertices;
@@ -396,7 +404,7 @@ int main(int argc, char **argv) {
   bottomShape->addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
 
   // The vertices above are arranged into a set of triangles.
-  bottomShape->setDrawType(GL_TRIANGLES);  
+  bottomShape->setDrawType(GL_TRIANGLES);
 
   // Now let's add a set of axes.
   bsg::bsgPtr<bsg::drawableObj> axes = new bsg::drawableObj();
@@ -404,7 +412,7 @@ int main(int argc, char **argv) {
   std::vector<glm::vec4> axesVertices;
   axesVertices.push_back(glm::vec4( -100.0f, 0.0f, 0.0f, 1.0f));
   axesVertices.push_back(glm::vec4( 100.0f, 0.0f, 0.0f, 1.0f));
-  
+
   axesVertices.push_back(glm::vec4( 0.0f, -100.0f, 0.0f, 1.0f));
   axesVertices.push_back(glm::vec4( 0.0f, 100.0f, 0.0f, 1.0f));
 
@@ -445,7 +453,7 @@ int main(int argc, char **argv) {
   // call and replacing it with the following.
   // bsg::drawableRectangle* rect = new bsg::drawableRectangle(shader, 3.0f, 5.0f);
   // scene.addObject(rect);
-  
+
   axesSet = new bsg::drawableCompound(shader);
   axesSet->addObject(axes);
 
@@ -454,7 +462,7 @@ int main(int argc, char **argv) {
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
   scene.setCameraPosition(glm::vec3(1.0f, 2.0f, 7.5f));
-  
+
   // All the shapes are now added to the scene.
 
   // Do the one-time things.  The every-render operations are done
@@ -467,5 +475,5 @@ int main(int argc, char **argv) {
 
   // We never get here, but the compiler is annoyed when you don't
   // exit from a function.
-  return(0); 
+  return(0);
 }

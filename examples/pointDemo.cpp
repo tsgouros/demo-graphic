@@ -51,6 +51,7 @@ private:
   bsg::drawablePoints* _pointSet;
 
   std::string _vertexFile;
+  std::string _geometryFile;
   std::string _fragmentFile;
 
 
@@ -99,6 +100,7 @@ private:
     // ignore faces that are facing away from the camera.
     glEnable(GL_CULL_FACE);
 
+    glPointSize(10);
   }
 
   // Just a little debug function so that a user can see what's going on
@@ -121,18 +123,23 @@ private:
     // lighting, and the shapes don't have textures, this is irrelevant.
     _lights->addLight(glm::vec4(10.0f, 10.0f, 10.0f, 1.0f),
                       glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-    _lights->addLight(glm::vec4(10.0f,-10.0f, 10.0f, 1.0f),
-                      glm::vec4(0.0f, 1.0f, 1.0f, 0.0f));
 
     // Create a shader manager and load the light list.
     _shader->addLights(_lights);
 
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
+    std::cout << "vertex shader: " << _vertexFile << std::endl;
 
     // ... then the fragment shader.  You could potentially add a
     // geometry shader at this point.
+    if (!_geometryFile.empty()) {
+      _shader->addShader(bsg::GLSHADER_GEOMETRY, _geometryFile);
+      std::cout << "geometry shader: " << _geometryFile << std::endl;
+    }
+    
     _shader->addShader(bsg::GLSHADER_FRAGMENT, _fragmentFile);
+    std::cout << "fragment shader: " << _fragmentFile << std::endl;
 
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
@@ -141,25 +148,28 @@ private:
     std::vector<glm::vec4> pointSetColors;
 
     for (int i = 0; i < 50; i++) {
-      pointSetVertices.push_back(glm::vec4(mrand.getf(10.0f),
-                                           mrand.getf(10.0f),
-                                           mrand.getf(10.0f), 1.0f));
-      pointSetColors.push_back(glm::vec4(mrand.getf(1.0f),
-                                         mrand.getf(1.0f),
-                                         mrand.getf(1.0f), 1.0f));
+      glm::vec4 p = glm::vec4(mrand.getf(10.0f),
+                              mrand.getf(10.0f),
+                              mrand.getf(10.0f), 1.0f);
+      //std::cout << "X:" << p.x << " Y:" << p.y << " Z:" << p.z << std::endl;
+      pointSetVertices.push_back(p);
+      pointSetColors.push_back(glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+      //mrand.getf(1.0f), mrand.getf(1.0f), mrand.getf(1.0f), 1.0f));
     }
 
     _pointSet = new bsg::drawablePoints(_shader, pointSetVertices, pointSetColors);
 
     // Now let's add a set of axes.
     bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
-    axesShader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
-    axesShader->addShader(bsg::GLSHADER_FRAGMENT, _fragmentFile);
+    axesShader->addShader(bsg::GLSHADER_VERTEX,
+                          std::string(DATAPATH) + "/shaders/sh4-nog.vp");
+    axesShader->addShader(bsg::GLSHADER_FRAGMENT,
+                          std::string(DATAPATH) + "/shaders/sh4-nog.fp");
     axesShader->compileShaders();
 
-    _axesSet = new bsg::drawableAxes(axesShader, 10.0f);
+    _axesSet = new bsg::drawableAxes(axesShader, 100.0f);
 
-    _scene.addObject(_pointSet);
+    //_scene.addObject(_pointSet);
     _scene.addObject(_axesSet);
 
     // All the shapes are now added to the scene.
@@ -185,10 +195,13 @@ public:
     // return argc and argv without the parts that MinVR used, so your
     // application's use of the command line can remain unchanged.
     if (getLeftoverArgc() > 2) _fragmentFile = std::string(getLeftoverArgv()[2]);
-    else _fragmentFile = std::string(DATAPATH) + "/shaders/shader.fp";
+    else _fragmentFile = std::string(DATAPATH) + "/shaders/sh4.fp";
+
+    if (getLeftoverArgc() > 3) _geometryFile = std::string(getLeftoverArgv()[3]);
+    else _geometryFile = ""; //std::string(DATAPATH) + "/shaders/sh4.gp";
 
     if (getLeftoverArgc() > 1) _vertexFile = std::string(getLeftoverArgv()[1]);
-    else _vertexFile = std::string(DATAPATH) + "/shaders/shader2.vp";
+    else _vertexFile = std::string(DATAPATH) + "/shaders/sh4.vp";
   }
 
 	/// The MinVR apparatus invokes this method whenever there is a new
@@ -217,7 +230,7 @@ public:
 
     // Print out where you are (where the camera is) and where you're
     // looking.
-    // _showCameraPosition();
+    //_showCameraPosition();
 
 	}
 
@@ -297,8 +310,8 @@ int main(int argc, char **argv) {
   // Now we load the shaders.  First check to see if any have been
   // specified on the command line.
   if (argc < 3) {
-    std::cerr << "Should have two args: the names of a vertex and fragment shader." << std::endl
-              << "Try 'bin/demo3 ../shaders/shader2.vp ../shaders/shader.fp -c ../config/desktop-freeglut.xml'." << std::endl
+    std::cerr << "Should have three args: the names of vertex, geometry, and fragment shaders." << std::endl
+              << "Try 'bin/pointDemo ../shaders/sh4.vp ../shaders/sh4.fp ../shaders/sh4.gp -c ../config/desktop-glfw.xml'." << std::endl
               << "We will soldier on with the default shaders." << std::endl ;
   }
 

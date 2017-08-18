@@ -420,7 +420,12 @@ void shaderMgr::compileShaders() {
   _programID = glCreateProgram();
   glAttachShader(_programID, _shaderIDs[GLSHADER_VERTEX]);
   glAttachShader(_programID, _shaderIDs[GLSHADER_FRAGMENT]);
-  if (geom) glAttachShader(_programID, _shaderIDs[GLSHADER_GEOMETRY]);
+  if (geom) {
+    glAttachShader(_programID, _shaderIDs[GLSHADER_GEOMETRY]);
+    int temp;
+    glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB, &temp);
+    glProgramParameteriEXT(_programID, GL_GEOMETRY_VERTICES_OUT_ARB, 4);
+  }
 
   // Assemble the shaders into a single program with 'link', which
   // will make sure that the inputs to the fragment shader correspond
@@ -574,7 +579,7 @@ void drawableObj::_getAttribLocations(GLuint programID) {
   if (_vertices.ID < 0) {
     std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
     badID = true;
-  }
+  } else std::cerr << "** vertex id:" << _vertices.name << ":" << _vertices.ID << std::endl;
 
   if (!_colors.empty()) {
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
@@ -582,7 +587,7 @@ void drawableObj::_getAttribLocations(GLuint programID) {
     if (_colors.ID < 0) {
       std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
       badID = true;
-    }
+    } std::cerr << "** color id:" << _colors.name << ":" << _colors.ID << std::endl;
   }
   if (!_normals.empty()) {
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
