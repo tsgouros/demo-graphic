@@ -20,19 +20,11 @@ vec4 fromgamma(vec4 a){
 
 void main()
 {
-  vec3 lightDir = normalize(vec3(0, 0.0, 1));
+  vec3 lightDir = normalize(vec3(0.0, 1.0, 0.5));
   float lambertian = max(dot(lightDir, gsNormal.xyz), 0.0);
   float ambient = 0.3;
-  float diffuse = 1. - ambient;
+  float diffuse = 1.0 - ambient;
   vec4 baseColor = gsColor;
 
-  vec4 minColor = togamma(vec4( 0 , .9, 0 , 1));
-  vec4 medColor = togamma(vec4( 1 , .2, .2, 1));
-  vec4 maxColor = togamma(vec4( .4, .4,  1, 1));
-  float midpoint = 0.3;
-
-  float ratio = 0.5;
-
-  //  color = baseColor * (ambient + diffuse * lambertian);
-  color = baseColor;
+  color = baseColor * (ambient + diffuse * lambertian);
 }

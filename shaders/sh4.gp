@@ -4,11 +4,9 @@ layout(points) in;
 layout(triangle_strip, max_vertices=85) out;
 
 in vec4 vertexColor[];
-//in vec4 vertexPosition[];
 
 out vec4 gsColor;
 out vec4 gsNormal;
-//out vec4 gsPosition;
 
 //UNIFORM
 uniform mat4 projMatrix;
@@ -16,7 +14,7 @@ uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 uniform mat4 normalMatrix;
 
-float radius = 0.05;
+float radius = 0.06;
 float pi = 3.1415926;
 
 vec4 get_vertex(float theta, float phi){
@@ -29,7 +27,7 @@ vec4 transform(vec4 i){
 
 void main ()
 {
-  vec4 pointPosition = gl_in[0].gl_Position; //vertexPosition[0];
+  vec4 pointPosition = gl_in[0].gl_Position;
 
   gsColor = vertexColor[0];
 
@@ -45,12 +43,10 @@ void main ()
 
       gsNormal = get_vertex(theta, phi);
       gl_Position = transform(pointPosition + radius * gsNormal);
-      //gsPosition = gl_Position;
       EmitVertex();
 
       gsNormal = get_vertex(theta, phi + phiStep);
       gl_Position = transform(pointPosition + radius * gsNormal);
-      //gsPosition = gl_Position;
       EmitVertex();
     }
 

@@ -148,12 +148,12 @@ private:
     std::vector<glm::vec4> pointSetColors;
 
     for (int i = 0; i < 50; i++) {
-      glm::vec4 p = glm::vec4(mrand.getf(1.0f),
-                              mrand.getf(1.0f),
-                              mrand.getf(1.0f), 1.0f);
+      glm::vec4 p = glm::vec4(mrand.getf(1.0f) - 0.5f,
+                              mrand.getf(1.0f) - 0.5f,
+                              mrand.getf(1.0f) - 0.5f, 1.0f);
       //std::cout << "X:" << p.x << " Y:" << p.y << " Z:" << p.z << std::endl;
       pointSetVertices.push_back(p);
-      pointSetColors.push_back(glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+      pointSetColors.push_back(glm::vec4(0.8f, 0.2f, 0.5f, 0.5f));
       //mrand.getf(1.0f), mrand.getf(1.0f), mrand.getf(1.0f), 1.0f));
     }
 
@@ -225,7 +225,7 @@ public:
 		if (event.getName() == "KbdEsc_Down") {
 			shutdown();
     } else if (event.getName() == "FrameStart") {
-      _oscillator = event.getDataAsFloat("ElapsedSeconds");
+      _oscillator = 0.3 * event.getDataAsFloat("ElapsedSeconds");
     }
 
     // Print out where you are (where the camera is) and where you're
@@ -288,12 +288,6 @@ public:
                                         vm[8],  vm[9],vm[10],vm[11],
                                         vm[12],vm[13],vm[14],vm[15]);
 
-      // std::cout << "View matrix:" << std::endl;
-      // std::cout << "[" << vm[0] << "," << vm[1] << "," << vm[2] << "," << vm[3] << "]" << std::endl;
-      // std::cout << "[" << vm[4] << "," << vm[5] << "," << vm[6] << "," << vm[7] << "]" << std::endl;
-      // std::cout << "[" << vm[8] << "," << vm[9] << "," << vm[10] << "," << vm[11] << "]" << std::endl;
-      // std::cout << "[" << vm[12] << "," << vm[13] << "," << vm[14] << "," << vm[15] << "]" << std::endl;
-      
       //bsg::bsgUtils::printMat("view", viewMatrix);
       _scene.draw(viewMatrix, projMatrix);
 
