@@ -84,7 +84,7 @@ private:
     }
 
     // This is the background color of the viewport.
-    glClearColor(0.1 , 0.0, 0.4, 1.0);
+    glClearColor(0.4 , 0.4, 0.4, 1.0);
 
     // Now we're ready to start issuing OpenGL calls.  Start by enabling
     // the modes we want.  The DEPTH_TEST is how you get hidden faces.
@@ -148,9 +148,9 @@ private:
     std::vector<glm::vec4> pointSetColors;
 
     for (int i = 0; i < 50; i++) {
-      glm::vec4 p = glm::vec4(mrand.getf(10.0f),
-                              mrand.getf(10.0f),
-                              mrand.getf(10.0f), 1.0f);
+      glm::vec4 p = glm::vec4(mrand.getf(1.0f),
+                              mrand.getf(1.0f),
+                              mrand.getf(1.0f), 1.0f);
       //std::cout << "X:" << p.x << " Y:" << p.y << " Z:" << p.z << std::endl;
       pointSetVertices.push_back(p);
       pointSetColors.push_back(glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
@@ -162,14 +162,14 @@ private:
     // Now let's add a set of axes.
     bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
     axesShader->addShader(bsg::GLSHADER_VERTEX,
-                          std::string(DATAPATH) + "/shaders/sh4-nog.vp");
+                          std::string(DATAPATH) + "/shaders/sh5.vp");
     axesShader->addShader(bsg::GLSHADER_FRAGMENT,
-                          std::string(DATAPATH) + "/shaders/sh4-nog.fp");
+                          std::string(DATAPATH) + "/shaders/sh5.fp");
     axesShader->compileShaders();
 
-    _axesSet = new bsg::drawableAxes(axesShader, 100.0f);
+    _axesSet = new bsg::drawableAxes(axesShader, 1.0f);
 
-    //_scene.addObject(_pointSet);
+    _scene.addObject(_pointSet);
     _scene.addObject(_axesSet);
 
     // All the shapes are now added to the scene.
@@ -262,8 +262,8 @@ public:
       // your scene, you can do that here.
       glm::vec3 pos = _pointSet->getPosition();
       pos.x = sin(_oscillator);
-      pos.y = 1.0f - cos(_oscillator);
-      pos.z = -5.0f;
+      pos.y = cos(_oscillator);
+      pos.z = 0.0f;
       _pointSet->setPosition(pos);
 
       // Now the preliminaries are done, on to the actual drawing.
@@ -288,6 +288,12 @@ public:
                                         vm[8],  vm[9],vm[10],vm[11],
                                         vm[12],vm[13],vm[14],vm[15]);
 
+      // std::cout << "View matrix:" << std::endl;
+      // std::cout << "[" << vm[0] << "," << vm[1] << "," << vm[2] << "," << vm[3] << "]" << std::endl;
+      // std::cout << "[" << vm[4] << "," << vm[5] << "," << vm[6] << "," << vm[7] << "]" << std::endl;
+      // std::cout << "[" << vm[8] << "," << vm[9] << "," << vm[10] << "," << vm[11] << "]" << std::endl;
+      // std::cout << "[" << vm[12] << "," << vm[13] << "," << vm[14] << "," << vm[15] << "]" << std::endl;
+      
       //bsg::bsgUtils::printMat("view", viewMatrix);
       _scene.draw(viewMatrix, projMatrix);
 

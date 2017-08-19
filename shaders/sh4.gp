@@ -1,10 +1,10 @@
 #version 150
 
 layout(points) in;
-layout(points, max_vertices=85) out;
+layout(triangle_strip, max_vertices=85) out;
 
 in vec4 vertexColor[];
-in vec4 vertexPosition[];
+//in vec4 vertexPosition[];
 
 out vec4 gsColor;
 out vec4 gsNormal;
@@ -16,7 +16,7 @@ uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 uniform mat4 normalMatrix;
 
-float radius = 0.2;
+float radius = 0.05;
 float pi = 3.1415926;
 
 vec4 get_vertex(float theta, float phi){

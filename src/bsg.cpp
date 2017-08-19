@@ -426,7 +426,7 @@ void shaderMgr::compileShaders() {
     glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB, &temp);
     glProgramParameteriEXT(_programID, GL_GEOMETRY_VERTICES_OUT_ARB, 4);
   }
-
+  
   // Assemble the shaders into a single program with 'link', which
   // will make sure that the inputs to the fragment shader correspond
   // with outputs from the vertex shader, and so on.
@@ -579,7 +579,7 @@ void drawableObj::_getAttribLocations(GLuint programID) {
   if (_vertices.ID < 0) {
     std::cerr << "** Caution: Bad ID for vertices attribute '" << _vertices.name << "'" << std::endl;
     badID = true;
-  } else std::cerr << "** vertex id:" << _vertices.name << ":" << _vertices.ID << std::endl;
+  } 
 
   if (!_colors.empty()) {
     _colors.ID = glGetAttribLocation(programID, _colors.name.c_str());
@@ -587,7 +587,7 @@ void drawableObj::_getAttribLocations(GLuint programID) {
     if (_colors.ID < 0) {
       std::cerr << "** Caution: Bad ID for colors attribute '" << _colors.name << "'" << std::endl;
       badID = true;
-    } std::cerr << "** color id:" << _colors.name << ":" << _colors.ID << std::endl;
+    } 
   }
   if (!_normals.empty()) {
     _normals.ID = glGetAttribLocation(programID, _normals.name.c_str());
@@ -658,6 +658,23 @@ void drawableObj::prepare(GLuint programID) {
   } else {
     _prepareSeparate(programID);
   }
+
+#if defined(__APPLE__)
+  // For Mac, post glsl 120
+  glBindAttribLocation(programID, _vertices.ID, _vertices.name.c_str());
+
+  if (!_colors.empty()) {
+    glBindAttribLocation(programID, _colors.ID, _colors.name.c_str());
+  }
+  if (!_normals.empty()) {
+    glBindAttribLocation(programID, _normals.ID, _normals.name.c_str());
+  }
+  if (!_uvs.empty()) {
+    glBindAttribLocation(programID, _uvs.ID, _uvs.name.c_str());
+  }
+  glLinkProgram(programID);
+  // End special Mac section.
+#endif
 }
 
 void drawableObj::_prepareInterleaved(GLuint programID) {
@@ -681,6 +698,13 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
   }
   // End of calculating all the stride values.
 
+#if defined(__APPLE__)
+  // Including this for OS X seems to allow using glsl > 2.1.  Don't know why.
+  GLuint vao;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+#endif
+ 
   // Prepare a data buffer for the interleaved data.
   glGenBuffers(1, &_interleavedData.bufferID);
 
@@ -716,6 +740,10 @@ void drawableObj::_prepareInterleaved(GLuint programID) {
 
 void drawableObj::_prepareSeparate(GLuint programID) {
 
+  GLuint vao;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+  
   // Figure out which buffers we need and get IDs for them.
   glGenBuffers(1, &_vertices.bufferID);
   if (!_colors.empty()) glGenBuffers(1, &_colors.bufferID);
