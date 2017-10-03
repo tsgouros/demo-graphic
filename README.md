@@ -136,7 +136,7 @@ some MinVR configuration files in the config directory.
     $ cd /path/to/my/MinVR
     $ export MINVR_ROOT=$(pwd)
     $ cd /path/to/my/demo-graphic/build
-    $ bin/demo3 ../config/desktop-freeglut.xml ../src/shader2.vp ../src/shader.fp
+    $ bin/demo3 ../shaders/shader2.vp ../shaders/shader.fp -c ../config/desktop-freeglut.xml
 
 Note that MINVR_ROOT points to the root of the MinVR *installation*,
 not the MinVR *repo*.
