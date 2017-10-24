@@ -16,4 +16,5 @@ void main()
   // here is taking the RGB value in Color and making it into an RGBA
   // value.
   gl_FragColor = colorFrag;
+  //gl_FragColor = vec4(0.5,0.5,0.5,1);
 }

@@ -343,12 +343,12 @@ int main(int argc, char **argv) {
   shader->addLights(lights);
 
   // Add the shaders to the manager, first the vertex shader...
-  std::string vertexFile = std::string("../shaders/textureShader.vp");
+  std::string vertexFile = std::string("../shaders/shader2.vp");
   shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
 
   // ... then the fragment shader.  You could potentially add a
   // geometry shader at this point.
-  std::string fragmentFile = std::string("../shaders/textureShader.fp");
+  std::string fragmentFile = std::string("../shaders/shader.fp");
   shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
   // The shaders are loaded, now compile them.
@@ -356,8 +356,7 @@ int main(int argc, char **argv) {
 
   // Add a texture to our shader manager object.
   bsg::bsgPtr<bsg::textureMgr> texture = new bsg::textureMgr();
-  //texture->readFile(bsg::texturePNG, "../data/gladiolas-sq.png");
-  //shader->addTexture(texture);
+
 
   // Do the same for the axes shader:
   bsg::bsgPtr<bsg::shaderMgr> axesShader = new bsg::shaderMgr();
@@ -372,9 +371,113 @@ int main(int argc, char **argv) {
   rectGroup = new bsg::drawableCollection("rectangles");
 
   // Now generate them and add them to the group.
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 10; i++) {
 
-    bsg::drawableRectangle* b = new bsg::drawableRectangle(shader, 2.0f, 2.0f, 2);
+    bsg::drawableCompound* b = new bsg::drawableCompound(shader); //new bsg::drawableRectangle(shader, 2.0f, 2.0f, 2);
+
+  bsg::bsgPtr<bsg::drawableObj> topShape = new bsg::drawableObj();
+  bsg::bsgPtr<bsg::drawableObj> bottomShape = new bsg::drawableObj();
+  
+  // Specify the vertices of the shapes we're drawing.  Note that the
+  // faces are specified with a *counter-clockwise* winding order, the
+  // OpenGL default.  You can make your faces wind the other
+  // direction, but have to adjust the OpenGL expectations with
+  // glFrontFace().
+  std::vector<glm::vec4> topShapeVertices;
+
+  // These would take many fewer vertices if they were specified as a
+  // triangle strip.
+  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+
+  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
+
+  topShapeVertices.push_back(glm::vec4( 4.3f, 4.3f, 4.3f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
+
+  topShapeVertices.push_back(glm::vec4( 1.1f, 6.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 6.1f, 1.1f, 1.1f, 1.0f));
+  topShapeVertices.push_back(glm::vec4( 1.1f, 1.1f, 6.1f, 1.0f));
+
+  topShape->addData(bsg::GLDATA_VERTICES, "position", topShapeVertices);
+
+  // Here are the corresponding colors for the above vertices.
+  std::vector<glm::vec4> topShapeColors;
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+  topShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  topShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+  topShape->addData(bsg::GLDATA_COLORS, "color", topShapeColors);
+
+  // The vertices above are arranged into a set of triangles.
+  topShape->setDrawType(GL_TRIANGLES);  
+
+  // Same thing for the other tetrahedron.
+  std::vector<glm::vec4> bottomShapeVertices;
+
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 5.0f, 0.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 0.0f, 0.0f, 5.0f, 1.0f));
+  bottomShapeVertices.push_back(glm::vec4( 5.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShape->addData(bsg::GLDATA_VERTICES, "position", bottomShapeVertices);
+
+  // And the corresponding colors for the above vertices.
+  std::vector<glm::vec4> bottomShapeColors;
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+  bottomShapeColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+
+  bottomShape->addData(bsg::GLDATA_COLORS, "color", bottomShapeColors);
+
+  // The vertices above are arranged into a set of triangles.
+  bottomShape->setDrawType(GL_TRIANGLES);  
+
+  
+  b->addObject(topShape);
+  //b->addObject(bottomShape);
+
+
+
     b->setPosition(-5.0f + 0.1f * (rand()%100),
                    -5.0f + 0.1f * (rand()%100),
                    -5.0f + 0.1f * (rand()%100));
@@ -389,6 +492,7 @@ int main(int argc, char **argv) {
     angVelocities.push_back(glm::vec3(-0.05 + 0.001 * (rand()%100),
                                       -0.05 + 0.001 * (rand()%100),
                                       -0.05 + 0.001 * (rand()%100)));
+
   }
 
   // You can define an iterator on a drawableCollection object.  Just
@@ -400,8 +504,9 @@ int main(int argc, char **argv) {
                             << it->second->getName() << std::endl;
   }
 
-  scene.addObject(rectGroup);
 
+  scene.addObject(rectGroup);
+std::cout << "sup" <<std::endl;
   axes = new bsg::drawableAxes(axesShader, 100.0f);
 
   scene.addObject(axes);
