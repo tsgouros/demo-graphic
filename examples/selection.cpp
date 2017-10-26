@@ -18,6 +18,7 @@ glm::mat4 projMatrix;
    glm::mat4 viewMatrix ;
 
    double  _pm[16];
+   const float *_floatpm;
    double _vm[16];
   // These are the shapes that make up the scene.  They are out here
   // in the variables global to this object so they can be available
@@ -386,6 +387,11 @@ public:
 
       const float* pm = renderState.getProjectionMatrix();
       
+      glMatrixMode(GL_PROJECTION);
+
+      glLoadMatrixf(pm);
+
+
       projMatrix = glm::mat4( pm[0],  pm[1], pm[2], pm[3],
                                         pm[4],  pm[5], pm[6], pm[7],
                                         pm[8],  pm[9],pm[10],pm[11],
@@ -396,6 +402,11 @@ public:
 
       // The draw step.  We let MinVR give us the view matrix.
       const float* vm = renderState.getViewMatrix();
+
+      glMatrixMode(GL_MODELVIEW);
+
+      glLoadMatrixf(vm);
+
       viewMatrix = glm::mat4( vm[0],  vm[1], vm[2], vm[3],
                                         vm[4],  vm[5], vm[6], vm[7],
                                         vm[8],  vm[9],vm[10],vm[11],
@@ -405,6 +416,7 @@ public:
       for(int i=0; i < 16; i++){
         _vm[i] = (double)vm[i];
         _pm[i] = (double)pm[i];
+
       }
       
       //bsg::bsgUtils::printMat("view", viewMatrix);
@@ -459,6 +471,9 @@ public:
     return _vm;
   }
   
+  const float* getFloatPm(){
+    return _floatpm;
+  }
 
 
 };
@@ -589,7 +604,7 @@ void disable(){
   glDisable(GL_LIGHTING);
   glDisable(GL_FOG);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    
+ 
 }
 
 void reload(){
@@ -659,6 +674,8 @@ bsg::bsgPtr<bsg::drawableObj> getObj(int i){
   return _app->getArr()[i];
 }
 
+glm::vec3 translateMouseToWorldCoords(int x, int y);
+
 int redraw(int x, int y){
     disable();
     
@@ -667,6 +684,7 @@ int redraw(int x, int y){
     changeColor();
     reload();
     int index = readInColor(x,y);
+    //translateMouseToWorldCoords(x,y);
     restoreColors();  
     std::cout << index << std::endl;
     if(index < sizeof(objs)){
@@ -707,24 +725,40 @@ glm::vec3 inWorldCoords(int x, int y){
   //gluUnProject( winX, winY, winZ, modelview, projection, viewport, &worldX, &worldY, &worldZ);
   return objcoord;
 }
+GLfloat _currWinZ;
 
-glm::vec3 translateMouseToWorldCoords(int x, int y){
+bsg::drawableCompound* b;
+glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
   GLint viewport[4];
     GLdouble modelview[16];
     GLdouble projection[16];
-    GLfloat winX, winY, winZ;
+    GLdouble winX, winY, winZ;
     GLdouble posX, posY, posZ;
  
     glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
     glGetDoublev( GL_PROJECTION_MATRIX, projection );
+
+
+
     glGetIntegerv( GL_VIEWPORT, viewport );
  
     winX = (float)x;
     winY = (float)viewport[3] - (float)y - 1;
-    glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-    
 
-    gluUnProject( winX, winY, winZ, _app->getVm(), _app->getPm(), viewport, &posX, &posY, &posZ);
+    glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+    if(winZ == 1){
+     // winZ = 0.9999;
+    }
+
+    glm::vec3 worldCoords = b->getPosition();
+    GLdouble dum1, dum2;
+    gluProject(worldCoords[0], worldCoords[1], worldCoords[2], modelview, projection, viewport, &dum1, &dum2, &winZ);
+
+
+    gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+
+
+
     printf("objcoords %g, %g, %g \n", posX, posY, posZ);
     printf("wincoords %g, %g, %g \n", winX, winY, winZ);
 
@@ -736,7 +770,8 @@ bool objectSelected;
 int selected;
 int _x;
 int _y;
-bsg::drawableCompound* b;
+
+
 void mouseMove(int button, int state, int x, int y) 
 {
   
@@ -758,9 +793,34 @@ void mouseMove(int button, int state, int x, int y)
     //calculateMouseRay(x,y);
     //getMouseInWorldCoords(x,y);
     //findRay(x,y);
+    
+    
     selected = turnIdToColor(x, y);
     
-       b = getCompound(selected);
+    b = getCompound(selected);
+
+
+
+    GLint viewport[4];
+    GLdouble modelview[16];
+    GLdouble projection[16];
+    GLfloat winX, winY, winZ;
+    GLdouble posX, posY, posZ;
+ 
+    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+    glGetDoublev( GL_PROJECTION_MATRIX, projection );
+
+
+    glm::vec3 oldPos = b->getPosition();
+    glGetIntegerv( GL_VIEWPORT, viewport );
+ 
+    winX = (float)x;
+    winY = (float)viewport[3] - y - 1;
+
+
+    glReadPixels( winX, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+
+    _currWinZ = winZ;
     //selectionbuffer(x,y);
   }
   if(state == 1 && selected > -1){
@@ -773,9 +833,10 @@ void mouseMove(int button, int state, int x, int y)
 }
 
 void mouseMoveWhileClicked(int x, int y){
-   
+   std::cout<<"MOUSE MOVE WHILE CLICKED" << std::endl;
     glm::vec3 oldPos = b->getPosition();
-    glm::vec3 coords = translateMouseToWorldCoords(x, y);
+
+    glm::vec3 coords = translateMouseToWorldCoords(x, y, oldPos[2]);
    
     printf("oldPos %f %f %f \n", oldPos[0], oldPos[1], oldPos[2]);
     //b->setPosition(oldPos[0]+coords[0],oldPos[1]+coords[1],oldPos[2]+coords[2]);
@@ -824,6 +885,7 @@ int main(int argc, char **argv) {
   _app = appObj;
 
   //appObj->set();
+  
 
   glutMouseFunc(mouseMove);
   glutMotionFunc(mouseMoveWhileClicked);
