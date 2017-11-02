@@ -689,7 +689,7 @@ int redraw(int x, int y){
     std::cout << index << std::endl;
     if(index < sizeof(objs)){
       std::cout << objs[index] << std::endl;
-      recolor(objs[index]);
+     // recolor(objs[index]);
       return index;
     }
     else {
