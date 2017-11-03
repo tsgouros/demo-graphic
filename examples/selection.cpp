@@ -343,7 +343,19 @@ public:
     }
 
     std::string eventName = event.getName();
+    if(eventName == "Kbda_Down"){
+      mouseDown = true;
+    } else if (eventName == "Kbda_Up"){
+      mouseDown = false;
+    }
+    if(eventName == "Mouse_Move" && mouseDown){
+      int x = event.getDataAsInt("XPos");
+      int y = event.getDataAsInt("YPos");
+      if(abs(selected) < 2){
+        mouseMoveWhileClicked(x,y);
+      }
     
+    }
     if(eventName == "Mouse_Move"){
 
       int x = event.getDataAsInt("XPos");
@@ -354,6 +366,8 @@ public:
        
       }
     }
+    
+
     //Wand_Move
     if(eventName == "Wand_Right_Btn_Down" || eventName == "Mouse_Down"){
         std::cout << "HELLO" << std::endl;
@@ -521,9 +535,7 @@ int turnIdToColor(int x, int y){
 
 void mouseMove(int state, int x, int y) 
 {
-  if(abs(selected) < 2){
-    mouseMoveWhileClicked(x,y);
-  }
+
   if(state == 1){
 
     selected = turnIdToColor(x, y);
@@ -550,7 +562,7 @@ void mouseMove(int state, int x, int y)
 
     _currWinZ = winZ;
 
-
+    
   }
 
   return;
