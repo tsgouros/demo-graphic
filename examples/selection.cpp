@@ -343,12 +343,12 @@ public:
     }
 
     std::string eventName = event.getName();
-    if(eventName == "Kbda_Down"){
+    if(eventName == "Kbda_Down" || eventName == "Wand_Right_Btn_Down"){
       mouseDown = true;
-    } else if (eventName == "Kbda_Up"){
+    } else if (eventName == "Kbda_Up" || eventName = "Wand_Right_Btn_Up"){
       mouseDown = false;
     }
-    if(eventName == "Mouse_Move" && mouseDown){
+    if((eventName == "Mouse_Move" && mouseDown) || eventName = "Wand_Move"){
       int x = event.getDataAsInt("XPos");
       int y = event.getDataAsInt("YPos");
       if(abs(selected) < 2){
@@ -356,7 +356,7 @@ public:
       }
     
     }
-    if(eventName == "Mouse_Move"){
+    if(eventName == "Mouse_Move" && !mouseDown){
 
       int x = event.getDataAsInt("XPos");
       int y = event.getDataAsInt("YPos");
@@ -367,11 +367,6 @@ public:
       }
     }
     
-
-    //Wand_Move
-    if(eventName == "Wand_Right_Btn_Down" || eventName == "Mouse_Down"){
-        std::cout << "HELLO" << std::endl;
-    }
 
     // Print out where you are (where the camera is) and where you're
     // looking.
