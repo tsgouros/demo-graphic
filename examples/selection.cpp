@@ -262,7 +262,8 @@ glm::mat4 projMatrix;
     arrColors[i] = topShapeColors;
     bArray[i] = b;
     b->addObject(topShape);
-    
+    topShape->setRealColors(topShapeColors);
+    assignFakeColor(topShape, i);
 
 
     b->setPosition(-5.0f + 0.1f * (rand()%100),
@@ -334,7 +335,9 @@ public:
 
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
-
+    if(event.getName() == "Mouse_Move"){
+      event.print();
+    }
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
 			shutdown();
@@ -345,15 +348,17 @@ public:
     std::string eventName = event.getName();
     if(eventName == "Kbda_Down" || eventName == "Wand_Right_Btn_Down"){
       mouseDown = true;
-    } else if (eventName == "Kbda_Up" || eventName = "Wand_Right_Btn_Up"){
+    } else if (eventName == "Kbda_Up" || eventName == "Wand_Right_Btn_Up"){
       mouseDown = false;
     }
-    if((eventName == "Mouse_Move" && mouseDown) || eventName = "Wand_Move"){
+    if((eventName == "Mouse_Move" && mouseDown) || eventName == "Wand_Move"){
       int x = event.getDataAsInt("XPos");
       int y = event.getDataAsInt("YPos");
+
       if(abs(selected) < 2){
         mouseMoveWhileClicked(x,y);
       }
+
     
     }
     if(eventName == "Mouse_Move" && !mouseDown){
@@ -363,7 +368,7 @@ public:
       int active = event.getDataAsInt("Active");
       if(active){
         mouseMove(active, x, y);
-       
+     
       }
     }
     
@@ -386,10 +391,8 @@ bsg::drawableCompound* getCompound(int i){
   return bArray[i];
 }
 
-void changeColor(){
-  bsg::bsgPtr<bsg::drawableObj>* objs = arr;
-  for(int i = 0; i < 2; i++){
-    bsg::bsgPtr<bsg::drawableObj> cur  = objs[i];
+void assignFakeColor(bsg::bsgPtr<bsg::drawableObj> obj, int i){
+    bsg::bsgPtr<bsg::drawableObj> cur  = obj;
     std::vector<glm::vec4> topShapeColors;
     float number = 1.0f/(i + 1);
     topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
@@ -407,12 +410,40 @@ void changeColor(){
     topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
     topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
     topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    
-    cur->setData(bsg::GLDATA_COLORS,  topShapeColors);
+    cur->setFakeColors(topShapeColors);
+}
+
+void changeColor(){
+  bsg::bsgPtr<bsg::drawableObj>* objs = arr;
+  for(int i = 0; i < 2; i++){
+     bsg::bsgPtr<bsg::drawableObj> cur  = objs[i];
+  //   std::vector<glm::vec4> topShapeColors;
+  //   float number = 1.0f/(i + 1);
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
+  //   cur->setFakeColors(topShapeColors);
+  //   cur->getFakeColors();
+    cur->setData(bsg::GLDATA_COLORS,  cur->getFakeColors());
     cur->load();
   }
    
 }
+
+
+
 glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
   GLint viewport[4];
     GLdouble modelview[16];
@@ -495,9 +526,8 @@ int readInColor(int x, int y){
 
 void restoreColors(){
   bsg::bsgPtr<bsg::drawableObj>* objs = arr;
-  std::vector<glm::vec4>* cols = arrColors;
   for(int i = 0; i < 2; i++){
-    std::vector<glm::vec4> ogShapeColors = cols[i];
+    std::vector<glm::vec4> ogShapeColors = objs[i]->getRealColors();
     objs[i]->setData(bsg::GLDATA_COLORS,  ogShapeColors);
     objs[i]->load();
   }
@@ -509,13 +539,15 @@ void restoreColors(){
     reload();
     int index = readInColor(x,y);
     disable();
-    //restoreColors();  
+    // restoreColors();  
+    // reload();
     std::cout << index << std::endl;
 
 
     if(index < sizeof(objs)){
       std::cout << objs[index] << std::endl;
      // recolor(objs[index]);
+
       return index;
     }
     else {

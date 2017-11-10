@@ -89,7 +89,7 @@ endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # Apple-specific code
-  set(CMAKE_CXX_FLAGS "-DOSX")
+  set(CMAKE_CXX_FLAGS "-DOSX -Wall -Wextra")
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

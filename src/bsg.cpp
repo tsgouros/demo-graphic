@@ -523,6 +523,29 @@ void drawableObj::setData(const GLDATATYPE type,
   _loadedIntoBuffer = false;
 }
 
+void drawableObj::setRealColors(
+  const std::vector<glm::vec4>& data) {
+  _realColors = data;
+  _loadedIntoBuffer = false;
+}
+
+std::vector<glm::vec4> drawableObj::getRealColors(){
+  return _realColors;
+}
+
+
+void drawableObj::setFakeColors(
+                          const std::vector<glm::vec4>& data) {
+
+  
+  _fakeColors = data;
+  _loadedIntoBuffer = false;
+}
+
+std::vector<glm::vec4> drawableObj::getFakeColors(){
+  return _fakeColors;
+}
+
 void drawableObj::setData(const GLDATATYPE type,
              const std::vector<glm::vec2>& data) {
 
