@@ -3,12 +3,15 @@
 #include <api/MinVR.h>
 #include <map>
 #include <glm/gtc/type_ptr.hpp>
+#include <unistd.h>
+#include <thread>
 class DemoVRApp: public MinVR::VRApp {
+
 
   // Data values that were global in the demo2.cpp file are defined as
   // private members of the VRApp.
 private:
-
+  //MinVR::VRFakeTrackerDevice device;
   // The scene and the objects in it must be available from the main()
   // function where it is created and the renderScene() function where
   // it is drawn.  The scene object contains all the drawable objects
@@ -58,6 +61,8 @@ glm::mat4 projMatrix;
   bsg::bsgPtr<bsg::drawableObj> arr[2];
   std::vector<glm::vec4> arrColors[2];
   bsg::drawableCompound* bArray[2];
+
+
   // These functions from demo2.cpp are not needed here:
   //
   //    init()
@@ -270,9 +275,15 @@ glm::mat4 projMatrix;
                    -5.0f + 0.1f * (rand()%100),
                    -5.0f + 0.1f * (rand()%100));
     b->setRotation(0.0f, 0.0f, 0.0f);
-    
+   // b->setPosition(0.1f,0.0f,0.0f);
     rectGroup->addObject(b);
-    
+
+    glm::vec3 bPos = b->getPosition();
+    bsg::bsgNameList inside = rectGroup->insideBoundingBox(glm::vec4(1.0,0.0,0.0, 1.0));
+
+      if (!inside.empty()){
+        std::cout << sizeof(inside) << std::endl;
+      }
   }
 
   // You can define an iterator on a drawableCollection object.  Just
@@ -312,8 +323,8 @@ public:
     _oscillationStep = 0.03f;
     _vertexFile = std::string(argv[1]);
     _fragmentFile = std::string(argv[2]);
-  
-
+    
+    
   }
 
 	/// The MinVR apparatus invokes this method whenever there is a new
@@ -321,6 +332,10 @@ public:
   bool mouseDown;
   int selected = 10;
   bsg::drawableCompound* b;
+  int currX;
+  int currY;
+  int currZ;
+  
 	void onVREvent(const MinVR::VREvent &event) {
         
     //event.print();
@@ -332,11 +347,12 @@ public:
     //   const double time = event.getDataAsDouble("ElapsedSeconds");
     //   return;
 		// }
-
+    
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
     if(event.getName() == "Mouse_Move"){
-      event.print();
+      currX = event.getDataAsInt("XPos");
+      currY = event.getDataAsInt("YPos");
     }
 		// Quit if the escape button is pressed
 		if (event.getName() == "KbdEsc_Down") {
@@ -352,24 +368,20 @@ public:
       mouseDown = false;
     }
     if((eventName == "Mouse_Move" && mouseDown) || eventName == "Wand_Move"){
+      
       int x = event.getDataAsInt("XPos");
       int y = event.getDataAsInt("YPos");
-
       if(abs(selected) < 2){
         mouseMoveWhileClicked(x,y);
       }
 
     
     }
-    if(eventName == "Mouse_Move" && !mouseDown){
-
-      int x = event.getDataAsInt("XPos");
-      int y = event.getDataAsInt("YPos");
-      int active = event.getDataAsInt("Active");
-      if(active){
-        mouseMove(active, x, y);
-     
-      }
+    
+    if(eventName == "Kbdq_Down"){
+        savedX = currX;
+        savedY = currY;
+        needToRedraw = 1;    
     }
     
 
@@ -417,32 +429,28 @@ void changeColor(){
   bsg::bsgPtr<bsg::drawableObj>* objs = arr;
   for(int i = 0; i < 2; i++){
      bsg::bsgPtr<bsg::drawableObj> cur  = objs[i];
-  //   std::vector<glm::vec4> topShapeColors;
-  //   float number = 1.0f/(i + 1);
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-  //   cur->setFakeColors(topShapeColors);
-  //   cur->getFakeColors();
     cur->setData(bsg::GLDATA_COLORS,  cur->getFakeColors());
     cur->load();
   }
-   
+  
 }
 
+int selectShape(int x, int y){
 
+  bsg::bsgPtr<bsg::drawableObj>* objs = arr;
+  disable();
+  changeColor();
+  reload();
+  selected = readInColor(x,y);
+  disable();
+  restoreColors();
+  reload();
+
+  if(abs(selected) < 2 && selected > -2){ 
+    b = getCompound(selected);
+  }
+  return selected;
+}
 
 glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
   GLint viewport[4];
@@ -457,14 +465,12 @@ glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
 
 
     glGetIntegerv( GL_VIEWPORT, viewport );
- 
+    
     winX = (float)x;
     winY = (float)viewport[3] - (float)y - 1;
 
     glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-    if(winZ == 1){
-     // winZ = 0.9999;
-    }
+    
 
     glm::vec3 worldCoords = b->getPosition();
     GLdouble dum1, dum2;
@@ -475,37 +481,31 @@ glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
 
 
 
-    printf("objcoords %g, %g, %g \n", posX, posY, posZ);
-    printf("wincoords %g, %g, %g \n", winX, winY, winZ);
-
   return glm::vec3(posX,posY,posZ);
 
 }
 
-void mouseMoveWhileClicked(int x, int y){
-   std::cout<<"MOUSE MOVE WHILE CLICKED" << std::endl;
-    glm::vec3 oldPos = b->getPosition();
 
-    glm::vec3 coords = translateMouseToWorldCoords(x, y, oldPos[2]);
-   
-    printf("oldPos %f %f %f \n", oldPos[0], oldPos[1], oldPos[2]);
-    //b->setPosition(oldPos[0]+coords[0],oldPos[1]+coords[1],oldPos[2]+coords[2]);
-    b->setPosition(coords[0],coords[1], coords[2]);
-    //b->setPosition(coords[0],coords[1],coords[2]);
-    b->setRotation(0.0f, 0.0f, 0.0f);
+void mouseMoveWhileClicked(int x, int y){
+  glm::vec3 oldPos = b->getPosition();
+  glm::vec3 coords = translateMouseToWorldCoords(x, y, oldPos[2]);
+  b->setPosition(coords[0],coords[1], coords[2]);
+  b->setRotation(0.0f, 0.0f, 0.0f);
     
 }
 
 GLfloat _currWinZ;
 
-
 void reload(){
-  glm::mat4 projMatrix = projMatrix; 
+  glm::mat4 projMatrix = getProjMatrix(); 
   _scene.load();
   
-  glm::mat4 viewMatrix = viewMatrix;
-  _scene.draw(viewMatrix, projMatrix);
+  glm::mat4 viewMatrix = getViewMatrix();
+  _scene.draw(viewMatrix, projMatrix);  
 }
+
+int savedX = 0;
+int savedY = 0;
 
 int readInColor(int x, int y){
   int window_width = glutGet(GLUT_WINDOW_WIDTH);
@@ -514,11 +514,9 @@ int readInColor(int x, int y){
   glGetIntegerv(GL_VIEWPORT, viewport);
 
   GLfloat color[4];
+
   glReadPixels(x, viewport[3] - y, 1, 1, GL_RED, GL_FLOAT, color);
-  printf("Clicked on pixel color %f \n",
-      color[0], color[1], color[2]);
-  std::cout<< x << std::endl;
-  std::cout <<y <<std::endl;
+  
   float output = color[0]*255/1.0f;
   float index = round((1.0f/color[0]) - 1);  
   return index;
@@ -533,67 +531,9 @@ void restoreColors(){
   }
 }
 
-  int redraw(int x, int y){
-    bsg::bsgPtr<bsg::drawableObj>* objs = arr;
-    changeColor();
-    reload();
-    int index = readInColor(x,y);
-    disable();
-    // restoreColors();  
-    // reload();
-    std::cout << index << std::endl;
+int needToRedraw = 0;
 
 
-    if(index < sizeof(objs)){
-      std::cout << objs[index] << std::endl;
-     // recolor(objs[index]);
-
-      return index;
-    }
-    else {
-      return -1;
-    }
-}
-
-int turnIdToColor(int x, int y){
-  return redraw(x,y);
- 
-}
-
-void mouseMove(int state, int x, int y) 
-{
-
-  if(state == 1){
-
-    selected = turnIdToColor(x, y);
-
-    b = getCompound(selected);
-
-    GLint viewport[4];
-    GLdouble modelview[16];
-    GLdouble projection[16];
-    GLfloat winX, winY, winZ;
-    GLdouble posX, posY, posZ;
- 
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-
-
-    glGetIntegerv( GL_VIEWPORT, viewport );
- 
-    winX = (float)x;
-    winY = (float)viewport[3] - y - 1;
-
-
-    glReadPixels( winX, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-
-    _currWinZ = winZ;
-
-    
-  }
-
-  return;
-}
   /// \brief Set the render context.
   ///
   /// The onVRRender methods are the heart of the MinVR rendering
@@ -609,6 +549,7 @@ void mouseMove(int state, int x, int y)
       //init();
       _scene.prepare();
     }
+
   }
 
 
@@ -616,24 +557,14 @@ void mouseMove(int state, int x, int y)
   /// It is called each time through the main graphics loop, and
   /// re-draws the scene according to whatever has changed since the
   /// last time it was drawn.
-   
+
 	void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
 		// Only draw if the application is still running.
-    int i = 0;
-		if (isRunning() && i == 0) {
-      
-      i = 1;
-      
-      //bsg::bsgNameList rectNames = rectGroup->getNames();
 
-  // Now generate them and add them to the group.
+		if (isRunning()) {
       
 
-  // First clear the display.
-      
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-      
-
       const float* pm = renderState.getProjectionMatrix();
       
       glMatrixMode(GL_PROJECTION);
@@ -645,9 +576,9 @@ void mouseMove(int state, int x, int y)
                                         pm[4],  pm[5], pm[6], pm[7],
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
-      //bsg::bsgUtils::printMat("proj", projMatrix);
-      
+
       _scene.load();
+
 
       // The draw step.  We let MinVR give us the view matrix.
       const float* vm = renderState.getViewMatrix();
@@ -668,21 +599,22 @@ void mouseMove(int state, int x, int y)
 
       }
       
-      //bsg::bsgUtils::printMat("view", viewMatrix);
-
-    
-
-     
-
       _scene.draw(viewMatrix, projMatrix);
+
+      bsg::bsgNameList inside = rectGroup->insideBoundingBox(glm::vec4(0.0,0.0,0.0, 0.0));
+
+
+      if(needToRedraw){
       
-      //glutSwapBuffers();
+        needToRedraw =0;
+        
+        selectShape(currX, currY);
+       
     }
   }
+}
 
-  bsg::bsgPtr<bsg::drawableObj>* getArr(){
-    return arr;
-  }
+  
 
   glm::mat4 getProjMatrix(){
     return projMatrix;
@@ -691,417 +623,11 @@ void mouseMove(int state, int x, int y)
     return viewMatrix;
   }
 
-  bsg::scene getScene(){
-    return _scene;
-  }
-  bsg::bsgPtr<bsg::drawableObj> getTop(){
-    return _topShape;
-  }
-  bsg::drawableCollection* getGroup(){
-    return rectGroup;
-  }
-
-  std::vector<glm::vec4>* getArrColors(){
-    return arrColors;
-  }
-  bsg::drawableCompound** getBArray(){
-    return bArray;
-  }
-
-  void hey(int x, int y, int state, int pos){
-    std::cout << "hey" << std::endl;
-  }
-
-  const double* getPm(){
-    return _pm;
-  }
-
-  const double* getVm(){
-    return _vm;
-  }
-  
-  const float* getFloatPm(){
-    return _floatpm;
-  }
-
 
 };
 
-DemoVRApp *_app;
 
-glm::mat4 gluInvertMatrix(glm::mat4 matrix)
-{
-    
-  
-    return glm::mat4(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-}
 
-
-
-void selectionbuffer(int x, int y){
-  glRenderMode(GL_SELECT);
-  GLuint selectBuf[512];
-  glSelectBuffer(512, selectBuf);
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-  gluPickMatrix(x, viewport[3]-y, 1,1, viewport);
-  int numhits = glRenderMode(GL_RENDER);
-  printf("number of hits %d\n", numhits);
-}
-glm::vec2 getNormalizedDeviceCoords(float mouseX, float mouseY){
-  float x = (2.0f*mouseX)/glutGet(GLUT_WINDOW_WIDTH)-1;
-  float y = 1-(2.0f*mouseY)/glutGet(GLUT_WINDOW_HEIGHT);
-  return glm::vec2(x,y);
-} 
-
-glm::vec4 toEyeCoords(glm::vec4 clipCoords){
-  glm::mat4 invertedProjection = gluInvertMatrix(_app->getProjMatrix());
-  glm::vec4 eyeCoords = invertedProjection * clipCoords;
-  return glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
-}
-
-glm::vec3 toWorldCoords(glm::vec4 eyeCoords){
-  //printf("view %g \n", _app->getViewMatrix()[3][3]);
-  glm::mat4 invertedView = gluInvertMatrix(_app->getViewMatrix());
-
-  //printf("eye ray %g, %g, %g, %g \n", eyeCoords[0], eyeCoords[1], eyeCoords[2], eyeCoords[3]);
-  glm::vec4 rayWorld = invertedView*eyeCoords;
-  //printf("eye ray2 %g, %g, %g, %g \n", rayWorld[0], rayWorld[1], rayWorld[2], rayWorld[3]);
-  glm::vec3 mouseRay = glm::vec3(rayWorld[0], rayWorld[1], rayWorld[2]);
-  
-  //mouseRay = normalize(mouseRay);
-
-  return mouseRay;
-}
-
-
-glm::vec3 calculateMouseRay(int x, int y){
-  //viewport space - > device space
-
-  
-  float mouseX = x;
-  float mouseY = y;
-  glm::vec2 normalizedCoords = getNormalizedDeviceCoords(mouseX, mouseY);
-  
-  glm::vec4 clipCoords = glm::vec4(normalizedCoords.x, normalizedCoords.y, -1.0f, 1.0f);
-  
-  glm::vec4 eyeCoords = toEyeCoords(clipCoords);
-  
-  glm::vec3 worldRay = toWorldCoords(eyeCoords);
-  printf("world ray %g, %g, %g \n", worldRay[0], worldRay[1], worldRay[2]);
-  return worldRay;
-
-}
-
-glm::vec3 getMouseInWorldCoords(int x, int y){
-  GLfloat depth;
-  int window_width = glutGet(GLUT_WINDOW_WIDTH);
-  int window_height = glutGet(GLUT_WINDOW_HEIGHT);
-  glReadPixels(x, glutGet(GLUT_WINDOW_HEIGHT)  - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
-  glm::vec4 viewport = glm::vec4(0, 0, window_width, window_height);
-  glm::vec3 wincoord = glm::vec3(x, glutGet(GLUT_WINDOW_HEIGHT) - y - 1, depth);
-  glm::vec3 objcoord = glm::unProject(wincoord, _app->getViewMatrix(), _app->getProjMatrix(), viewport);
-  printf("objcoord %g, %g, %g \n", objcoord[0], objcoord[1], objcoord[2]);
-  return objcoord;
-}
-
-void findRay(int mouse_x, int mouse_y){
-
-  float normalised_x = 2.0f * mouse_x / glutGet(GLUT_WINDOW_WIDTH) - 1;
-  float normalised_y = 1 - 2.0f * mouse_y / glutGet(GLUT_WINDOW_HEIGHT);
-  // note the y pos is inverted, so +y is at the top of the screen
-
-  glm::mat4 unviewMat = gluInvertMatrix(_app->getProjMatrix() * _app->getViewMatrix());
-
-  glm::vec4 near_point = unviewMat * glm::vec4(normalised_x, normalised_y, 0.0, 1.0);
-  
-  // glm::vec4 camera_pos = glm::vec4(scene->)
-  // glm::vec4 ray_dir = near_point - camera_pos;
-  // printf("ray dir %g, %g, %g, %g\n", ray_dir[0], ray_dir[1], ray_dir[2], ray_dir[3]);
-  
-}
-void changeColor(){
-  bsg::bsgPtr<bsg::drawableObj>* objs = _app->getArr();
-  for(int i = 0; i < 2; i++){
-    bsg::bsgPtr<bsg::drawableObj> cur  = objs[i];
-    std::vector<glm::vec4> topShapeColors;
-    float number = 1.0f/(i + 1);
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    
-    cur->setData(bsg::GLDATA_COLORS,  topShapeColors);
-    cur->load();
-  }
-   
-}
-
-void disable(){
-  glDisable(GL_TEXTURE);
-  glDisable(GL_LIGHTING);
-  glDisable(GL_FOG);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
- 
-}
-
-void reload(){
-  glm::mat4 projMatrix = _app->getProjMatrix(); 
-  _app->getScene().load();
-  
-  glm::mat4 viewMatrix = _app->getViewMatrix();
-  _app->getScene().draw(viewMatrix, projMatrix);
-}
-
-int readInColor(int x, int y){
-  int window_width = glutGet(GLUT_WINDOW_WIDTH);
-  int window_height = glutGet(GLUT_WINDOW_HEIGHT);
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-  GLfloat color[4];
-  glReadPixels(x, viewport[3] - y, 1, 1, GL_RED, GL_FLOAT, color);
-  printf("Clicked on pixel color %f \n",
-      color[0], color[1], color[2]);
-
-  float output = color[0]*255/1.0f;
-  float index = round((1.0f/color[0]) - 1);  
-  return index;
-}
-
-void restoreColors(){
-  bsg::bsgPtr<bsg::drawableObj>* objs = _app->getArr();
-  std::vector<glm::vec4>* cols = _app->getArrColors();
-  for(int i = 0; i < 2; i++){
-    std::vector<glm::vec4> ogShapeColors = cols[i];
-    objs[i]->setData(bsg::GLDATA_COLORS,  ogShapeColors);
-    objs[i]->load();
-  }
-}
-
-void recolor(bsg::bsgPtr<bsg::drawableObj> toRecolor){
-
-    bsg::bsgPtr<bsg::drawableObj> cur  = toRecolor;
-    std::vector<glm::vec4> topShapeColors;
-    float number = 1.0f;
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    topShapeColors.push_back(glm::vec4( number,number, number, 1.0f));
-    
-    cur->setData(bsg::GLDATA_COLORS,  topShapeColors);
-    cur->load();
-  
-}
-
-bsg::drawableCompound* getCompound(int i){
-  return _app->getBArray()[i];
-}
-
-bsg::bsgPtr<bsg::drawableObj> getObj(int i){
-  return _app->getArr()[i];
-}
-
-glm::vec3 translateMouseToWorldCoords(int x, int y);
-
-int redraw(int x, int y){
-    disable();
-    
-    //bsg::drawableCollection* rectGroup = _app->getGroup();
-    bsg::bsgPtr<bsg::drawableObj>* objs = _app->getArr();
-    changeColor();
-    reload();
-    int index = readInColor(x,y);
-    //translateMouseToWorldCoords(x,y);
-    restoreColors();  
-    std::cout << index << std::endl;
-    if(index < sizeof(objs)){
-      std::cout << objs[index] << std::endl;
-     // recolor(objs[index]);
-      return index;
-    }
-    else {
-      return -1;
-    }
-}
-
-
-
-int turnIdToColor(int x, int y){
-  return redraw(x,y);
- 
-}
-
-glm::vec3 inWorldCoords(int x, int y){
-  
-        GLdouble modelview[16]; //var to hold the modelview info
-        GLdouble projection[16]; //var to hold the projection matrix info
-        GLfloat winX, winY, winZ; //variables to hold screen x,y,z coordinates
-        GLdouble worldX, worldY, worldZ; //variables to hold world x,y,z coordinates
- GLfloat depth;
-
-  int window_width = glutGet(GLUT_WINDOW_WIDTH);
-  int window_height = glutGet(GLUT_WINDOW_HEIGHT);
-  glReadPixels(x, glutGet(GLUT_WINDOW_HEIGHT)  - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
-  glm::vec4 viewport = glm::vec4(0, 0, window_width, window_height);
-  glm::vec3 wincoord = glm::vec3(x, glutGet(GLUT_WINDOW_HEIGHT) - y - 1, depth);
-  glm::vec3 objcoord = calculateMouseRay(x,y);
-  printf("objcoord %g, %g, %g \n", objcoord[0], objcoord[1], objcoord[2]);
-
-
-  //get the world coordinates from the screen coordinates
-  //gluUnProject( winX, winY, winZ, modelview, projection, viewport, &worldX, &worldY, &worldZ);
-  return objcoord;
-}
-GLfloat _currWinZ;
-
-bsg::drawableCompound* b;
-glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
-  GLint viewport[4];
-    GLdouble modelview[16];
-    GLdouble projection[16];
-    GLdouble winX, winY, winZ;
-    GLdouble posX, posY, posZ;
- 
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-
-
-
-    glGetIntegerv( GL_VIEWPORT, viewport );
- 
-    winX = (float)x;
-    winY = (float)viewport[3] - (float)y - 1;
-
-    glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-    if(winZ == 1){
-     // winZ = 0.9999;
-    }
-
-    glm::vec3 worldCoords = b->getPosition();
-    GLdouble dum1, dum2;
-    gluProject(worldCoords[0], worldCoords[1], worldCoords[2], modelview, projection, viewport, &dum1, &dum2, &winZ);
-
-
-    gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
-
-
-
-    printf("objcoords %g, %g, %g \n", posX, posY, posZ);
-    printf("wincoords %g, %g, %g \n", winX, winY, winZ);
-
-  return glm::vec3(posX,posY,posZ);
-
-}
-
-bool objectSelected;
-int selected;
-int _x;
-int _y;
-
-
-
-void mouseMove(int button, int state, int x, int y) 
-{
-  //WAND_Right_Btn_Down
-  
-  // int window_width = glutGet(GLUT_WINDOW_WIDTH);
-  // int window_height = glutGet(GLUT_WINDOW_HEIGHT);
-
-  // GLbyte color[4];
-  // GLfloat depth;
-  // GLuint index;
-  
-  // glReadPixels(x, window_height - y - 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
-  // glReadPixels(x, window_height - y - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
-  // glReadPixels(x, window_height - y - 1, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
-
-  // printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
-  //        x, y, color[0], color[1], color[2], color[3], depth, index);
-  
-  if(state == 0){
-    //calculateMouseRay(x,y);
-    //getMouseInWorldCoords(x,y);
-    //findRay(x,y);
-    
-    
-    selected = turnIdToColor(x, y);
-    
-    b = getCompound(selected);
-
-
-
-    GLint viewport[4];
-    GLdouble modelview[16];
-    GLdouble projection[16];
-    GLfloat winX, winY, winZ;
-    GLdouble posX, posY, posZ;
- 
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-
-
-    glm::vec3 oldPos = b->getPosition();
-    glGetIntegerv( GL_VIEWPORT, viewport );
- 
-    winX = (float)x;
-    winY = (float)viewport[3] - y - 1;
-
-
-    glReadPixels( winX, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
-
-    _currWinZ = winZ;
-    //selectionbuffer(x,y);
-  }
-  if(state == 1 && selected > -1){
-     //b = getCompound(selected);
-    
-   
-  }
-  
-  return;
-}
-
-void mouseMoveWhileClicked(int x, int y){
-   std::cout<<"MOUSE MOVE WHILE CLICKED" << std::endl;
-    glm::vec3 oldPos = b->getPosition();
-
-    glm::vec3 coords = translateMouseToWorldCoords(x, y, oldPos[2]);
-   
-    printf("oldPos %f %f %f \n", oldPos[0], oldPos[1], oldPos[2]);
-    //b->setPosition(oldPos[0]+coords[0],oldPos[1]+coords[1],oldPos[2]+coords[2]);
-    b->setPosition(coords[0],coords[1], coords[2]);
-    //b->setPosition(coords[0],coords[1],coords[2]);
-    b->setRotation(0.0f, 0.0f, 0.0f);
-    
-}
-
-int count;
-void hello(int button, int state, int x, int y){
-  count += 1;
-  printf("state:%d, %d\n", state, count);
-}
 // The main function is just a shell of its former self.  Just
 // initializes a MinVR graphics object and runs it.
 int main(int argc, char **argv) {
@@ -1133,17 +659,11 @@ int main(int argc, char **argv) {
 
   DemoVRApp *appObj = new DemoVRApp(argc,argv);
 
-  _app = appObj;
-
-  //appObj->set();
   
-
-  //glutMouseFunc(mouseMove);
-
-  //glutMotionFunc(mouseMoveWhileClicked);
   glEnable(GL_DEPTH_TEST);
-    //gluReshapeFunc(reshape);
   
+    //gluReshapeFunc(reshape);
+
   // Run it.
 	//app.run();
   appObj->run();
