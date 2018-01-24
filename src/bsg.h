@@ -379,7 +379,8 @@ typedef enum {
   textureDDS = 1, //! Not implemented.
   textureBMP = 2, //! Not implemented.
   textureCHK = 3, //! Will provide a checkerboard texture.
-  textureJPG = 4  //! Not implemented.
+  textureJPG = 4, //! Not implemented.
+  textureTTF = 5  //! Not implemented yet (MKE)
 } textureType;
 
 
@@ -403,6 +404,7 @@ class textureMgr {
 
   GLuint _loadPNG(const std::string imagePath);
   GLuint _loadCheckerBoard (const int size, int numFields);
+  GLuint _loadTTF(const std::string ttfPath); // MKE
 
  public:
   textureMgr() { _setupDefaultNames(); };

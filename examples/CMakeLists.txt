@@ -70,7 +70,8 @@ include_directories(
     add_executable(demo3 demo3.cpp)
 
     target_link_libraries(demo3 bsg
-      ${MINVR_LIBRARY}
+      debug ${MINVR_LIBRARY_DEBUG}
+      optimized ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})
@@ -78,7 +79,8 @@ include_directories(
     add_executable(pointDemo pointDemo.cpp)
 
     target_link_libraries(pointDemo bsg
-      ${MINVR_LIBRARY}
+      debug ${MINVR_LIBRARY_DEBUG}
+      optimized ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})
@@ -86,24 +88,27 @@ include_directories(
     add_executable(demo4 demo4.cpp)
 
     target_link_libraries(demo4 bsg
-     ${MINVR_LIBRARY}
-     ${FREEGLUT_LIBRARY}
-     ${OPENGL_LIBRARY}
-     ${GLEW_LIBRARY})
+      debug ${MINVR_LIBRARY_DEBUG}
+      optimized ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY})
 
     add_executable(textureDemoMinVR textureDemoMinVR.cpp)
 
 
     target_link_libraries(textureDemoMinVR bsg
-     ${MINVR_LIBRARY}
-     ${FREEGLUT_LIBRARY}
-     ${OPENGL_LIBRARY}
-     ${GLEW_LIBRARY})
+      debug ${MINVR_LIBRARY_DEBUG}
+      optimized ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY})
 
     add_executable(objDemoMinVR objDemoMinVR.cpp)
 
     target_link_libraries(objDemoMinVR bsg
-      ${MINVR_LIBRARY}
+      debug ${MINVR_LIBRARY_DEBUG}
+      optimized ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})
@@ -111,7 +116,8 @@ include_directories(
     add_executable(kbDemoMinVR kbDemoMinVR.cpp)
 
     target_link_libraries(kbDemoMinVR bsg
-      ${MINVR_LIBRARY}
+      debug ${MINVR_LIBRARY_DEBUG}
+      optimized ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})

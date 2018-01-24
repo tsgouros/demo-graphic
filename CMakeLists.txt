@@ -75,6 +75,7 @@ message("-- FreeGLUT library: " ${FREEGLUT_LIBRARY})
 find_package(MinVR MODULE)
 message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
 message("-- MinVR library:    " ${MINVR_LIBRARY})
+message("-- 2d MinVR library: " ${MINVR_LIBRARY_DEBUG})
 
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")

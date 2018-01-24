@@ -22,3 +22,15 @@ install(TARGETS bsg
 install(FILES ${bsg_headers}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
+set(demoheaders MVRDemo.h)
+
+# add_library(MVRDemo ${demoheaders})
+# set_target_properties(MVRDemo PROPERTIES LINKER_LANGUAGE CXX)
+
+# install(TARGETS MVRDemo
+#   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+# 	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
+install(FILES ${demoheaders}
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+

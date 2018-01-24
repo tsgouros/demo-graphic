@@ -71,9 +71,18 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
     _textureBufferID = _loadCheckerBoard (64, 8);
     break;
 
+  case textureTTF:
+    _textureBufferID = _loadTTF(fileName);  // MKE
+
   default:
     throw std::runtime_error("What texture type is this?");
   }
+}
+
+GLuint textureMgr::_loadTTF(const std::string ttfPath) { // MKE
+
+  std::cout << "READ AND PROCESS " << ttfPATH << " HERE!" << std::endl;
+  return 0;
 }
 
 GLuint textureMgr::_loadCheckerBoard (const int size, int numFields) {
