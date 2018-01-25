@@ -81,7 +81,7 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
 
 GLuint textureMgr::_loadTTF(const std::string ttfPath) { // MKE
 
-  std::cout << "READ AND PROCESS " << ttfPATH << " HERE!" << std::endl;
+  std::cout << "READ AND PROCESS " << ttfPath << " HERE!" << std::endl;
   return 0;
 }
 
