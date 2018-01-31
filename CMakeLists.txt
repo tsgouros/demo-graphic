@@ -77,6 +77,7 @@ message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
 message("-- MinVR library:    " ${MINVR_LIBRARY})
 message("-- 2d MinVR library: " ${MINVR_LIBRARY_DEBUG})
 
+set(MINVR_LIBRARY_DEBUG ${MINVR_LIBRARY})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # Linux specific code -- Not sure why pthreads or dl is required.  This
