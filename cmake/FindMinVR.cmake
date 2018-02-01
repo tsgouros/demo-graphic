@@ -14,14 +14,14 @@ if(MINVR_INSTALL_DIR)
   find_path(MINVR_INCLUDE_DIR
     NAMES api/MinVR.h
     HINTS
-    ${MINVR_INSTALL_DIR}/include
+    ${MINVR_INSTALL_DIR}/include/MinVR-2.0
     ENV CPATH
     /usr/local/include)
 
   find_library(MINVR_LIBRARY
     NAMES MinVR
     HINTS
-    ${MINVR_INSTALL_DIR}/lib
+    ${MINVR_INSTALL_DIR}/lib/MinVR-2.0
     ENV LD_LIBRARY_PATH
     /usr/local/lib)
 

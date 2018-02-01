@@ -212,7 +212,7 @@ public:
 		if (event.getName() == "KbdEsc_Down") {
 			shutdown();
     } else if (event.getName() == "FrameStart") {
-      _oscillator = event.getDataAsFloat("ElapsedSeconds");
+      _oscillator = event.getValue("ElapsedSeconds");
     }
 
     // Print out where you are (where the camera is) and where you're
@@ -242,8 +242,6 @@ public:
   /// re-draws the scene according to whatever has changed since the
   /// last time it was drawn.
 	void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
-		// Only draw if the application is still running.
-		if (isRunning()) {
 
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
@@ -281,7 +279,7 @@ public:
       // We let MinVR swap the graphics buffers.
       // glutSwapBuffers();
     }
-  }
+
 };
 
 // The main function is just a shell of its former self.  Just
