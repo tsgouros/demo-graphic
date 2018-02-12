@@ -2,9 +2,9 @@
 #include "bsgMenagerie.h"
 #include "bsgObjModel.h"
 
-#include <api/MinVR.h>
+#include "MVRDemo.h"
 
-class DemoVRApp: public MinVR::VRApp {
+class DemoVRApp: public MVRDemo {
 
   // Data values that were global in the demo2.cpp file are defined as
   // private members of the VRApp.
@@ -45,7 +45,7 @@ private:
   std::string _vertexFile;
   std::string _fragmentFile;
 
-  
+
   // These functions from demo2.cpp are not needed here:
   //
   //    init()
@@ -58,7 +58,7 @@ private:
   // This contains a bunch of sanity checks from the graphics
   // initialization of demo2.cpp.  They are still useful with MinVR.
   void _checkContext() {
-    
+
     // There is one more graphics library used here, called GLEW.  This
     // library sorts through the various OpenGL updates and changes and
     // allows a user to pretend that it's all a consistent and simple
@@ -115,7 +115,7 @@ private:
     std::cout << "looking at ("
               << _scene.getLookAtPosition().x << ", "
               << _scene.getLookAtPosition().y << ", "
-              << _scene.getLookAtPosition().z << ")." << std::endl; 
+              << _scene.getLookAtPosition().z << ")." << std::endl;
   }
 
   void _initializeScene() {
@@ -131,7 +131,7 @@ private:
 
     _vertexFile = "../shaders/textureShader.vp";
     _fragmentFile = "../shaders/textureShader.fp";
-    
+
     // Add the shaders to the manager, first the vertex shader...
     _shader->addShader(bsg::GLSHADER_VERTEX, _vertexFile);
 
@@ -147,7 +147,7 @@ private:
 
     texture->readFile(bsg::textureCHK, "");
     _shader->addTexture(texture);
-    
+
     // We could put the axes and the object in the same compound
     // shape, but we leave them separate so they can be moved
     // separately.
@@ -164,7 +164,7 @@ private:
 
     _modelGroup->setPosition(glm::vec3(0.0f, 0.0f, -10.0f));
     _scene.addObject(_modelGroup);
- 
+
     _axesShader->addShader(bsg::GLSHADER_VERTEX, "../shaders/shader2.vp");
     _axesShader->addShader(bsg::GLSHADER_FRAGMENT, "../shaders/shader.fp");
     _axesShader->compileShaders();
@@ -175,12 +175,13 @@ private:
     _scene.addObject(_axesSet);
 
     // All the shapes are now added to the scene.
+    std::cout << "Here is your scene graph:" << std::endl << _scene << std::endl;
   }
 
-  
+
 public:
   DemoVRApp(int argc, char** argv) :
-    MinVR::VRApp(argc, argv) {
+    MVRDemo(argc, argv) {
 
     // This is the root of the scene graph.
     bsg::scene _scene = bsg::scene();
@@ -197,16 +198,12 @@ public:
   /// The MinVR apparatus invokes this method whenever there is a new
   /// event to process.
   void onVREvent(const MinVR::VREvent &event) {
-        
+
     // event.print();
-        
-    // This heartbeat event recurs at regular intervals, so you can do
-    // animation with the model matrix here, as well as in the render
-    // function.  
-                // if (event.getName() == "FrameStart") {
-    //   const double time = event.getDataAsDouble("ElapsedSeconds");
-    //   return;
-                // }
+
+    // The "FrameStart" heartbeat event recurs at regular intervals,
+    // so you can do animation here, as well as in the render
+    // function.
 
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
@@ -215,25 +212,25 @@ public:
     if (event.getName() == "KbdEsc_Down") {
       shutdown();
     } else if (event.getName() == "FrameStart") {
-      _oscillator = event.getDataAsFloat("ElapsedSeconds");
+      _oscillator = event.getValue("ElapsedSeconds");
     }
 
     // Print out where you are (where the camera is) and where you're
     // looking.
     // _showCameraPosition();
-    
+
   }
-  
+
   /// \brief Set the render context.
   ///
   /// The onVRRender methods are the heart of the MinVR rendering
   /// apparatus.  Some render calls are shared among multiple views,
   /// for example a stereo view has two renders, with the same render
   /// context.
-  void onVRRenderGraphicsContext(const MinVR::VRGraphicsState &renderState) {
+  void onVRRenderContext(const VRState &renderState) {
 
-    // Check if this is the first call.  If so, do some initialization. 
-    if (renderState.isInitialRenderCall()) {
+    // Check if this is the first call.  If so, do some initialization.
+    if ((int)renderState.getValue("InitRender") == 1) {
       _checkContext();
       _initializeScene();
       _scene.prepare();
@@ -246,28 +243,27 @@ public:
   /// It is called each time through the main graphics loop, and
   /// re-draws the scene according to whatever has changed since the
   /// last time it was drawn.
-  void onVRRenderGraphics(const MinVR::VRGraphicsState &renderState) {
+  void onVRRenderScene(const VRState &renderState) {
     // Only draw if the application is still running.
-    if (isRunning()) {
 
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
       _orbiter->setPosition(3.0f * cos(_oscillator), 3.0, 3.0 * sin(_oscillator));
-      _orbiter->setOrientation(glm::quat(0.5 * cos(_oscillator * 1.1f), 0.0, 
+      _orbiter->setOrientation(glm::quat(0.5 * cos(_oscillator * 1.1f), 0.0,
 					 cos(_oscillator), sin(_oscillator)));
-      _modelGroup->setPosition(cos(_oscillator / 1.2f), 
+      _modelGroup->setPosition(cos(_oscillator / 1.2f),
 			       -2.2f + sin(_oscillator / 1.2f), -10.0);
-      _modelGroup->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0, 
+      _modelGroup->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0,
 					 cos(_oscillator * 0.2f), sin(_oscillator * 0.2f)));
 
       // Now the preliminaries are done, on to the actual drawing.
-  
+
       // First clear the display.
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-  
+
       // Second the load() step.  We let MinVR give us the projection
       // matrix from the render state argument to this method.
-      const float* pm = renderState.getProjectionMatrix();
+      std::vector<float> pm = renderState.getValue("ProjectionMatrix");
       glm::mat4 projMatrix = glm::mat4( pm[0],  pm[1], pm[2], pm[3],
                                         pm[4],  pm[5], pm[6], pm[7],
                                         pm[8],  pm[9],pm[10],pm[11],
@@ -275,7 +271,7 @@ public:
       _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
-      const float* vm = renderState.getViewMatrix();
+      std::vector<float> vm = renderState.getValue("ViewMatrix");
       glm::mat4 viewMatrix = glm::mat4( vm[0],  vm[1], vm[2], vm[3],
                                         vm[4],  vm[5], vm[6], vm[7],
                                         vm[8],  vm[9],vm[10],vm[11],
@@ -287,7 +283,6 @@ public:
       // We let MinVR swap the graphics buffers.
       // glutSwapBuffers();
     }
-  }
 };
 
 // The main function is just a shell of its former self.  Just
@@ -303,19 +298,18 @@ int main(int argc, char **argv) {
   // If there weren't enough args, throw an error and explain what the
   // user should have done.
   if (argc < 2) {
-    throw std::runtime_error("\nNeed a config file.\nTry 'bin/objDemoMinVR ../config/desktop-freeglut.xml'");
+    throw std::runtime_error("\nNeed a config file.\nTry 'bin/objDemoMinVR -c ../config/desktop-freeglut.xml'");
   }
 
   // Is the MINVR_ROOT variable set?  MinVR usually needs this to find
   // some important things.
   if (getenv("MINVR_ROOT") == NULL) {
-    std::cout << "***** No MINVR_ROOT -- MinVR might not be found *****" << std::endl 
+    std::cout << "***** No MINVR_ROOT -- MinVR might not be found *****" << std::endl
               << "MinVR is found (at runtime) via the 'MINVR_ROOT' variable."
               << std::endl << "Try 'export MINVR_ROOT=/my/path/to/MinVR'."
               << std::endl;
   }
-  
-  
+
   // Initialize the app.
   DemoVRApp app(argc, argv);
 
@@ -328,4 +322,4 @@ int main(int argc, char **argv) {
 
 
 
-  
+

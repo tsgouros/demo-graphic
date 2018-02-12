@@ -305,15 +305,8 @@ public:
 	/// event to process.
 	void onVREvent(const MinVR::VRDataIndex &event) {
 
-    //    std::cout << "EVENT:" << event << std::endl;
-
-    // This heartbeat event recurs at regular intervals, so you can do
-    // animation with the model matrix here, as well as in the render
-    // function.
-		// if (event.getName() == "FrameStart") {
-    //   const double time = event.getDataAsDouble("ElapsedSeconds");
-    //   return;
-		// }
+    // if (event.getName() != "FrameStart")
+    //   std::cout << "EVENT:" << event << std::endl;
 
     float step = 0.5f;
     float stepAngle = 5.0f / 360.0f;
@@ -342,7 +335,7 @@ public:
     //    std::cout << "onVRRenderContext..." << std::endl;
 
     // Check if this is the first call.  If so, do some initialization.
-    if ((int)renderState.getValue("InitRender", "/") == 1) {
+    if ((int)renderState.getValue("InitRender") == 1) {
       _checkContext();
       _initializeScene();
       _scene.prepare();
