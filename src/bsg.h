@@ -749,10 +749,10 @@ class drawableObj {
 /// A bsgName is a name that specifies an object that is possibly
 /// situated within a complicated scene hierarchy.  So a "name"
 /// consists of a list of strings, one for each level of the
-/// hierarchy.  This was a typdef for a list of strings, and it is
-/// pretty much still just that, but was turned into its own class in
-/// order to have a prettier print() method.  One name specifies an
-/// object.  See scene.getObject.
+/// hierarchy.  This was originally just a typedef for a list of
+/// strings, and it is pretty much still just that, but was turned
+/// into its own class in order to have a prettier print() method.
+/// One name specifies an object.  See scene.getObject.
 class bsgName : public std::list<std::string> {
  private:
   std::string printName() const;
@@ -774,7 +774,9 @@ typedef std::list<bsgName> bsgNameList;
 /// graph.  It handles the basics of a transformation matrix, which
 /// both of those classes need.  Beyond the shared functionality,
 /// having both those objects inherit from the same parent allows us
-/// to define a pointer object (bsgPtr) that can point equally well to both.
+/// to define a pointer object (bsgPtr) that can point equally well to
+/// both, so makes it convenient for drawableCollection to contain
+/// both drawableCollection and drawableCompound objects.
 ///
 /// This class is where the model matrix is handled, and it is handled
 /// by combining the internal model matrix (with all the position,
@@ -972,19 +974,20 @@ class drawableMulti {
 ///
 /// A compound drawable object is made of a bunch of drawableObj
 /// objects but can be considered to be a single object.  It might
-/// consist of just one object, which might seem a waste, but that's
-/// ok, since this is also where the objects are placed in model
-/// space.  If there are multiple component objects, they must specify
-/// their vertex coordinates in the same coordinate system as each
-/// other, and they are pretty much stuck there.  They are not
-/// designed to move relative to each other.  If you want to move
-/// objects independently of each other, use multiple drawableCompound
-/// objects within a drawableCollection.  (Or consider using a real
-/// scene graph API, like OSG.)  The view matrix and the projection
-/// matrix are used here, though they are generated and managed at the
-/// scene level.
+/// consist of just one object, which might seem a waste, but the
+/// class is more than that.
 ///
-/// Important: We expect one of these will be the leaf nodes to every
+/// This object is also where things are placed in model space.  If
+/// there are multiple component objects, their vertex coordinates
+/// must be specified in the same coordinate system as each other, and
+/// they are pretty much stuck there.  They are not designed to move
+/// relative to each other.  If you want to move objects independently
+/// of each other, use multiple drawableCompound objects within a
+/// drawableCollection.  (Or consider using a real scene graph API,
+/// like OSG.)  The view matrix and the projection matrix are used
+/// here, though they are generated and managed at the scene level.
+///
+/// Important: We expect a drawableCompound object will be the leaf nodes to every
 /// scene graph branch.
 ///
 /// The shaders are included in this object as a pointer because many
@@ -994,11 +997,17 @@ class drawableMulti {
 ///
 /// This class imposes a small number of restrictions on the shader
 /// code itself, mostly that the matrix names in the shader must match
-/// the matrix names here.  There is a setMatrixNames() method for
+/// the matrix names here.  There is a setMatrixName() method for
 /// that.  Setting things up for the number of lights is also
 /// something that needs to be configured carefully.  See the
 /// lightList documentation.
 ///
+/// The bsg library contains a menagerie of predefined elementary and
+/// not-so-elementary shapes in the bsgMenagerie.h file.  These are
+/// all child objects of drawableCompound and can be used to assemble
+/// a scene.
+///
+
 class drawableCompound : public drawableMulti {
  protected:
 
@@ -1148,18 +1157,26 @@ class drawableCompound : public drawableMulti {
 ///
 /// This is the heart of a scene graph: a collection of drawable
 /// objects that can be nested arbitrarily deeply.  Each object
-/// manages a transformation matrix that it applies to all of its
-/// children, as well as a pointer to a parent object so the
-/// transformations can be applied in the right order.  The objects
-/// are named, so they can be addressed and modified individually.
+/// manages a transformation matrix (a "model" matrix) that it applies
+/// to all of its children, as well as a pointer to a parent object so
+/// the transformations can be applied in the right order.  The
+/// objects are named, so they can be addressed and modified
+/// individually.
 ///
-/// To use a scene graph, create a collection object like this one to
-/// be the root, making sure it has no parent.  Add objects, or groups
-/// of objects to it, at will.  If you don't assign names to the added
+/// A collection object like this one is at the root of a scene graph.
+///
+/// To use this object, add objects, or groups of objects to it,
+/// however many you want.  If you don't assign names to the added
 /// objects, it will come up with a hash-y sort of random-looking name
 /// for you.  There is a getNames() method so you can learn these
 /// random names, but it might be better just to pick sensible names
 /// if you intend to manipulate the scene after creation.
+///
+/// Note that, like \ref drawableCompound, this class inherits from
+/// \ref drawableMulti.  This unifies the management of
+/// transformations, and also means that the child nodes of a
+/// drawableCollection can be either drawableCollection or \ref
+/// drawableCompound.
 ///
 class drawableCollection : public drawableMulti {
 
@@ -1281,9 +1298,39 @@ class drawableCollection : public drawableMulti {
 /// the scene graph tree, and management capacity for things like the
 /// view and projection matrices.
 ///
+///
+/// To use the scene object, create it, and add objects to it using
+/// the addObject() method.  Some of those objects will themselves be
+/// containers holding other objects (\ref drawableCollection) and some of
+/// them will be drawable objects themselves (\ref drawableCompound).
+/// Do this:
+///
+/// \code
+/// std::cout << scene << std::endl;
+/// \endcode
+///
+/// To see a rendering of the scene's tree structure.
+///
 /// Like many of the other objects in this library, the scene is meant
-/// to be prepared, loaded, and drawn.  The scene object will manage
-/// those chores for most of the other objects, though.
+/// to be prepared, loaded, and drawn.  Use the prepare() method after
+/// your objects have been built and the scene assembled.  It gets
+/// things ready to draw, and is only meant to be called once, after
+/// everything has been initialized.
+///
+/// The load() method is used prior to drawing.  It updates all the
+/// various model matrices, as well as any changes in the model
+/// objects that may have taken place.  All that data is sent to the
+/// GPU.
+///
+/// The draw() method takes a camera matrix and a projection matrix
+/// and demands the GPU render them.  This is separated from the
+/// load() method for displays that might render the same scene
+/// multiple times, such as with a stereo image.
+///
+/// All the elements of a scene (and the shaders, lights, and textures
+/// used in the scene as well) follow the same steps.  The scene
+/// object will manage the prepare(), load(), and draw() for all of
+/// them.
 ///
 /// \code
 /// scene = bsg::scene();
@@ -1296,8 +1343,6 @@ class drawableCollection : public drawableMulti {
 ///
 /// scene.draw(scene.getViewMatrix(), scene.getProjMatrix());
 /// \endcode
-///
-/// Use the addObject
 ///
 ///
 class scene {
@@ -1375,10 +1420,14 @@ class scene {
   /// This is how you build a scene.  Objects can be either
   /// drawableCompound objects, or a drawableCollection object.  A
   /// compound object is made up of multiple components, but is
-  /// treated as a single object.  These are the leaves of your scene
-  /// graph.  A drawableCollection object is a collection of other
-  /// drawable objects, which can themselves be collections of other
-  /// objects.  See the treeDemo2 program for an example.
+  /// treated as a single object.  These are the leaf nodes of your
+  /// scene graph.  A drawableCollection object is a collection of
+  /// other drawable objects, which can themselves be collections of
+  /// other objects.  These are the branch nodes of your scene graph.
+  /// See the treeDemo2 program for an example.
+  ///
+  /// This method will choose a random-ish name for your object.  If
+  /// you want to specify a name, use the other addObject().
   void addObject(const bsgPtr<drawableMulti> &pMultiObject) {
     _sceneRoot.addObject(pMultiObject->getName(), pMultiObject);
   }
@@ -1395,7 +1444,7 @@ class scene {
   /// \brief Prepare the scene to be drawn.
   ///
   /// This does a bunch of one-time-only initializations for the
-  /// member drawable elements.
+  /// member drawable elements.  If the elements have been changed, th
   void prepare();
 
   /// \brief Generates a projection matrix.
