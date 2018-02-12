@@ -100,8 +100,6 @@ private:
   // function and the renderScene() function.
   bsg::drawableCompound* _axesSet;
   bsg::drawableCollection* _plugBoard;
-  bsg::drawableObjModel* _model;
-  bsg::drawableObjModel* _orbiter;
   std::vector<animLine> _lines;
 
   // These are part of the animation stuff, and again are out here with
@@ -236,10 +234,6 @@ private:
     // shape, but we leave them separate so they can be moved
     // separately.
 
-    _orbiter = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
-    _model = new bsg::drawableObjModel(_shader, "../data/test-v.obj");
-    //_model = new bsg::drawableObjModel(_shader, "../data/LEGO_Man.obj");
-
     _plugBoard = new bsg::drawableCollection();
 
     for (int i = 0; i < 10; i++) {
@@ -342,8 +336,13 @@ public:
     if ((int)renderState.getValue("InitRender") == 1) {
       _checkContext();
       _initializeScene();
+
+      // Make any initializations necessary for the scene and its shaders.
       _scene.prepare();
     }
+
+   // Load the scene models to the GPU.
+    _scene.load();
   }
 
   /// \brief Draw the image.
@@ -356,32 +355,19 @@ public:
 
       // If you want to adjust the positions of the various objects in
       // your scene, you can do that here.
-      _orbiter->setPosition(3.0f * cos(_oscillator), 3.0, 3.0 * sin(_oscillator));
-      _orbiter->setOrientation(glm::quat(0.5 * cos(_oscillator * 1.1f), 0.0,
-					 cos(_oscillator), sin(_oscillator)));
-      // _plugBoard->setPosition(cos(_oscillator / 1.2f),
-			//        -2.2f + sin(_oscillator / 1.2f), -10.0);
-      // _plugBoard->setOrientation(glm::quat(0.5 * cos(_oscillator * 0.1f), 0.0,
-			// 		 cos(_oscillator * 0.2f), sin(_oscillator * 0.2f)));
-
-
-      // bPtr(bsg::drawableSaggyLine,_plugBoard->getObject("line"))->
-      //   setLineEnds(_orbiter->getPosition(),
-      //               _model->getPosition());
 
       // Now the preliminaries are done, on to the actual drawing.
 
       // First clear the display.
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-      // Second the load() step.  We let MinVR give us the projection
-      // matrix from the render state argument to this method.
+      // We let MinVR give us the projection matrix from the render
+      // state argument to this method.
       std::vector<float> pm = renderState.getValue("ProjectionMatrix");
       glm::mat4 projMatrix = glm::mat4( pm[0],  pm[1], pm[2], pm[3],
                                         pm[4],  pm[5], pm[6], pm[7],
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
-      _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
       std::vector<float> vm = renderState.getValue("ViewMatrix");

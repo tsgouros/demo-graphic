@@ -258,8 +258,14 @@ public:
     if ((int)renderState.getValue("InitRender", "/") == 1) {
       _checkContext();
       _initializeScene();
+
+      // Make any initializations necessary for the scene and its shaders.
       _scene.prepare();
     }
+
+   // Load the scene models to the GPU.
+    _scene.load();
+
   }
 
   /// This is the heart of any graphics program, the render function.
@@ -307,7 +313,6 @@ public:
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
       //bsg::bsgUtils::printMat("proj", projMatrix);
-      _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
       std::vector<float> vm = renderState.getValue("ViewMatrix");

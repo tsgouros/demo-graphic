@@ -235,6 +235,8 @@ public:
       _initializeScene();
       _scene.prepare();
     }
+
+    _scene.load();
   }
 
   /// This is the heart of any graphics program, the render function.
@@ -264,7 +266,6 @@ public:
                                         pm[8],  pm[9],pm[10],pm[11],
                                         pm[12],pm[13],pm[14],pm[15]);
       //bsg::bsgUtils::printMat("proj", projMatrix);
-      _scene.load();
 
       // The draw step.  We let MinVR give us the view matrix.
       const float* vm = renderState.getViewMatrix();
