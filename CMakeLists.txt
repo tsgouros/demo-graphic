@@ -1,9 +1,12 @@
 # CMakeLists files in this project can
 # refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and
 # to the root binary directory of the project as ${HELLO_BINARY_DIR}.
-cmake_minimum_required (VERSION 2.8.2)
+cmake_minimum_required (VERSION 3.9)
 
 project (demo-graphic)
+
+# This is for the new-style cmake includes.
+list(APPEND CMAKE_PREFIX_PATH ${MINVR_INSTALL_DIR})
 
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
@@ -76,6 +79,7 @@ find_package(MinVR MODULE)
 message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
 message("-- MinVR library:    " ${MINVR_LIBRARY})
 message("-- 2d MinVR library: " ${MINVR_LIBRARY_DEBUG})
+
 
 set(MINVR_LIBRARY_DEBUG ${MINVR_LIBRARY})
 
