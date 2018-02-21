@@ -466,8 +466,14 @@ Hearing event:Head_Move
   $ make install
 \end{Verbatim}
 
-Attach it to your demo-graphic build after defining MINVR\_ROOT to
-point to the \underline{INSTALL} directory.
+\end{frame}
+
+\begin{frame}[fragile]{Getting and building demo-graphic}
+
+
+Attach MinVR to your demo-graphic build by defining MINVR\_ROOT to
+point to the MinVR \underline{INSTALL} directory.  If you didn't set
+it with cmake, this will be in MinVR/build/install.
 
 \begin{Verbatim}[fontsize=\small]
   $ git clone https://github.com/tsgouros/demo-graphic
@@ -476,6 +482,14 @@ point to the \underline{INSTALL} directory.
   $ cd build
   $ cmake .. -DMINVR_INSTALL_DIR=${MINVR_ROOT}
              -DBUILD_DOCUMENTATION=ON
+  $ make
+\end{Verbatim}
+
+All built?  Try these:
+
+\begin{Verbatim}
+  $ bin/treeDemo
+  $ bin/objDemoMinVR -c ../config/desktop-freeglut.xml
 \end{Verbatim}
 \end{frame}
 
