@@ -6,7 +6,12 @@ cmake_minimum_required (VERSION 3.9)
 project (demo-graphic)
 
 # This is for the new-style cmake includes.
-list(APPEND CMAKE_PREFIX_PATH ${MINVR_INSTALL_DIR})
+if (MINVR_INSTALL_DIR) 
+  list(APPEND CMAKE_PREFIX_PATH ${MINVR_INSTALL_DIR})
+else(MINVR_INSTALL_DIR)
+  message(WARNING "MINVR_INSTALL_DIR not specified, so I will probably not be able to find MinVR.  But I'll look for it and install everything else for you.")
+endif(MINVR_INSTALL_DIR)
+
 
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
@@ -32,7 +37,7 @@ endif()
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
 
-option(BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)")
+option(BUILD_DOCUMENTATION "If enabled, will create and install the HTML based API documentation (requires Doxygen)")
 
 if(BUILD_DOCUMENTATION)
   if(NOT DOXYGEN_FOUND)
@@ -75,13 +80,19 @@ find_package(FreeGLUT REQUIRED)
 message("-- FreeGLUT includes:" ${FREEGLUT_INCLUDE_DIR})
 message("-- FreeGLUT library: " ${FREEGLUT_LIBRARY})
 
-find_package(MinVR MODULE)
-message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
-message("-- MinVR library:    " ${MINVR_LIBRARY})
-message("-- 2d MinVR library: " ${MINVR_LIBRARY_DEBUG})
+find_package(MinVR)
+# message("-- MinVR includes:   " ${MINVR_INCLUDE_DIR})
+# message("-- MinVR library:    " ${MINVR_LIBRARY})
+# message("-- 2d MinVR library: " ${MINVR_LIBRARY_DEBUG})
+
+if (MinVR_FOUND)
+  message(STATUS "MinVR found at: ${MinVR_DIR}")
+else (MinVR_FOUND)
+  message(STATUS "MinVR not found, my apologies.  Try specifying MINVR_INSTALL_PREFIX like this:\n   $ cmake .. -DMINVR_INSTALL_PREFIX=/path/to/your/MinVR")
+endif(MinVR_FOUND)
 
 
-set(MINVR_LIBRARY_DEBUG ${MINVR_LIBRARY})
+# set(MINVR_LIBRARY_DEBUG ${MINVR_LIBRARY})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   # Linux specific code -- Not sure why pthreads or dl is required.  This
@@ -110,3 +121,43 @@ add_definitions(-DDATAPATH="${CMAKE_SOURCE_DIR}")
 add_subdirectory(src)
 add_subdirectory(examples)
 
+## ************************************************ HOW ARE WE BUILDING?
+
+
+# The following sorts through all the cmake variables, and stores the ones
+# whose help strings include the magic string "If enabled", plus the cmake
+# build type (Debug, Release, etc.) and install directory.  It then stores a
+# simulacrum of the cmake invocation in a shell script, so you can run it
+# again if you like.
+#
+# This also means that if you add options, make their help strings include
+# the magic string.
+
+# Get a list of all the cmake variables.
+get_cmake_property(CACHE_VARS CACHE_VARIABLES)
+
+# Start our invocation string.
+set(CMAKE_INVOCATION "cmake ${CMAKE_SOURCE_DIR} ")
+cmake_policy(SET CMP0054 NEW)
+
+# Loop through all the variables, and if they match the magic string, or if
+# they are the build type, add them to the invocation string.
+foreach(CACHE_VAR ${CACHE_VARS})
+  get_property(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
+  get_property(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
+  if (CACHE_VAR_HELPSTRING MATCHES "If enabled" OR
+      # There are also a few commonly-used cmake variables worth recording.
+      CACHE_VAR STREQUAL "CMAKE_BUILD_TYPE" OR
+      CACHE_VAR STREQUAL "CMAKE_INSTALL_PREFIX" OR
+      CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
+    if(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
+      set(CACHE_VAR_TYPE)
+    else()
+      set(CACHE_VAR_TYPE :${CACHE_VAR_TYPE})
+    endif()
+    set(CMAKE_INVOCATION "${CMAKE_INVOCATION} -D${CACHE_VAR}${CACHE_VAR_TYPE}=\"${${CACHE_VAR}}\"")
+  endif()
+endforeach()
+file(WRITE ${CMAKE_BINARY_DIR}/cmake-repeat.sh "#!/usr/bin/env bash\n# Feel free to edit this file before executing it. The file will be\n# overwritten with each cmake invocation, but the saved version will\n# reflect your changes.\n${CMAKE_INVOCATION}\n")
+
+message(STATUS "CMAKE invocation stored in ${CMAKE_BINARY_DIR}/cmake-repeat.sh.\n   Feel free to edit, then execute that file to re-run this cmake.")
