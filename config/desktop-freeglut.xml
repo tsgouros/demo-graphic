@@ -30,6 +30,15 @@
   
   <VRSetups>
     <Desktop hostType="VRStandAlone">
+
+        <FakeHTDevice inputdeviceType="VRFakeTrackerDevice">
+          <TrackerName type="string">Head</TrackerName>
+          <ToggleOnOffEvent type="string">Kbdt_Down</ToggleOnOffEvent>
+          <XYTranslationScale>5</XYTranslationScale>
+          <ZTranslationScale>5</ZTranslationScale>
+          <RotationScale>1</RotationScale>
+        </FakeHTDevice>
+
       <FreeGLUTToolkit windowtoolkitType="VRFreeGLUTWindowToolkit"/>
       <OpenGLToolkit graphicstoolkitType="VROpenGLGraphicsToolkit"/>
       <RootNode displaynodeType="VRGraphicsWindowNode">
@@ -40,7 +49,7 @@
         <YPos>100</YPos>
         <Width>640</Width>
         <Height>640</Height>
-        <LookAtNode displaynodeType="VRLookAtNode">
+        <LookAtNode displaynodeType="VRTrackedLookAtNode">
           <ProjectionNode displaynodeType="VROffAxisProjectionNode">
             <TopLeft type="floatarray">-10,10,-3</TopLeft>
             <TopRight type="floatarray">-10,10,-3</TopRight>

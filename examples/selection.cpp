@@ -372,6 +372,10 @@ public:
       int x = event.getDataAsInt("XPos");
       int y = event.getDataAsInt("YPos");
       if(abs(selected) < 2){
+        //The check above is hard coded for a scene with two objects, but 
+        //essentially if we're in this if-statement, an object was selected.
+        //The following method will move the object with the mouse, so that
+        //dragging the mouse after clicking "A" will drag the object around the scene.
         mouseMoveWhileClicked(x,y);
       }
 
@@ -399,10 +403,12 @@ void disable(){
  
 }
 
+//Given an ID into the object array, return the compound.
 bsg::drawableCompound* getCompound(int i){
   return bArray[i];
 }
 
+//Create a "fake color" which will act as an ID for the object
 void assignFakeColor(bsg::bsgPtr<bsg::drawableObj> obj, int i){
     bsg::bsgPtr<bsg::drawableObj> cur  = obj;
     std::vector<glm::vec4> topShapeColors;
@@ -425,6 +431,9 @@ void assignFakeColor(bsg::bsgPtr<bsg::drawableObj> obj, int i){
     cur->setFakeColors(topShapeColors);
 }
 
+//Hardcoded for a scene with two objects, but this method 
+//iterates through the objects in the scene and fills their data
+//fields with their fake "ID" colors.
 void changeColor(){
   bsg::bsgPtr<bsg::drawableObj>* objs = arr;
   for(int i = 0; i < 2; i++){
@@ -435,17 +444,28 @@ void changeColor(){
   
 }
 
+// This method controls the logic for selection. It's parameters are 
+// the x and y location of the mouse click when "Q" is pressed.
 int selectShape(int x, int y){
 
   bsg::bsgPtr<bsg::drawableObj>* objs = arr;
+  //First, handle all GL disabling
   disable();
+  //Behind the scenes, change the colors of all the objects. Each object
+  //has a single specific color which will act as its key.
   changeColor();
+  //Reload the scene to include the recoloring.
   reload();
+  //Read in the color under the mouse.
   selected = readInColor(x,y);
+  //Once again, handle GL disabling
   disable();
+  //Return colors to what they normally are. This way, the user won't have
+  //to see any of the logic that just occured.
   restoreColors();
   reload();
-
+  //Right now, I've hardcoded the scene to only have two objects. If
+  //selected has an ID of 0 or 1, that will refer to one of the two objects.
   if(abs(selected) < 2 && selected > -2){ 
     b = getCompound(selected);
   }
@@ -485,7 +505,7 @@ glm::vec3 translateMouseToWorldCoords(int x, int y, int z){
 
 }
 
-
+// Gets the world coordinates of the mouse and moves the object to that position.
 void mouseMoveWhileClicked(int x, int y){
   glm::vec3 oldPos = b->getPosition();
   glm::vec3 coords = translateMouseToWorldCoords(x, y, oldPos[2]);
@@ -507,6 +527,7 @@ void reload(){
 int savedX = 0;
 int savedY = 0;
 
+//This checks the color under the mouse
 int readInColor(int x, int y){
   int window_width = glutGet(GLUT_WINDOW_WIDTH);
   int window_height = glutGet(GLUT_WINDOW_HEIGHT);
@@ -514,14 +535,15 @@ int readInColor(int x, int y){
   glGetIntegerv(GL_VIEWPORT, viewport);
 
   GLfloat color[4];
-
+  //Given an x and y coordinate, check what color the pixel is under the mouse
   glReadPixels(x, viewport[3] - y, 1, 1, GL_RED, GL_FLOAT, color);
-  
+  //Turn this color into an ID and return it as an index.
   float output = color[0]*255/1.0f;
   float index = round((1.0f/color[0]) - 1);  
   return index;
 }
 
+//Repaint the scene with the real stored colors of all the objects.
 void restoreColors(){
   bsg::bsgPtr<bsg::drawableObj>* objs = arr;
   for(int i = 0; i < 2; i++){
@@ -603,11 +625,12 @@ int needToRedraw = 0;
 
       bsg::bsgNameList inside = rectGroup->insideBoundingBox(glm::vec4(0.0,0.0,0.0, 0.0));
 
-
+      //A toggle indicating if "Q" is being pressed, which is the keyboard version of the
+      //wand button click.
       if(needToRedraw){
       
         needToRedraw =0;
-        
+        // We check here to see if any shapes have been selected.
         selectShape(currX, currY);
        
     }
