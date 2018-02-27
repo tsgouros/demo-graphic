@@ -149,6 +149,7 @@ foreach(CACHE_VAR ${CACHE_VARS})
       # There are also a few commonly-used cmake variables worth recording.
       CACHE_VAR STREQUAL "CMAKE_BUILD_TYPE" OR
       CACHE_VAR STREQUAL "CMAKE_INSTALL_PREFIX" OR
+      CACHE_VAR MATCHES "MINVR|MinVR" OR
       CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
     if(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
       set(CACHE_VAR_TYPE)
