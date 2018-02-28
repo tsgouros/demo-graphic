@@ -12,7 +12,6 @@ else(MINVR_INSTALL_DIR)
   message(WARNING "MINVR_INSTALL_DIR not specified, so I will probably not be able to find MinVR.  But I'll look for it and install everything else for you.")
 endif(MINVR_INSTALL_DIR)
 
-
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
 set(VERSION_MINOR   1   CACHE STRING "Project minor version number.")
@@ -88,7 +87,7 @@ find_package(MinVR)
 if (MinVR_FOUND)
   message(STATUS "MinVR found at: ${MinVR_DIR}")
 else (MinVR_FOUND)
-  message(STATUS "MinVR not found, my apologies.  Try specifying MINVR_INSTALL_PREFIX like this:\n   $ cmake .. -DMINVR_INSTALL_PREFIX=/path/to/your/MinVR")
+  message(STATUS "MinVR not found, my apologies.  Try specifying MINVR_INSTALL_DIR like this:\n   $ cmake .. -DMINVR_INSTALL_DIR=/path/to/your/MinVR/install")
 endif(MinVR_FOUND)
 
 
