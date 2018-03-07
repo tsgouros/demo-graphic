@@ -92,7 +92,7 @@ endif(MinVR_FOUND)
 
 # TODO @martha & tom: this is a hack, for now, because there is some problem with the linking
 # set(MINVR_LIBRARY /gpfs/runtime/opt/minvr/beta-bleeding/lib/MinVR-2.0/libMinVR.a)
-set(MINVR_INCLUDE_DIR ~/Dropbox/ccv/MinVR/build/install/include)
+# set(MINVR_INCLUDE_DIR ~/Dropbox/ccv/MinVR/build/install/include)
 
 # set(MINVR_LIBRARY_DEBUG ${MINVR_LIBRARY})
 
@@ -125,7 +125,7 @@ add_definitions(-DDATAPATH="${CMAKE_SOURCE_DIR}")
 ## add_dependencies(whatever freetypegl) and make sure that FREETYPEGL_INCLUDE_DIR
 ## is nominated in the include_directories() list.
 message(STATUS "LOOKING FOR GLFW3")
-find_package(glfw3 REQUIRED)
+find_package(glfw3)
 
 set(FREETYPEGL_CHECKOUT_DIR ${PROJECT_SOURCE_DIR}/external/freetype-gl)
 make_directory(${FREETYPEGL_CHECKOUT_DIR})

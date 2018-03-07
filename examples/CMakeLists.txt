@@ -89,37 +89,41 @@ include_directories(
 
     add_executable(demo3 demo3.cpp)
 
-    target_link_libraries(demo3 PUBLIC bsg MinVR::MinVR
+    target_link_libraries(demo3 PUBLIC bsg freetypegl MinVR::MinVR
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+      ${GLEW_LIBRARY}
+      ${FREETYPE_LIBRARIES})
 
     add_executable(pointDemo pointDemo.cpp)
 
-    target_link_libraries(pointDemo PUBLIC bsg MinVR::MinVR
+    target_link_libraries(pointDemo PUBLIC bsg freetypegl MinVR::MinVR
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+      ${GLEW_LIBRARY}
+      ${FREETYPE_LIBRARIES})
 
     add_executable(demo4 demo4.cpp)
 
-    target_link_libraries(demo4 PUBLIC bsg MinVR::MinVR
+    target_link_libraries(demo4 PUBLIC freetypegl bsg MinVR::MinVR
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+      ${GLEW_LIBRARY}
+      ${FREETYPE_LIBRARIES})
 
     add_executable(textureDemoMinVR textureDemoMinVR.cpp)
 
 
-    target_link_libraries(textureDemoMinVR PUBLIC bsg MinVR::MinVR
+    target_link_libraries(textureDemoMinVR PUBLIC bsg freetypegl MinVR::MinVR
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+      ${GLEW_LIBRARY}
+      ${FREETYPE_LIBRARIES})
 
     add_executable(textDemoMinVR textDemoMinVR.cpp)
     add_dependencies(textDemoMinVR freetypegl-download)
 
-    target_link_libraries(textDemoMinVR bsg
+    target_link_libraries(textDemoMinVR bsg freetypegl MinVR::MinVR
      ${MINVR_LIBRARY}
      ${FREEGLUT_LIBRARY}
      ${OPENGL_LIBRARY}
@@ -129,17 +133,19 @@ include_directories(
 
     add_executable(objDemoMinVR objDemoMinVR.cpp)
 
-    target_link_libraries(objDemoMinVR PUBLIC bsg MinVR::MinVR
+    target_link_libraries(objDemoMinVR PUBLIC freetypegl bsg MinVR::MinVR
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+      ${GLEW_LIBRARY}
+      ${FREETYPE_LIBRARIES})
 
     add_executable(kbDemoMinVR kbDemoMinVR.cpp)
 
-    target_link_libraries(kbDemoMinVR PUBLIC bsg MinVR::MinVR
+    target_link_libraries(kbDemoMinVR PUBLIC bsg freetypegl MinVR::MinVR
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
-      ${GLEW_LIBRARY})
+      ${GLEW_LIBRARY}
+      ${FREETYPE_LIBRARIES})
 
   else(MinVR_FOUND)
 
