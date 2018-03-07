@@ -1,4 +1,5 @@
 #include "bsgMenagerie.h"
+#include "../external/freetype-gl/freetype-gl.h"
 
 namespace bsg {
 
@@ -716,6 +717,185 @@ drawablePoints::drawablePoints(bsgPtr<shaderMgr> pShader,
   _points->setInterleaved(false);
 
   addObject(_points);
+}
+
+
+drawableText::drawableText(bsgPtr<shaderMgr> pShader,
+                           bsgPtr<fontTextureMgr> texture, const char *text, 
+                           const float height, const char *fontFilePath,
+                           const glm::vec4 color) :
+    drawableCompound(pShader),
+    _texture(texture),
+    _text(text),
+    _height(height),
+    _fontFilePath(fontFilePath),
+    _color(color) {
+
+  _name = "second";
+
+  std::cout << "second constructor" << std::endl;
+  // std::cout << _texture->_textureAttribName << std::endl;
+  doStuff();
+}
+
+drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text, 
+                           const float height, const char *fontFilePath,
+                           const glm::vec4 color) :
+    drawableCompound(pShader),
+    _text(text),
+    _height(height),
+    _fontFilePath(fontFilePath),
+    _color(color) {
+
+  _name = "first";
+  
+  std::cout << "first constructor" << std::endl;
+  _texture = new bsg::fontTextureMgr();
+  // std::cout << _texture->_textureAttribName << std::endl;
+  doStuff();
+}
+
+void drawableText::doStuff() {
+  _texture->readFile(bsg::textureTTF, _fontFilePath);
+  _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
+
+  std::cout << "We are about to request the font." << std::endl;
+  std::cout << "The font we are requesting is: " << _fontFilePath << std::endl;
+  texture_font_t *font = _texture->getFont(_fontFilePath);
+
+  std::cout << "The font we got is: " << font << std::endl;
+
+  // vertex_buffer_t *buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
+
+  // _height is the height we want the text to be, in world units. But
+  // freetypegl measures font size in pixels, so if we don't scale the
+  // coordinates it gives us somehow, the text will show up many times too big.
+  // So, we scale the coordinates by dividing height (the height that the user
+  // wanted) by font's height attribute. See:
+  // https://github.com/rougier/freetype-gl/blob/master/texture-font.h
+  float scaling_factor = _height / font->height;
+  int i = 0;
+  vec2 pen = {{0.0f, 0.0f}};
+
+  while (_text[i]) {
+    // std::string _name = randomName("letter");
+    bsgPtr<drawableObj> _frontFace = new drawableObj();
+    bsgPtr<drawableObj> _backFace = new drawableObj();
+    texture_glyph_t *glyph = texture_font_get_glyph(font, &_text[i]);
+
+    float kerning = 0.0f;
+    if (i > 0) {
+      kerning = texture_glyph_get_kerning(glyph, _text + i - 1);
+    }
+
+    pen.x += kerning;
+
+    float x0  = (pen.x + glyph->offset_x);
+    float y0  = (int)(pen.y + glyph->offset_y);
+    float x1  = (x0 + glyph->width);
+    float y1  = (int)(y0 - glyph->height);
+
+    std::vector<glm::vec4> frontFaceVertices;
+
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y1,
+      0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y1,
+      0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y0,
+      0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y0,
+      0.0f, 1.0f));
+
+    _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
+
+    std::vector<glm::vec4> frontFaceNormals;
+
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+
+    _frontFace->addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
+
+    std::vector<glm::vec2> frontFaceUVs;
+
+    float u0 = glyph->s0;
+    float v0 = glyph->t0;
+    float u1 = glyph->s1;
+    float v1 = glyph->t1;
+
+    frontFaceUVs.push_back(glm::vec2(u0, v1));
+    frontFaceUVs.push_back(glm::vec2(u1, v1));
+    frontFaceUVs.push_back(glm::vec2(u0, v0));
+    frontFaceUVs.push_back(glm::vec2(u1, v0));
+
+    _frontFace->addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
+
+    // Here are the corresponding colors for the above vertices.
+    std::vector<glm::vec4> frontFaceColors;
+    frontFaceColors.push_back(_color);
+    frontFaceColors.push_back(_color);
+    frontFaceColors.push_back(_color);
+    frontFaceColors.push_back(_color);
+
+    _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+    
+    // The vertices above are arranged into a set of triangles.
+    _frontFace->setDrawType(GL_TRIANGLE_STRIP);  
+
+    // Same thing for the back-facing rectangle.
+    std::vector<glm::vec4> backFaceVertices;
+
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y1,
+      0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y0,
+      0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y1,
+      0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y0,
+      0.0f, 1.0f));
+
+    _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
+
+    std::vector<glm::vec4> backFaceNormals;
+
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+
+    _backFace->addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
+
+    std::vector<glm::vec2> backFaceUVs;
+
+    backFaceUVs.push_back(glm::vec2(u0, v1));
+    backFaceUVs.push_back(glm::vec2(u0, v0));
+    backFaceUVs.push_back(glm::vec2(u1, v1));
+    backFaceUVs.push_back(glm::vec2(u1, v0));
+
+    _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
+
+    std::vector<glm::vec4> backFaceColors;
+    backFaceColors.push_back(_color);
+    backFaceColors.push_back(_color);
+    backFaceColors.push_back(_color);
+    backFaceColors.push_back(_color);
+
+    _backFace->addData(bsg::GLDATA_COLORS, "color", backFaceColors);
+    
+    _backFace->setDrawType(GL_TRIANGLE_STRIP);  
+
+    addObject(_frontFace);
+    addObject(_backFace);
+
+    pen.x += glyph->advance_x;
+
+    i++;
+  }
+}
+
+bsgPtr<fontTextureMgr> drawableText::getFontTexture() {
+  return _texture;
 }
 
 

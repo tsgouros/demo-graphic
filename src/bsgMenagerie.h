@@ -175,5 +175,35 @@ class drawablePoints : public drawableCompound {
                  const std::vector<glm::vec4> &colors);
 };
 
+/// \brief A line of text.
+///
+/// A single line of text in the size, color, and font you specify. Doesn't
+/// handle things like paragraph styling, margins, and rag; that's what
+/// drawableTextBox will be for.
+
+class drawableText : public drawableCompound {
+  private:
+    const char *_text;
+    const float _height;
+    const char *_fontFilePath;
+    const glm::vec4 _color;
+    bsgPtr<fontTextureMgr> _texture;
+
+  public:
+    drawableText(bsgPtr<shaderMgr> shader,
+                 const char *text,
+                 const float height,
+                 const char *fontFilePath,
+                 const glm::vec4 color);
+    drawableText(bsgPtr<shaderMgr> shader,
+                 bsgPtr<fontTextureMgr> texture,
+                 const char *text,
+                 const float height,
+                 const char *fontFilePath,
+                 const glm::vec4 color);
+    bsgPtr<fontTextureMgr> getFontTexture();
+    void doStuff();
+};
+
 
 }

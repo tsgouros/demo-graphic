@@ -8,12 +8,15 @@ target_link_libraries(demo PUBLIC
   ${GLEW_LIBRARY}
 )
 
+find_package(Freetype REQUIRED)
+
 include_directories(
   ${CMAKE_SOURCE_DIR}/src
   ${OPENGL_INCLUDE_DIR}
   ${FREEGLUT_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
-  ${GLEW_INCLUDE_DIRS})
+  ${GLEW_INCLUDE_DIRS}
+  ${FREETYPE_INCLUDE_DIRS})
 
 #if(PNG_FOUND)
 
@@ -24,38 +27,54 @@ include_directories(
 
   add_executable(demo2 demo2.cpp)
 
-  target_link_libraries(demo2 PUBLIC bsg
+  target_link_libraries(demo2 PUBLIC bsg freetypegl
    ${FREEGLUT_LIBRARY}
    ${OPENGL_LIBRARY}
-   ${GLEW_LIBRARY})
+   ${GLEW_LIBRARY}
+   ${FREETYPE_LIBRARIES})
 
   add_executable(textureDemo textureDemo.cpp)
+  add_dependencies(textureDemo freetypegl-download)
 
-  target_link_libraries(textureDemo PUBLIC bsg
+  target_link_libraries(textureDemo PUBLIC bsg freetypegl
    ${FREEGLUT_LIBRARY}
    ${OPENGL_LIBRARY}
-   ${GLEW_LIBRARY})
+   ${GLEW_LIBRARY}
+   ${FREETYPE_LIBRARIES})
+
+  add_executable(textDemo textDemo.cpp)
+
+  target_link_libraries(textDemo PUBLIC bsg freetypegl
+   ${FREEGLUT_LIBRARY}
+   ${OPENGL_LIBRARY}
+   ${GLEW_LIBRARY}
+   ${FREETYPE_LIBRARIES})
+
+  add_dependencies(textDemo freetypegl-download)
 
   add_executable(treeDemo treeDemo.cpp)
 
-  target_link_libraries(treeDemo PUBLIC bsg
+  target_link_libraries(treeDemo PUBLIC bsg freetypegl
     ${FREEGLUT_LIBRARY}
     ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY})
+    ${GLEW_LIBRARY}
+    ${FREETYPE_LIBRARIES})
 
   add_executable(treeDemo2 treeDemo2.cpp)
 
-  target_link_libraries(treeDemo2 PUBLIC bsg
+  target_link_libraries(treeDemo2 PUBLIC bsg freetypegl
     ${FREEGLUT_LIBRARY}
     ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY})
+    ${GLEW_LIBRARY}
+    ${FREETYPE_LIBRARIES})
 
   add_executable(selectDemo selectDemo.cpp)
 
-  target_link_libraries(selectDemo PUBLIC bsg
+  target_link_libraries(selectDemo PUBLIC bsg freetypegl
     ${FREEGLUT_LIBRARY}
     ${OPENGL_LIBRARY}
-    ${GLEW_LIBRARY})
+    ${GLEW_LIBRARY}
+    ${FREETYPE_LIBRARIES})
 
 
   if(MinVR_FOUND)
@@ -96,6 +115,17 @@ include_directories(
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})
+
+    add_executable(textDemoMinVR textDemoMinVR.cpp)
+    add_dependencies(textDemoMinVR freetypegl-download)
+
+    target_link_libraries(textDemoMinVR bsg
+     ${MINVR_LIBRARY}
+     ${FREEGLUT_LIBRARY}
+     ${OPENGL_LIBRARY}
+     ${GLEW_LIBRARY}
+     ${GLEW_LIBRARY}
+     ${FREETYPE_LIBRARIES})
 
     add_executable(objDemoMinVR objDemoMinVR.cpp)
 
