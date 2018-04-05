@@ -95,7 +95,7 @@ fontTextureMgr::fontTextureMgr(): textureMgr() {
   _width = 2048;
   _height = 2048;
   _atlas = texture_atlas_new(_width, _height, 1);
-  std::cout << _textureAttribName << std::endl;
+  std::cout << "hello, " << _textureAttribName << std::endl;
 }
 
 void fontTextureMgr::readFile(const textureType& type, const std::string& fileName) {
@@ -115,6 +115,8 @@ void fontTextureMgr::readFile(const textureType& type, const std::string& fileNa
 // have a font, _font is a null pointer and this function should throw an error.
 texture_font_t *fontTextureMgr::getFont(const std::string &fileName) {
   // todo @martha maybe throw an error
+  std::cout << fileName << std::endl;
+  std::cout << _fontsMap[fileName] << std::endl;
   return _fontsMap[fileName];
 }
 

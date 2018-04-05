@@ -734,6 +734,8 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader,
   _name = "second";
 
   std::cout << "second constructor" << std::endl;
+  
+  _texture->readFile(bsg::textureTTF, _fontFilePath);
   // std::cout << _texture->_textureAttribName << std::endl;
   doStuff();
 }
@@ -751,13 +753,14 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text,
   
   std::cout << "first constructor" << std::endl;
   _texture = new bsg::fontTextureMgr();
+
+  _texture->readFile(bsg::textureTTF, _fontFilePath);
+  _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
   // std::cout << _texture->_textureAttribName << std::endl;
   doStuff();
 }
 
 void drawableText::doStuff() {
-  _texture->readFile(bsg::textureTTF, _fontFilePath);
-  _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
 
   std::cout << "We are about to request the font." << std::endl;
   std::cout << "The font we are requesting is: " << _fontFilePath << std::endl;

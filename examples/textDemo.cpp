@@ -281,7 +281,7 @@ int main(int argc, char **argv) {
 
   shader->compileShaders();
 
-  text1 = new bsg::drawableText(shader, "hello world!", 0.5, 
+  text1 = new bsg::drawableText(shader, "M", 0.5, 
       "../external/freetype-gl/fonts/Vera.ttf",
       glm::vec4(0.0, 1.0, 1.0, 1.0));
   text1->setPosition(0.0f, 0.0f, 0.0f);
@@ -292,13 +292,13 @@ int main(int argc, char **argv) {
   std::cout << texture.ptr() << std::endl;
   std::cout << "bye" << std::endl;
 
-  // text2 = new bsg::drawableText(shader, texture, "L", 1.2, 
-  //     "../external/freetype-gl/fonts/LuckiestGuy.ttf",
-  //     glm::vec4(1.0, 0.0, 1.0, 1.0));
-  // // std::cout << "4" << std::endl;
-  // text2->setPosition(-5.0f, -1.0f, 0.0f);
-  // scene.addObject(text2);
-  // std::cout << "5" << std::endl;
+  text2 = new bsg::drawableText(shader, texture, "O", 1.2, 
+      "../external/freetype-gl/fonts/LuckiestGuy.ttf",
+      glm::vec4(1.0, 0.0, 1.0, 1.0));
+  // std::cout << "4" << std::endl;
+  text2->setPosition(-5.0f, -1.0f, 0.0f);
+  scene.addObject(text2);
+  std::cout << "5" << std::endl;
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
