@@ -734,7 +734,7 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader,
   _name = "second";
 
   std::cout << "second constructor" << std::endl;
-  
+
   _texture->readFile(bsg::textureTTF, _fontFilePath);
   // std::cout << _texture->_textureAttribName << std::endl;
   doStuff();
@@ -822,10 +822,10 @@ void drawableText::doStuff() {
 
     std::vector<glm::vec2> frontFaceUVs;
 
-    float u0 = glyph->s0;
-    float v0 = glyph->t0;
-    float u1 = glyph->s1;
-    float v1 = glyph->t1;
+    float u0 = 0;//glyph->s0;
+    float v0 = 0;//glyph->t0;
+    float u1 = 1;//glyph->s1;
+    float v1 = 1;//glyph->t1;
 
     frontFaceUVs.push_back(glm::vec2(u0, v1));
     frontFaceUVs.push_back(glm::vec2(u1, v1));

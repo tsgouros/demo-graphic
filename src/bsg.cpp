@@ -137,16 +137,23 @@ GLuint fontTextureMgr::_loadTTF(const std::string ttfPath) {
   texture_font_t *font = texture_font_new_from_file(_atlas, 200, ttfPath.c_str());
   _fontsMap[ttfPath] = font;
   // std::map<std::string, texture_font_t *>
-  for (std::map<std::string, texture_font_t *>::iterator it=_fontsMap.begin(); it!=_fontsMap.end(); ++it) {
-    std::cout << it->first << " => " << it->second << '\n';
-  }
+  // for (std::map<std::string, texture_font_t *>::iterator it=_fontsMap.begin(); it!=_fontsMap.end(); ++it) {
+  //   std::cout << it->first << " => " << it->second << '\n';
+  // }
   // todo @martha ack
 
+  texture_font_t *font2 = texture_font_new_from_file(_atlas, 200, "../external/freetype-gl/fonts/LuckiestGuy.ttf");
+  std::cout << "font2" << font2 << std::endl;
+  _fontsMap["../external/freetype-gl/fonts/LuckiestGuy.ttf"] = font2;
+
   // Cache some glyphs to speed things up.
-  texture_font_load_glyphs(font,
-                          (std::string(" !\"#$%&'()*+,-./0123456789:;<=>?") +
-                          std::string("@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_") +
-                          std::string("`abcdefghijklmnopqrstuvwxyz{|}~")).c_str());
+  texture_font_load_glyphs(font, (std::string("ABCDEFG")).c_str());
+  texture_font_load_glyphs(font2, (std::string("ABCDEFG")).c_str());
+  // todo uncomment
+  // texture_font_load_glyphs(font,
+  //                         (std::string(" !\"#$%&'()*+,-./0123456789:;<=>?") +
+  //                         std::string("@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_") +
+  //                         std::string("`abcdefghijklmnopqrstuvwxyz{|}~")).c_str());
 
   // Generate one texture and store its ID in the texture variable. Then, since
   // OpenGL is a state machine, bind that texture so OpenGL knows to use it
