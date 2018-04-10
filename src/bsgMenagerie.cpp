@@ -719,6 +719,21 @@ drawablePoints::drawablePoints(bsgPtr<shaderMgr> pShader,
   addObject(_points);
 }
 
+drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text, 
+                           const float height, const char *fontFilePath,
+                           const glm::vec4 color) :
+    drawableCompound(pShader),
+    _text(text),
+    _height(height),
+    _fontFilePath(fontFilePath),
+    _color(color) {
+
+  _texture = new bsg::fontTextureMgr();
+  _texture->readFile(bsg::textureTTF, _fontFilePath);
+  _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
+
+  _write();
+}
 
 drawableText::drawableText(bsgPtr<shaderMgr> pShader,
                            bsgPtr<fontTextureMgr> texture, const char *text, 
@@ -731,42 +746,18 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader,
     _fontFilePath(fontFilePath),
     _color(color) {
 
-  _name = "second";
+  // If the font requested isn't already in this texture's fontMap, we need to
+  // load it in. If it is, we don't do anything.
+  if (!_texture->getFont(_fontFilePath)) {
+    _texture->readFile(bsg::textureTTF, _fontFilePath);
+  }
 
-  std::cout << "second constructor" << std::endl;
-
-  _texture->readFile(bsg::textureTTF, _fontFilePath);
-  // std::cout << _texture->_textureAttribName << std::endl;
-  doStuff();
+  _write();
 }
 
-drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text, 
-                           const float height, const char *fontFilePath,
-                           const glm::vec4 color) :
-    drawableCompound(pShader),
-    _text(text),
-    _height(height),
-    _fontFilePath(fontFilePath),
-    _color(color) {
+void drawableText::_write() {
 
-  _name = "first";
-  
-  std::cout << "first constructor" << std::endl;
-  _texture = new bsg::fontTextureMgr();
-
-  _texture->readFile(bsg::textureTTF, _fontFilePath);
-  _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
-  // std::cout << _texture->_textureAttribName << std::endl;
-  doStuff();
-}
-
-void drawableText::doStuff() {
-
-  std::cout << "We are about to request the font." << std::endl;
-  std::cout << "The font we are requesting is: " << _fontFilePath << std::endl;
   texture_font_t *font = _texture->getFont(_fontFilePath);
-
-  std::cout << "The font we got is: " << font << std::endl;
 
   // vertex_buffer_t *buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
 
@@ -781,7 +772,6 @@ void drawableText::doStuff() {
   vec2 pen = {{0.0f, 0.0f}};
 
   while (_text[i]) {
-    // std::string _name = randomName("letter");
     bsgPtr<drawableObj> _frontFace = new drawableObj();
     bsgPtr<drawableObj> _backFace = new drawableObj();
     texture_glyph_t *glyph = texture_font_get_glyph(font, &_text[i]);
@@ -822,10 +812,10 @@ void drawableText::doStuff() {
 
     std::vector<glm::vec2> frontFaceUVs;
 
-    float u0 = 0;//glyph->s0;
-    float v0 = 0;//glyph->t0;
-    float u1 = 1;//glyph->s1;
-    float v1 = 1;//glyph->t1;
+    float u0 = glyph->s0;
+    float v0 = glyph->t0;
+    float u1 = glyph->s1;
+    float v1 = glyph->t1;
 
     frontFaceUVs.push_back(glm::vec2(u0, v1));
     frontFaceUVs.push_back(glm::vec2(u1, v1));

@@ -95,7 +95,6 @@ fontTextureMgr::fontTextureMgr(): textureMgr() {
   _width = 2048;
   _height = 2048;
   _atlas = texture_atlas_new(_width, _height, 1);
-  std::cout << "hello, " << _textureAttribName << std::endl;
 }
 
 void fontTextureMgr::readFile(const textureType& type, const std::string& fileName) {
@@ -108,15 +107,13 @@ void fontTextureMgr::readFile(const textureType& type, const std::string& fileNa
   }
 }
 
-// If this texture manager is a font, we need to be able to return that
+// If this texture manager is a font, we need to be able to return a
 // texture_font_t object so that somebody can access crucial info
 // such as the location of a glyph in the text atlas (the texture), and how much
-// kerning it should get. On the other hand, if this texture manager doesn't
-// have a font, _font is a null pointer and this function should throw an error.
+// kerning it should get, for the specific font in question (indicated by
+// fileName). If this texture manager doesn't have that particular font loaded
+// alread, it returns null to let the user know they should load it in.
 texture_font_t *fontTextureMgr::getFont(const std::string &fileName) {
-  // todo @martha maybe throw an error
-  std::cout << fileName << std::endl;
-  std::cout << _fontsMap[fileName] << std::endl;
   return _fontsMap[fileName];
 }
 
@@ -136,24 +133,12 @@ GLuint fontTextureMgr::_loadTTF(const std::string ttfPath) {
   // design choices we will make around this?
   texture_font_t *font = texture_font_new_from_file(_atlas, 200, ttfPath.c_str());
   _fontsMap[ttfPath] = font;
-  // std::map<std::string, texture_font_t *>
-  // for (std::map<std::string, texture_font_t *>::iterator it=_fontsMap.begin(); it!=_fontsMap.end(); ++it) {
-  //   std::cout << it->first << " => " << it->second << '\n';
-  // }
-  // todo @martha ack
-
-  texture_font_t *font2 = texture_font_new_from_file(_atlas, 200, "../external/freetype-gl/fonts/LuckiestGuy.ttf");
-  std::cout << "font2" << font2 << std::endl;
-  _fontsMap["../external/freetype-gl/fonts/LuckiestGuy.ttf"] = font2;
 
   // Cache some glyphs to speed things up.
-  texture_font_load_glyphs(font, (std::string("ABCDEFG")).c_str());
-  texture_font_load_glyphs(font2, (std::string("ABCDEFG")).c_str());
-  // todo uncomment
-  // texture_font_load_glyphs(font,
-  //                         (std::string(" !\"#$%&'()*+,-./0123456789:;<=>?") +
-  //                         std::string("@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_") +
-  //                         std::string("`abcdefghijklmnopqrstuvwxyz{|}~")).c_str());
+  texture_font_load_glyphs(font,
+                          (std::string(" !\"#$%&'()*+,-./0123456789:;<=>?") +
+                          std::string("@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_") +
+                          std::string("`abcdefghijklmnopqrstuvwxyz{|}~")).c_str());
 
   // Generate one texture and store its ID in the texture variable. Then, since
   // OpenGL is a state machine, bind that texture so OpenGL knows to use it

@@ -190,20 +190,29 @@ class drawableText : public drawableCompound {
     bsgPtr<fontTextureMgr> _texture;
 
   public:
+
+    // This first constructor is for the first time you use text in a scene.
+    // It creates its own texture, which you can then retrieve using getTexture
+    // and reuse for all other text in the scene.
     drawableText(bsgPtr<shaderMgr> shader,
                  const char *text,
                  const float height,
                  const char *fontFilePath,
                  const glm::vec4 color);
+
+    // This second constructor gets passed an already-initialized texture. It'll
+    // either use that texture with the existing font, or add a new font to the
+    // texture, but it's all stored within the same texture so as to save on
+    // memory usage.
     drawableText(bsgPtr<shaderMgr> shader,
                  bsgPtr<fontTextureMgr> texture,
                  const char *text,
                  const float height,
                  const char *fontFilePath,
                  const glm::vec4 color);
-    bsgPtr<fontTextureMgr> getFontTexture();
-    void doStuff();
-};
 
+    bsgPtr<fontTextureMgr> getFontTexture();
+    void _write();
+};
 
 }
