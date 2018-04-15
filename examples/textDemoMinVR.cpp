@@ -132,6 +132,8 @@ private:
     // The shaders are loaded, now compile them.
     _shader->compileShaders();
 
+    // Add the text to the scene. For an example of how to draw several
+    // drawableText objects using the same texture, see textDemo.cpp.
     _helloWorld = new bsg::drawableText(_shader, "hello world!", 2.0, 
       "../external/freetype-gl/fonts/Vera.ttf",
       glm::vec4(0.0, 1.0, 1.0, 1.0));
