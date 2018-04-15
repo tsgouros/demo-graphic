@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
   axes = new bsg::drawableAxes(axesShader, 100.0f);
   scene.addObject(axes);
 
-  // make the drawableText texture shader
+  // Make the drawableText texture shader
   bsg::bsgPtr<bsg::shaderMgr> shader = new bsg::shaderMgr();
   shader->addLights(lights);
 
@@ -281,15 +281,18 @@ int main(int argc, char **argv) {
 
   shader->compileShaders();
 
-  text1 = new bsg::drawableText(shader, "Martha", 1,
+  // Draw the first text object -- it makes its own fontTextureMgr
+  text1 = new bsg::drawableText(shader, "Hello", 1,
       "../external/freetype-gl/fonts/Vera.ttf",
       glm::vec4(0.0, 1.0, 1.0, 1.0));
   text1->setPosition(0.0f, 0.0f, 0.0f);
   scene.addObject(text1);
 
+  // Retrieve that fontTextureMgr and reuse it for the second texture object
   bsg::bsgPtr<bsg::fontTextureMgr> texture = text1->getFontTexture();
 
-  text2 = new bsg::drawableText(shader, texture, "Olivia", 1, 
+  // It can even handle different fonts!
+  text2 = new bsg::drawableText(shader, texture, "Goodbye", 1, 
       "../external/freetype-gl/fonts/LuckiestGuy.ttf",
       glm::vec4(1.0, 0.0, 1.0, 1.0));
   text2->setPosition(-1.0f, 0.0f, -1.0f);
