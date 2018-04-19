@@ -1,0 +1,349 @@
+\iffalse %% true for article, false for presentation
+\documentclass[12pt]{article}
+\usepackage{beamerarticle}
+\usepackage[lmargin=1.3in,rmargin=1.3in,tmargin=0.5in,bmargin=0.5in,marginparwidth=1.5in]{geometry}
+\else
+\documentclass[ignorenonframetext]{beamer}
+\fi
+\usepackage[export]{adjustbox}
+\usepackage{mathptmx}
+\usepackage{natbib}
+\usepackage{apalike}
+\usepackage{multicol}
+\usepackage{fancyvrb}
+\usepackage{eso-pic}
+\usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{helvet}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\makeatletter
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\makeatother
+
+\setlist[itemize]{itemsep=20pt,label=$\bullet$}
+
+\usepackage{tikz}
+
+\defbeamertemplate<article>{frame begin}{lined}{\par\noindent\rule{\textwidth}{1pt}\par}
+\defbeamertemplate<article>{frame end}{lined}{\par\noindent\rule{\textwidth}{1pt}\par}
+
+\newcounter{framebox}
+\defbeamertemplate<article>{frame begin}{tikzed}{%
+  \par\noindent\stepcounter{framebox}%
+  \tikz[remember picture,overlay] %
+  \path (-1ex,0) coordinate (frame top \the\value{framebox});}
+\defbeamertemplate<article>{frame end}{tikzed}{%
+  \hspace*{\fill}\tikz[remember picture,overlay] %
+  \draw (frame top \the\value{framebox}) rectangle (1ex,0);\par}
+
+
+\mode<article>
+{
+  \setlength{\parskip}{10pt}
+  \setlength{\parindent}{0pt}
+
+  \setbeamertemplate{frame begin}[lined]
+  \setbeamertemplate{frame end}[lined]
+%  \addtobeamertemplate{frame begin}{}{\setbox0=\bgroup}
+%  \addtobeamertemplate{frame end}{\egroup}{}
+  \usepackage{fancyhdr}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancypagestyle{plain}{%
+    \fancyhead[L]{}
+    \fancyhead[C]{}
+    \fancyhead[R]{}
+    \fancyfoot[C]{}
+    \fancyfoot[R]{\raisebox{6in}[0pt][0pt]{\hbox to 0pt{\hspace{0.3in}\framebox{\LARGE\thepage}}}}}
+  \pagestyle{plain}
+}
+
+\newcommand{\cp}[1]{\textcolor{lightgray}{#1}}
+\setcitestyle{authoryear,open={(},close={)}}
+
+\mode<presentation>
+{
+%  \hypersetup{colorlinks=true,citecolor=green}
+
+  \usecolortheme{default}
+  \useinnertheme[shadow]{rounded}
+  \useoutertheme{tsinfolines}
+
+  \usesubitemizeitemtemplate{%
+    \tiny\raise1.5pt\hbox{\color{beamerstructure}$\blacktriangleright$}%
+  }
+  \usesubsubitemizeitemtemplate{%
+    \tiny\raise1.5pt\hbox{\color{beamerstructure}$\bigstar$}%
+  }
+
+  \setbeamersize{text margin left=1em,text margin right=1em}
+
+% Turns off headline.
+%  \setbeamertemplate{headline}[default]
+
+  %% started as:  \usetheme[secheader]{Boadilla}
+%  \usecolortheme{albatross}
+  % or ...
+
+  \setbeamercovered{invisible}
+  % or whatever (possibly just delete it)
+
+%  \addtobeamertemplate{frame title}{\begin{center}}{\end{center}}
+%  Doesn't seem to do what I'd want.
+
+}
+
+%\beamertemplatenavigationsymbolsempty
+
+
+\title{VR Graphics Programming for, well, you know}
+\subtitle{Some (relatively) easy steps to virtual reality, Part 4}
+\author{Tom Sgouros}
+\institute{Center for Computation
+    and Visualization\\Brown University\\thomas\_sgouros@brown.edu}
+\date{Spring 2018}
+
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command:
+
+%\beamerdefaultoverlayspecification{<+->}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\section{OSCAR at CCV}
+
+\subsection{General layout}
+
+Lots of networked nodes, ssh between them, with ssh keys.
+
+\begin{frame}{OSCAR cluster}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item Lots of CPUs in lots of nodes.
+
+\item Giant shared storage array: /gpfs
+
+\item Heterogeneous array.  Some have graphics cards, some don't, old,
+  new.
+
+\item Identical OS image.
+
+\item Separate authorization / authentication from rest of campus.
+
+\item Mostly batch jobs through SLURM.
+
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{frame}
+
+
+
+
+
+\subsection{Modules}
+
+why it exists
+
+what it does
+
+which ones you need.
+
+.modules file
+
+\begin{frame}[fragile]{Modules on OSCAR}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item Support heterogeneous software.
+
+\item Can't load all the specialized software onto images.
+
+\item Controls environment variables like PATH, CPATH, LIBPATH,
+  MANPATH, etc.
+
+\end{itemize}
+\begin{verbatim}
+$ module load minvr
+\end{verbatim}
+
+\end{minipage}
+\end{center}
+\end{frame}
+
+
+\begin{frame}{OSCAR accounts}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item Quotas, myquota
+
+\item data and scratch
+
+\item ssh configuration
+
+\item .modules file
+
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{frame}
+
+
+
+
+
+\begin{frame}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item
+
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{frame}
+
+
+
+
+
+\subsection{YURT structure}
+
+
+\begin{frame}{YURT structure}
+
+\begin{center}
+
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item Opti-trak tracker for head and hands
+
+\item VRPN Button presses
+
+\item 19 Linux machines, cave001, cave002, etc.
+
+\item 69 video projectors
+
+\item Scalable software applied to output.
+
+\end{itemize}
+\end{minipage}
+\end{center}
+
+\end{frame}
+
+\begin{frame}[fragile]{MinVR Display Graph in practice}
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<YURTGraph>
+  <RootNode displaynodeType="VRGraphicsWindowNode" windowtoolkitType="VRFreeGLUTWindowToolkit" graphicstoolkitType="VROpenGLGraphicsToolkit">
+    <LookAtNode displaynodeType="VRHeadTrackingNode">
+      <StereoNode displaynodeType="VRStereoNode">
+        <ScalableProjectionNode displaynodeType="VRScalableNode">
+          <NearClip>0.01</NearClip>
+          <FarClip>100.0</FarClip>
+        </ScalableProjectionNode>
+      </StereoNode>
+    </LookAtNode>
+  </RootNode>
+</YURTGraph>
+\end{Verbatim}
+\end{frame}
+
+
+\begin{frame}{Compiling for YURT}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item Use login003 or login004
+
+\item ssh3.ccv.brown.edu
+
+\item VNC client (CCV page, Computing/Software, look left), use
+  desktop3 or desktop4.
+
+
+\item Don't compile on dev nodes or on login001 or login002.
+
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{frame}
+
+
+
+
+\begin{frame}{Controlling the YURT}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item \texttt{pjcontrol} command.
+
+\item Projectors numbered, list on paper near kiosk, or ops guide.
+   http://github.com/tsgouros/yurt-ops
+
+\item cave-utils module
+
+\item \texttt{pjcontrol 0-68 on} also \texttt{off}, \texttt{error}
+
+\item \texttt{pjcontrol 27 mono; sleep 10; pjcontrol 27 stereo}
+
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{frame}
+
+\begin{frame}{Oops}
+
+\begin{center}
+\begin{minipage}{0.9\columnwidth}
+\begin{itemize}
+
+\item cavesupport@ccv.brown.edu
+
+\item support@ccv.brown.edu
+
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{frame}
+
+
+
+
+
+
+
+
+\end{document}

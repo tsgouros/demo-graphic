@@ -1,0 +1,537 @@
+\iffalse %% true for article, false for presentation
+\documentclass[12pt]{article}
+\usepackage{beamerarticle}
+\usepackage[lmargin=1.3in,rmargin=1.3in,tmargin=0.5in,bmargin=0.5in,marginparwidth=1.5in]{geometry}
+\else
+\documentclass[ignorenonframetext]{beamer}
+\fi
+\usepackage[export]{adjustbox}
+\usepackage{mathptmx}
+\usepackage{natbib}
+\usepackage{apalike}
+\usepackage{multicol}
+\usepackage{eso-pic}
+\usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{helvet}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\makeatletter
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\makeatother
+
+\setlist[itemize]{itemsep=20pt,label=$\bullet$}
+
+\usepackage{tikz}
+
+\defbeamertemplate<article>{frame begin}{lined}{\par\noindent\rule{\textwidth}{1pt}\par}
+\defbeamertemplate<article>{frame end}{lined}{\par\noindent\rule{\textwidth}{1pt}\par}
+
+\newcounter{framebox}
+\defbeamertemplate<article>{frame begin}{tikzed}{%
+  \par\noindent\stepcounter{framebox}%
+  \tikz[remember picture,overlay] %
+  \path (-1ex,0) coordinate (frame top \the\value{framebox});}
+\defbeamertemplate<article>{frame end}{tikzed}{%
+  \hspace*{\fill}\tikz[remember picture,overlay] %
+  \draw (frame top \the\value{framebox}) rectangle (1ex,0);\par}
+
+
+\mode<article>
+{
+  \setlength{\parskip}{10pt}
+  \setlength{\parindent}{0pt}
+
+  \setbeamertemplate{frame begin}[lined]
+  \setbeamertemplate{frame end}[lined]
+%  \addtobeamertemplate{frame begin}{}{\setbox0=\bgroup}
+%  \addtobeamertemplate{frame end}{\egroup}{}
+  \usepackage{fancyhdr}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancypagestyle{plain}{%
+    \fancyhead[L]{}
+    \fancyhead[C]{}
+    \fancyhead[R]{}
+    \fancyfoot[C]{}
+    \fancyfoot[R]{\raisebox{6in}[0pt][0pt]{\hbox to 0pt{\hspace{0.3in}\framebox{\LARGE\thepage}}}}}
+  \pagestyle{plain}
+}
+
+\newcommand{\cp}[1]{\textcolor{lightgray}{#1}}
+\setcitestyle{authoryear,open={(},close={)}}
+
+\mode<presentation>
+{
+%  \hypersetup{colorlinks=true,citecolor=green}
+
+  \usecolortheme{default}
+  \useinnertheme[shadow]{rounded}
+  \useoutertheme{tsinfolines}
+
+  \usesubitemizeitemtemplate{%
+    \tiny\raise1.5pt\hbox{\color{beamerstructure}$\blacktriangleright$}%
+  }
+  \usesubsubitemizeitemtemplate{%
+    \tiny\raise1.5pt\hbox{\color{beamerstructure}$\bigstar$}%
+  }
+
+  \setbeamersize{text margin left=1em,text margin right=1em}
+
+% Turns off headline.
+%  \setbeamertemplate{headline}[default]
+
+  %% started as:  \usetheme[secheader]{Boadilla}
+%  \usecolortheme{albatross}
+  % or ...
+
+  \setbeamercovered{invisible}
+  % or whatever (possibly just delete it)
+
+%  \addtobeamertemplate{frame title}{\begin{center}}{\end{center}}
+%  Doesn't seem to do what I'd want.
+
+}
+
+%\beamertemplatenavigationsymbolsempty
+
+
+\title{VR Graphics Programming for, well, you know}
+\subtitle{Some (relatively) easy steps to virtual reality, Part 1}
+\author{Tom Sgouros}
+\institute{Center for Computation
+    and Visualization\\Brown University\\thomas\_sgouros@brown.edu}
+\date{Spring 2018}
+
+
+% If you wish to uncover everything in a step-wise fashion, uncomment
+% the following command:
+
+%\beamerdefaultoverlayspecification{<+->}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section{Basic 3D graphics}
+
+\begin{frame}{Basic 3D graphics}
+  \begin{description}
+  \item[Coordinates] Where things are in space.
+  \item[Transformation matrices] How one space relates to another.
+  \item[Objects] Shape, color, location.
+  \item[Scene graph] How one object relates to another.
+  \item[Illumination] Lights and lighting.
+  \item[Textures] Surface treatments.
+  \end{description}
+\end{frame}
+
+\subsection{Coordinates}
+
+\begin{frame}{Coordinates}
+\begin{itemize}
+\item Four dimensions, ``Homogeneous coordinates'' $[{\color{blue}x}, {\color{blue}y}, {\color{blue}z}, {\color{red}w}]$
+\item Vertex locations, normal directions.
+
+\item Also color (also 4D  $[{\color{red}r}, {\color{green}g},
+  {\color{blue}b}, {\color{gray}a}]$), texture $[u.v]$, other?
+
+\end{itemize}
+\end{frame}
+
+
+\subsection{Transformation matrices}
+
+\begin{frame}{Spaces and transformation matrices}
+\begin{itemize}
+\item Move from one space to another.
+
+\item Model space -- where an object is
+  defined.\\\hspace{10em}$\Updownarrow$ {\small\color{red} model matrix}
+\vspace{-1.8em}
+\item World space -- where an object is placed.\\\hspace{10em}$\Updownarrow$ {\small\color{red} view matrix}
+\vspace{-1.8em}
+\item Camera space -- where an object appears to be placed (POV).\\\hspace{10em}$\Updownarrow$ {\small\color{red} projection matrix}
+\vspace{-1.8em}
+\item Screen -- where it appears on the screen
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Transformation matrices}
+\begin{gather*}
+\left[\begin{array}{cccc}
+        \color{cyan}a & \color{blue}b & \color{blue}c & \color{red}j \\
+        \color{blue}d & \color{cyan}e & \color{blue}f & \color{red}k \\
+        \color{blue}g & \color{blue}h & \color{cyan}i & \color{red}l \\
+        0 & 0 & 0 & 1
+      \end{array}\right]\times\left[\begin{array}{c}x\\ y \\z \\w\end{array}\right]
+  \end{gather*}
+
+\hfill
+{\color{red}Translation} \hfill
+{\color{blue}Rotation} \hfill
+{\color{green}Scale} \hfill~
+
+
+\begin{align*}
+\left[\begin{array}{cccc}x & y & z & 1\\\end{array}\right]&
+~~~\text{Point} \\
+\left[\begin{array}{cccc}x & y & z & 0\\\end{array}\right]&
+~~~\text{Direction}
+\end{align*}
+
+\end{frame}
+
+\subsection{Objects}
+
+\begin{frame}[fragile]{drawableObjData}
+A way to link some data, a name string, and two IDs (that OpenGL calls names).
+\begin{verbatim}
+template <class T>
+class drawableObjData {
+ private:
+  std::vector<T> _data;
+
+ public:
+ drawableObjData(): name("") {
+    _data.reserve(50); ID = 0; bufferID = 0;
+  };
+ drawableObjData(const std::string inName,
+                 const std::vector<T> inData) :
+  name(inName), _data(inData) {}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{drawableObj}
+The data you need to draw an object.
+
+\begin{verbatim}
+class drawableObj {
+ protected:
+
+  // Specifies whether this is a triangle, a triangle strip,
+  // fan, quads, points, whatever.
+  GLenum _drawType;
+  GLsizei _count;
+
+  drawableObjData<glm::vec4> _vertices;
+  drawableObjData<glm::vec4> _colors;
+  drawableObjData<glm::vec4> _normals;
+  drawableObjData<glm::vec2> _uvs;
+\end{verbatim}
+\end{frame}
+
+\subsection{Scene graph}
+
+\begin{frame}{Scene graph}
+A way to group a collection of objects to be drawn into small groups
+that can be manipulated as a single object.  Creates a hierarchy of
+model matrices with object models placed on the tree.
+
+\vspace{10pt}
+
+\begin{minipage}{\columnwidth}
+  % Copied in from scene-graph.latex, but with the \unitlength
+  % adjusted slightly and the SetFigFont definition removed.  Not sure
+  % why that part wouldn't work in situ, but it wouldn't.
+\setlength{\unitlength}{3447sp}%
+\begin{center}
+\begin{picture}(5137,2587)(211,-1793)
+\put(1951,614){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Scene}%
+}}}}
+\thicklines
+{\color[rgb]{0,0,0}\put(601,-1111){\line(-4,-5){300}}
+}%
+{\color[rgb]{0,0,0}\multiput(676,-1111)(-1.66667,-8.33333){46}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\multiput(751,-1111)(3.75000,-7.50000){41}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(826,-1111){\line( 1,-1){375}}
+}%
+{\color[rgb]{0,0,0}\put(1576,-436){\line( 5,-3){750}}
+}%
+{\color[rgb]{0,0,0}\put(1051,-436){\line(-4,-5){300}}
+}%
+\put(976,-361){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tractor}%
+}}}}
+\put(301,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Wheels}%
+}}}}
+\put(226,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}1}%
+}}}}
+\put(526,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}2}%
+}}}}
+\put(901,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}3}%
+}}}}
+\put(1201,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}4}%
+}}}}
+\put(1351,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Engine}%
+}}}}
+\put(2326,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Seat}%
+}}}}
+{\color[rgb]{0,0,0}\multiput(3451,-436)(-3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(3826,-436){\line( 1,-1){375}}
+}%
+{\color[rgb]{0,0,0}\multiput(3226,-1111)(-3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(3376,-1111){\line( 4,-5){300}}
+}%
+{\color[rgb]{0,0,0}\multiput(4426,-1111)(3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(4576,-1111){\line( 2,-1){750}}
+}%
+\put(3376,-361){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Farmer}%
+}}}}
+\put(3076,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Head}%
+}}}}
+\put(2851,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Eyes}%
+}}}}
+\put(3526,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Mouth}%
+}}}}
+\put(4201,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Body}%
+}}}}
+\put(4501,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Arms}%
+}}}}
+\put(5326,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Legs}%
+}}}}
+{\color[rgb]{0,0,0}\put(2026,539){\line(-1,-1){675}}
+}%
+{\color[rgb]{0,0,0}\put(2251,539){\line( 3,-2){1038.461}}
+}%
+{\color[rgb]{0,0,0}\multiput(1426,-436)(3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+\end{picture}%
+\end{center}
+\end{minipage}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{drawableMulti}
+A way to manage a position and location, and the model matrix
+system for a scene graph.
+\begin{verbatim}
+class drawableMulti {
+ protected:
+
+  drawableMulti* _parent;
+
+  std::string _name;
+
+  glm::vec3 _position;
+  glm::vec3 _scale;
+  glm::quat _orientation;
+
+  glm::mat4 _modelMatrix;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{drawableCompound}
+
+An object made up of pieces that you don't expect to move relative to
+one another.
+
+\begin{verbatim}
+class drawableCompound : public drawableMulti {
+ protected:
+  typedef std::list<bsgPtr<drawableObj> > DrawableObjList;
+  DrawableObjList _objects;
+
+  bsgPtr<shaderMgr> _pShader;
+
+  glm::mat4 _totalModelMatrix;
+
+  glm::mat4 _normalMatrix;
+
+  std::string _modelMatrixName;
+  GLuint _modelMatrixID;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{bsgMenagerie}
+  \begin{center}
+    A fairly random collection of drawableCompound objects.
+
+\vspace{10pt}
+
+    \begin{minipage}{0.8\columnwidth}
+      \begin{multicols}{2}
+        \begin{description}
+        \item[drawableRectangle]
+        \item[drawableSquare]
+        \item[drawableCube]
+        \item[drawableSphere]
+        \item[drawableCone]
+        \item[drawableCircle]
+        \item[drawableCylinder]
+        \item[drawableAxes]
+        \item[drawableLine]
+        \item[drawableSaggyLine]
+        \item[drawablePoints]
+        \item[drawableObjModel]
+        \end{description}
+      \end{multicols}
+    \end{minipage}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{drawableCollection}
+
+A collection of drawableCompound and drawableCollection objects.  This
+is the scene graph.
+
+\begin{verbatim}
+class drawableCollection : public drawableMulti {
+
+  typedef std::map<std::string, bsgPtr<drawableMulti> >
+                                            CollectionMap;
+  CollectionMap _collection;
+
+ public:
+  std::string addObject(const std::string name,
+               const bsgPtr<drawableMulti> &pMultiObject);
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Scene graph redux}
+
+  A look at the scene graph again.  The drawableCollection objects are
+  the branches on this tree and drawableCompound objects are the
+  leaves.  The drawableMulti is the parent class to both, but you
+  won't instantiate any of them directly.
+
+\vspace{10pt}
+
+\begin{minipage}{\columnwidth}
+  % Copied in from scene-graph.latex, but with the \unitlength
+  % adjusted slightly and the SetFigFont definition removed.  Not sure
+  % why that part wouldn't work in situ, but it wouldn't.
+\setlength{\unitlength}{3447sp}%
+\begin{center}
+\begin{picture}(5137,2587)(211,-1793)
+\put(1951,614){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Scene}%
+}}}}
+\thicklines
+{\color[rgb]{0,0,0}\put(601,-1111){\line(-4,-5){300}}
+}%
+{\color[rgb]{0,0,0}\multiput(676,-1111)(-1.66667,-8.33333){46}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\multiput(751,-1111)(3.75000,-7.50000){41}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(826,-1111){\line( 1,-1){375}}
+}%
+{\color[rgb]{0,0,0}\put(1576,-436){\line( 5,-3){750}}
+}%
+{\color[rgb]{0,0,0}\put(1051,-436){\line(-4,-5){300}}
+}%
+\put(976,-361){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tractor}%
+}}}}
+\put(301,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Wheels}%
+}}}}
+\put(226,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}1}%
+}}}}
+\put(526,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}2}%
+}}}}
+\put(901,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}3}%
+}}}}
+\put(1201,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}4}%
+}}}}
+\put(1351,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Engine}%
+}}}}
+\put(2326,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Seat}%
+}}}}
+{\color[rgb]{0,0,0}\multiput(3451,-436)(-3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(3826,-436){\line( 1,-1){375}}
+}%
+{\color[rgb]{0,0,0}\multiput(3226,-1111)(-3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(3376,-1111){\line( 4,-5){300}}
+}%
+{\color[rgb]{0,0,0}\multiput(4426,-1111)(3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+{\color[rgb]{0,0,0}\put(4576,-1111){\line( 2,-1){750}}
+}%
+\put(3376,-361){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Farmer}%
+}}}}
+\put(3076,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Head}%
+}}}}
+\put(2851,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Eyes}%
+}}}}
+\put(3526,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Mouth}%
+}}}}
+\put(4201,-1036){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Body}%
+}}}}
+\put(4501,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Arms}%
+}}}}
+\put(5326,-1711){\makebox(0,0)[lb]{\smash{{\SetFigFont{14}{16.8}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Legs}%
+}}}}
+{\color[rgb]{0,0,0}\put(2026,539){\line(-1,-1){675}}
+}%
+{\color[rgb]{0,0,0}\put(2251,539){\line( 3,-2){1038.461}}
+}%
+{\color[rgb]{0,0,0}\multiput(1426,-436)(3.12500,-7.81250){49}{\makebox(6.6667,10.0000){\small.}}
+}%
+\end{picture}%
+\end{center}
+\end{minipage}
+
+
+\end{frame}
+
+
+
+\subsection{Illumination}
+
+\begin{frame}[fragile]{lightMgr}
+
+A list of lights and their colors.
+
+
+\begin{verbatim}
+class lightList {
+ private:
+
+  /// The positions of the lights in the list.
+  drawableObjData<glm::vec4> _lightPositions;
+  /// The colors of the lights in the list.
+  drawableObjData<glm::vec4> _lightColors;
+\end{verbatim}
+\end{frame}
+
+\subsection{Textures}
+
+\begin{frame}[fragile]{textureMgr}
+
+An easier way to load textures and make them available to a shaderhandle tex
+
+\begin{verbatim}
+
+class textureMgr {
+ private:
+  GLfloat _width, _height;
+
+  GLuint _textureAttribID;
+  std::string _textureAttribName;
+  GLuint _textureBufferID;
+
+  GLuint _loadPNG(const std::string imagePath);
+  GLuint _loadCheckerBoard (const int size, int numFields);
+  GLuint _loadTTF(const std::string ttfPath);
+\end{verbatim}
+
+
+\end{frame}
+
+\end{document}

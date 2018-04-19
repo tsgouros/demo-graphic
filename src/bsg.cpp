@@ -71,9 +71,18 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
     _textureBufferID = _loadCheckerBoard (64, 8);
     break;
 
+  case textureTTF:
+    _textureBufferID = _loadTTF(fileName);  // MKE
+
   default:
     throw std::runtime_error("What texture type is this?");
   }
+}
+
+GLuint textureMgr::_loadTTF(const std::string ttfPath) { // MKE
+
+  std::cout << "READ AND PROCESS " << ttfPath << " HERE!" << std::endl;
+  return 0;
 }
 
 GLuint textureMgr::_loadCheckerBoard (const int size, int numFields) {
@@ -111,7 +120,7 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
 
   // This function was originally written by David Grayson for
   // https://github.com/DavidEGrayson/ahrs-visualizer
-	
+
 
 
   /* load an image file directly as a new OpenGL texture */
@@ -244,7 +253,7 @@ GLuint textureMgr::_loadPNG(const std::string imagePath) {
   // read the png into image_data through row_pointers
   png_read_image(png_ptr, row_pointers);
   */
-	
+
   // Neccessary as stb loads images upside down (as OpenGL sees it)
   stbi_set_flip_vertically_on_load(true);
 
@@ -355,6 +364,13 @@ void shaderMgr::addShader(const GLSHADERTYPE type,
       std::cerr << "Caution: Shader ("
                 << shaderFile
                 << ") does not care about number of lights." << std::endl;
+    }
+  } else {
+    if (_shaderText[type].find("XX") != std::string::npos) {
+      std::cerr << "Caution: Shader ("
+                << shaderFile
+                << ") is meant to use lights, and you have added no lights."
+                << std::endl;
     }
   }
 }
