@@ -57,8 +57,15 @@ include_directories(
     ${OPENGL_LIBRARY}
     ${GLEW_LIBRARY})
 
+  add_executable(selectDemoEdit selectDemoEdit.cpp)
 
-  if(MinVR_FOUND)
+  target_link_libraries(selectDemoEdit bsg
+    ${FREEGLUT_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${GLEW_LIBRARY})
+    
+  if(MINVR_FOUND)
+
 
     # Redefine the include directories to include MinVR.
     include_directories(
@@ -78,6 +85,30 @@ include_directories(
     add_executable(pointDemo pointDemo.cpp)
 
     target_link_libraries(pointDemo PUBLIC bsg MinVR::MinVR
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY})
+
+    add_executable(demob demob.cpp)
+
+    target_link_libraries(demob bsg
+      ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY})
+
+    add_executable(selection selection.cpp)
+
+    target_link_libraries(selection bsg
+      ${MINVR_LIBRARY}
+      ${FREEGLUT_LIBRARY}
+      ${OPENGL_LIBRARY}
+      ${GLEW_LIBRARY})
+
+    add_executable(selectDemo_minVR selectDemo_minVR.cpp)
+
+    target_link_libraries(selectDemo_minVR bsg
+      ${MINVR_LIBRARY}
       ${FREEGLUT_LIBRARY}
       ${OPENGL_LIBRARY}
       ${GLEW_LIBRARY})
