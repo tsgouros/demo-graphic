@@ -13,6 +13,10 @@ bsg::scene scene = bsg::scene();
 bsg::drawableAxes* axes;
 bsg::drawableText* text1;
 bsg::drawableText* text2;
+bsg::drawableTextBox* textBox;
+bsg::drawableRectangle* rect;
+bsg::drawableRectangleOutline* outline;
+bsg::drawableCollection* collection;
 
 // Initialize the graphics display, in all the ways required.  You'll
 // often see this as "creating a graphics *context*".  The funny thing
@@ -246,7 +250,7 @@ int main(int argc, char **argv) {
   init(argc, argv);
 
   // ... make a window for drawing things.
-  makeWindow(100, 100, 400, 400);
+  makeWindow(100, 100, 1000, 700);
 
   // Create a list of lights.  If the shader you're using doesn't use
   // lighting, and the shapes don't have textures, this is irrelevant.
@@ -270,33 +274,46 @@ int main(int argc, char **argv) {
   scene.addObject(axes);
 
   // Make the drawableText texture shader
-  bsg::bsgPtr<bsg::shaderMgr> shader = new bsg::shaderMgr();
-  shader->addLights(lights);
+  bsg::bsgPtr<bsg::shaderMgr> textShader = new bsg::shaderMgr();
+  textShader->addLights(lights);
 
   std::string vertexFile = std::string("../shaders/textShader.vp");
-  shader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
+  textShader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
 
   std::string fragmentFile = std::string("../shaders/textShader.fp");
-  shader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
+  textShader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
 
-  shader->compileShaders();
+  textShader->compileShaders();
 
   // Draw the first text object -- it makes its own fontTextureMgr
-  text1 = new bsg::drawableText(shader, "Hello", 1,
+  text1 = new bsg::drawableText(textShader, "Hello", 0.3,
       "../external/freetype-gl/fonts/Vera.ttf",
-      glm::vec4(0.0, 1.0, 1.0, 1.0));
-  text1->setPosition(0.0f, 0.0f, 0.0f);
-  scene.addObject(text1);
+      glm::vec4(1.0, 1.0, 1.0, 1.0));
+  // scene.addObject(text1);
 
   // Retrieve that fontTextureMgr and reuse it for the second texture object
   bsg::bsgPtr<bsg::fontTextureMgr> texture = text1->getFontTexture();
 
   // It can even handle different fonts!
-  text2 = new bsg::drawableText(shader, texture, "Goodbye", 1, 
+  text2 = new bsg::drawableText(textShader, texture, "Goodbye", 1, 
       "../external/freetype-gl/fonts/LuckiestGuy.ttf",
       glm::vec4(1.0, 0.0, 1.0, 1.0));
   text2->setPosition(-1.0f, 0.0f, -1.0f);
-  scene.addObject(text2);
+  // scene.addObject(text2);
+
+  // todo @martha this is the new shader! comment about it
+  bsg::bsgPtr<bsg::shaderMgr> backgroundShader = new bsg::shaderMgr();
+  backgroundShader->addLights(lights);
+  std::string vertexFile2 = std::string("../shaders/shader2.vp");
+  backgroundShader->addShader(bsg::GLSHADER_VERTEX, vertexFile2);
+  std::string fragmentFile2 = std::string("../shaders/shader.fp");
+  backgroundShader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile2);
+  backgroundShader->compileShaders();
+
+  // TODO martha comment this
+  textBox = new bsg::drawableTextBox(textShader, backgroundShader, 
+    "hello", "../external/freetype-gl/fonts/Vera.ttf");
+  scene.addObject(textBox);
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));

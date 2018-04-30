@@ -11,10 +11,25 @@ class drawableRectangle : public drawableCompound {
 
  public:
   drawableRectangle(bsgPtr<shaderMgr> pShader,
-                    const float &width, const float &height);
+                    const float &width, const float &height,
+                    const glm::vec4 color = glm::vec4(0,0,0,0));
   drawableRectangle(bsgPtr<shaderMgr> pShader,
                     const float &width, const float &height,
                     const int &nDivs);
+
+};
+
+class drawableRectangleOutline : public drawableCompound {
+ private:
+
+  float _width, _height, _strokeWidth;
+  bsgPtr<drawableObj> _frontFace, _backFace;
+
+ public:
+  drawableRectangleOutline(bsgPtr<shaderMgr> pShader,
+                    const float &width, const float &height,
+                    const float &strokeWidth,
+                    const glm::vec4 color = glm::vec4(0,0,0,0));
 
 };
 
@@ -214,5 +229,41 @@ class drawableText : public drawableCompound {
     bsgPtr<fontTextureMgr> getFontTexture();
     void _write();
 };
+
+/// \brief A box of text.
+///
+/// Situates text in the size, color, and font you specify within a box of the
+/// dimensions, border color, and background color you specify.
+
+class drawableTextBox : public drawableCollection {
+ private:
+   const char *_text;
+   const float _textHeight;
+   const char *_fontFilePath;
+   const float _boxHeight;
+   const float _boxWidth;
+   const float _borderWidth;
+   const glm::vec4 _textColor;
+   const glm::vec4 _backgroundColor;
+   const glm::vec4 _borderColor;
+
+ public:
+   drawableTextBox(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   const float textHeight=0.75,
+                   const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const glm::vec4 backgroundColor=glm::vec4(0.0, 0.0, 0.0, 1.0),
+                      // default is transparent
+                   const glm::vec4 borderColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const float boxHeight=1,
+                   const float boxWidth=2,
+                   const float borderWidth=0.1);
+   // todo @martha: getters and setters for all attributes ?
+};
+
 
 }

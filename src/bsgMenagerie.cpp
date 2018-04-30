@@ -79,7 +79,8 @@ namespace bsg {
   }
 
   drawableRectangle::drawableRectangle(bsgPtr<shaderMgr> pShader,
-                                       const float &width, const float &height) :
+                                       const float &width, const float &height,
+                                       const glm::vec4 color) :
     drawableCompound(pShader), _height(height), _width(width) {
 
     _name = randomName("rect");
@@ -100,10 +101,24 @@ namespace bsg {
 
     // Here are the corresponding colors for the above vertices.
     std::vector<glm::vec4> frontFaceColors;
-    frontFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-    frontFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    frontFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    frontFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    // If no color has been provided, the default color arg is (0,0,0,0).
+    // If this is the case, then the default behavior is to make each of the
+    // 4 vertices a different color.
+    if (color == glm::vec4(0, 0, 0, 0)) {
+      frontFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+      frontFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+      frontFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+      frontFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    // If color data has been provided, on the other hand, then make all
+    // the vertices that color.
+    } else {
+      frontFaceColors.push_back(color);
+      frontFaceColors.push_back(color);
+      frontFaceColors.push_back(color);
+      frontFaceColors.push_back(color);
+    }
 
     _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
 
@@ -140,10 +155,18 @@ namespace bsg {
 
     // And the corresponding colors for the above vertices.
     std::vector<glm::vec4> backFaceColors;
-    backFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-    backFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    backFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    backFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    if (color == glm::vec4(0, 0, 0, 0)) {
+      backFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+      backFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+      backFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+      backFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    } else {
+      backFaceColors.push_back(color);
+      backFaceColors.push_back(color);
+      backFaceColors.push_back(color);
+      backFaceColors.push_back(color);
+    }
 
     _backFace->addData(bsg::GLDATA_COLORS, "color", backFaceColors);
 
@@ -164,6 +187,89 @@ namespace bsg {
     backFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
     _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
+
+    // The vertices above are arranged into a set of triangles.
+    _backFace->setDrawType(GL_TRIANGLE_STRIP);
+
+    addObject(_frontFace);
+    addObject(_backFace);
+  }
+
+  drawableRectangleOutline::drawableRectangleOutline(bsgPtr<shaderMgr> pShader,
+                                       const float &width, const float &height,
+                                       const float &strokeWidth,
+                                       const glm::vec4 color) :
+    drawableCompound(pShader), _height(height), _width(width),
+    _strokeWidth(strokeWidth) {
+
+    _name = randomName("rect");
+    _frontFace = new drawableObj();
+    _backFace = new drawableObj();
+
+    float w = _width/2.0f;
+    float h = _height/2.0f;
+    float s = _strokeWidth;
+
+    std::vector<glm::vec4> frontFaceVertices;
+
+    frontFaceVertices.push_back(glm::vec4(-w-s,-h-s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w,    -h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w-s, h+s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w,     h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w+s,  h+s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w,      h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w+s, -h-s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w,     -h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w-s,-h-s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w,    -h, 0.0f, 1.0f));
+
+    _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
+
+    // Here are the corresponding colors for the above vertices.
+    std::vector<glm::vec4> frontFaceColors;
+
+    for (int i=0; i<10; i++) {
+      frontFaceColors.push_back(color);
+    }
+    
+    _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+
+    std::vector<glm::vec4> frontFaceNormals;
+
+    for (int i=0; i<10; i++) {
+      frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    }
+
+    _frontFace->addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
+
+    // The vertices above are arranged into a set of triangles.
+    _frontFace->setDrawType(GL_TRIANGLE_STRIP);
+
+    std::vector<glm::vec4> backFaceVertices;
+
+    backFaceVertices.push_back(glm::vec4(w+s,-h-s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w,    -h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w+s, h+s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w,     h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w-s,  h+s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w,      h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w-s, -h-s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w,     -h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w+s,-h-s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w,    -h, 0.0f, 1.0f));
+
+    _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
+
+    // Here are the corresponding colors for the above vertices.
+    _backFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+
+    std::vector<glm::vec4> backFaceNormals;
+
+    for (int i=0; i<10; i++) {
+      backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, -1.0f, 0.0f));
+    }
+
+    _backFace->addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
 
     // The vertices above are arranged into a set of triangles.
     _backFace->setDrawType(GL_TRIANGLE_STRIP);
@@ -728,6 +834,8 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text,
     _fontFilePath(fontFilePath),
     _color(color) {
 
+  _name = randomName("text");
+
   _texture = new bsg::fontTextureMgr();
   _texture->readFile(bsg::textureTTF, _fontFilePath);
   _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
@@ -745,6 +853,8 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader,
     _height(height),
     _fontFilePath(fontFilePath),
     _color(color) {
+
+  _name = randomName("text");
 
   // If the font requested isn't already in this texture's fontMap, we need to
   // load it in. If it is, we don't do anything.
@@ -771,6 +881,30 @@ void drawableText::_write() {
   int i = 0;
   vec2 pen = {{0.0f, 0.0f}};
 
+  while(_text[i]) {
+    texture_glyph_t *glyph = texture_font_get_glyph(font, &_text[i]);
+
+    float kerning = 0.0f;
+    if (i > 0) {
+      kerning = texture_glyph_get_kerning(glyph, _text + i - 1);
+    }
+
+    pen.x += kerning;
+    pen.x += glyph->advance_x;
+
+    if (pen.y < glyph->height) {
+      pen.y = glyph->height;
+    }
+    i++;
+  }
+
+  float w = scaling_factor * pen.x;
+  float h = scaling_factor * pen.y;
+
+  i = 0;
+  pen.x = 0.0f;
+  pen.y = 0.0f;
+
   while (_text[i]) {
     bsgPtr<drawableObj> _frontFace = new drawableObj();
     bsgPtr<drawableObj> _backFace = new drawableObj();
@@ -790,14 +924,10 @@ void drawableText::_write() {
 
     std::vector<glm::vec4> frontFaceVertices;
 
-    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y1,
-      0.0f, 1.0f));
-    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y1,
-      0.0f, 1.0f));
-    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y0,
-      0.0f, 1.0f));
-    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y0,
-      0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
 
     _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
 
@@ -839,14 +969,10 @@ void drawableText::_write() {
     // Same thing for the back-facing rectangle.
     std::vector<glm::vec4> backFaceVertices;
 
-    backFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y1,
-      0.0f, 1.0f));
-    backFaceVertices.push_back(glm::vec4(scaling_factor*x0, scaling_factor*y0,
-      0.0f, 1.0f));
-    backFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y1,
-      0.0f, 1.0f));
-    backFaceVertices.push_back(glm::vec4(scaling_factor*x1, scaling_factor*y0,
-      0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
 
     _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
 
@@ -891,5 +1017,41 @@ bsgPtr<fontTextureMgr> drawableText::getFontTexture() {
   return _texture;
 }
 
+
+drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   const float textHeight,
+                   const glm::vec4 textColor,
+                   const glm::vec4 backgroundColor,
+                   const glm::vec4 borderColor,
+                   const float boxHeight,
+                   const float boxWidth,
+                   const float borderWidth) : 
+    drawableCollection(),
+    _text(text),
+    _fontFilePath(fontFilePath),
+    _textHeight(textHeight),
+    _textColor(textColor),
+    _backgroundColor(backgroundColor),
+    _borderColor(borderColor),
+    _boxHeight(boxHeight),
+    _boxWidth(boxWidth),
+    _borderWidth(borderWidth) {
+
+  _name = randomName("textBox");
+
+  drawableRectangle *rect = new drawableRectangle(backgroundShader, 
+    _boxWidth, _boxHeight, _backgroundColor);
+  drawableRectangleOutline *outline = new drawableRectangleOutline(
+    backgroundShader, _boxWidth, _boxHeight, _borderWidth, _borderColor);
+  drawableText *drawText = new drawableText(textShader, _text, _textHeight, 
+      _fontFilePath, _textColor);
+  drawText->setPosition(0.0f, 0.0f, 0.001f);
+  addObject(rect);
+  addObject(outline);
+  addObject(drawText);
+}
 
 }
