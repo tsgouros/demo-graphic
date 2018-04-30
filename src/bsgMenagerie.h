@@ -194,7 +194,7 @@ class drawablePoints : public drawableCompound {
 ///
 /// A single line of text in the size, color, and font you specify. Doesn't
 /// handle things like paragraph styling, margins, and rag; that's what
-/// drawableTextBox will be for.
+/// drawableTextRect will be for.
 
 class drawableText : public drawableCompound {
   private:
@@ -230,12 +230,12 @@ class drawableText : public drawableCompound {
     void _write();
 };
 
-/// \brief A box of text.
+/// \brief A rectangle of text, like a button.
 ///
 /// Situates text in the size, color, and font you specify within a box of the
 /// dimensions, border color, and background color you specify.
 
-class drawableTextBox : public drawableCollection {
+class drawableTextRect : public drawableCollection {
  private:
    const char *_text;
    const float _textHeight;
@@ -248,10 +248,47 @@ class drawableTextBox : public drawableCollection {
    const glm::vec4 _borderColor;
 
  public:
+   drawableTextRect(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   const float textHeight=0.75,
+                   const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const glm::vec4 backgroundColor=glm::vec4(0.0, 0.0, 0.0, 1.0),
+                      // default is transparent
+                   const glm::vec4 borderColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const float boxHeight=1,
+                   const float boxWidth=2,
+                   const float borderWidth=0.1);
+   // todo @martha: getters and setters for all attributes ?
+};
+
+/// \brief A 3d box of text.
+///
+/// Situates text in the size, color, and font you specify within a box of the
+/// dimensions, border color, and background color you specify.
+
+class drawableTextBox : public drawableCollection {
+ private:
+   const char *_text;
+   const float _textHeight;
+   const char *_fontFilePath;
+   const float _boxHeight;
+   const float _boxWidth;
+   const float _borderWidth;
+   const float _extrusion;
+   const glm::vec4 _textColor;
+   const glm::vec4 _backgroundColor;
+   const glm::vec4 _borderColor;
+
+ public:
    drawableTextBox(bsgPtr<shaderMgr> textShader,
                    bsgPtr<shaderMgr> backgroundShader,
                    const char *text,
                    const char *fontFilePath,
+                   const float extrusion=0.5,
                    const float textHeight=0.75,
                    const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
                       // default is white

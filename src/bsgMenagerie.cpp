@@ -1018,7 +1018,7 @@ bsgPtr<fontTextureMgr> drawableText::getFontTexture() {
 }
 
 
-drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
+drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
                    bsgPtr<shaderMgr> backgroundShader,
                    const char *text,
                    const char *fontFilePath,
@@ -1040,7 +1040,7 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
     _boxWidth(boxWidth),
     _borderWidth(borderWidth) {
 
-  _name = randomName("textBox");
+  _name = randomName("textRect");
 
   drawableRectangle *rect = new drawableRectangle(backgroundShader, 
     _boxWidth, _boxHeight, _backgroundColor);
@@ -1052,6 +1052,74 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
   addObject(rect);
   addObject(outline);
   addObject(drawText);
+}
+
+drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   const float extrusion,
+                   const float textHeight,
+                   const glm::vec4 textColor,
+                   const glm::vec4 backgroundColor,
+                   const glm::vec4 borderColor,
+                   const float boxHeight,
+                   const float boxWidth,
+                   const float borderWidth) : 
+    drawableCollection(),
+    _text(text),
+    _fontFilePath(fontFilePath),
+    _extrusion(extrusion),
+    _textHeight(textHeight),
+    _textColor(textColor),
+    _backgroundColor(backgroundColor),
+    _borderColor(borderColor),
+    _boxHeight(boxHeight),
+    _boxWidth(boxWidth),
+    _borderWidth(borderWidth) {
+
+  _name = randomName("textBox");
+
+  drawableTextRect *textRect = new drawableTextRect(textShader, backgroundShader, 
+    _text, _fontFilePath, _textHeight, _textColor, _backgroundColor, _borderColor,
+    _boxHeight, _boxWidth, _borderWidth);
+  textRect->setPosition(0.f, 0.f, _extrusion/2);
+
+  drawableRectangleOutline *backFaceOutline = new drawableRectangleOutline(
+    backgroundShader, _boxWidth, _boxHeight, _borderWidth, _borderColor);
+  backFaceOutline->setPosition(0.0f, 0.0f, -_extrusion/2);
+
+  drawableRectangle *backFace = new drawableRectangle(backgroundShader, 
+    _boxWidth, _boxHeight, _backgroundColor);
+  backFace->setPosition(0.0f, 0.0f, -_extrusion/2);
+
+  drawableRectangle *leftFace = new drawableRectangle(backgroundShader, 
+    _extrusion, _boxHeight + 2 * _borderWidth, _borderColor);
+  leftFace->setRotation(0.0f, M_PI/2, 0.0f);
+  leftFace->setPosition(-_boxWidth/2 - borderWidth, 0.f, 0.f);
+
+  drawableRectangle *rightFace = new drawableRectangle(backgroundShader, 
+    _extrusion, _boxHeight + 2 * _borderWidth, _borderColor);
+  rightFace->setRotation(0.0f, M_PI/2, 0.0f);
+  rightFace->setPosition(_boxWidth/2 + borderWidth, 0.f, 0.f);
+
+  drawableRectangle *topFace = new drawableRectangle(backgroundShader, 
+    _boxWidth + 2 * _borderWidth, _extrusion, _borderColor);
+  topFace->setRotation(M_PI/2, 0.0f, 0.0f);
+  topFace->setPosition(0.f, _boxHeight/2 + borderWidth, 0.f);
+
+  drawableRectangle *bottomFace = new drawableRectangle(backgroundShader, 
+    _boxWidth + 2 * _borderWidth, _extrusion, _borderColor);
+  bottomFace->setRotation(M_PI/2, 0.0f, 0.0f);
+  bottomFace->setPosition(0.f, -_boxHeight/2 - borderWidth, 0.f);
+
+  addObject(textRect);
+  addObject(backFaceOutline);
+  addObject(backFace);
+  addObject(leftFace);
+  addObject(rightFace);
+  addObject(topFace);
+  addObject(bottomFace);
 }
 
 }

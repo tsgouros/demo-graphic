@@ -311,13 +311,15 @@ int main(int argc, char **argv) {
   backgroundShader->compileShaders();
 
   // TODO martha comment this
+  // also, bring back the example of textRect
   textBox = new bsg::drawableTextBox(textShader, backgroundShader, 
-    "hello", "../external/freetype-gl/fonts/Vera.ttf");
-  scene.addObject(textBox);
+    "hello", "../external/freetype-gl/fonts/Vera.ttf", 0.4f, 0.6f,
+    glm::vec4(1.0, 0.0, 1.0, 1.0));
+  scene.addObject(textBox); 
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-  scene.setCameraPosition(glm::vec3(0.0f, 0.0f, 1.0f));
+  scene.setCameraPosition(glm::vec3(1, 1.5, 1));
   
   // All the shapes are now added to the scene.
 
