@@ -246,29 +246,30 @@ class drawableTextRect : public drawableCollection {
    const glm::vec4 _textColor;
    const glm::vec4 _backgroundColor;
    const glm::vec4 _borderColor;
+   const bsgPtr<fontTextureMgr> _texture;
 
  public:
    drawableTextRect(bsgPtr<shaderMgr> textShader,
                    bsgPtr<shaderMgr> backgroundShader,
                    const char *text,
                    const char *fontFilePath,
+                   bsgPtr<fontTextureMgr> texture=NULL,
                    const float textHeight=0.75,
                    const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
                       // default is white
                    const glm::vec4 backgroundColor=glm::vec4(0.0, 0.0, 0.0, 1.0),
-                      // default is transparent
+                      // default is black
                    const glm::vec4 borderColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
                       // default is white
                    const float boxHeight=1,
                    const float boxWidth=2,
                    const float borderWidth=0.1);
-   // todo @martha: getters and setters for all attributes ?
 };
 
 /// \brief A 3d box of text.
 ///
-/// Situates text in the size, color, and font you specify within a box of the
-/// dimensions, border color, and background color you specify.
+/// Situates text in the size, color, and font you specify within a 3s box of
+/// the dimensions, border color, background color, and extrusion you specify.
 
 class drawableTextBox : public drawableCollection {
  private:
@@ -282,24 +283,25 @@ class drawableTextBox : public drawableCollection {
    const glm::vec4 _textColor;
    const glm::vec4 _backgroundColor;
    const glm::vec4 _borderColor;
+   const bsgPtr<fontTextureMgr> _texture;
 
  public:
    drawableTextBox(bsgPtr<shaderMgr> textShader,
                    bsgPtr<shaderMgr> backgroundShader,
                    const char *text,
                    const char *fontFilePath,
+                   bsgPtr<fontTextureMgr> texture=NULL,
                    const float extrusion=0.5,
                    const float textHeight=0.75,
                    const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
                       // default is white
                    const glm::vec4 backgroundColor=glm::vec4(0.0, 0.0, 0.0, 1.0),
-                      // default is transparent
+                      // default is black
                    const glm::vec4 borderColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
                       // default is white
                    const float boxHeight=1,
                    const float boxWidth=2,
                    const float borderWidth=0.1);
-   // todo @martha: getters and setters for all attributes ?
 };
 
 

@@ -118,6 +118,7 @@ texture_font_t *fontTextureMgr::getFont(const std::string &fileName) {
 }
 
 GLuint fontTextureMgr::_loadTTF(const std::string ttfPath) {
+  // std::cout << "loading ttf " << ttfPath << std::endl;
 
   // Build a new texture font from its description and size. This texture_font_t
   // object will be in charge of building bitmap glyphs, putting them in the

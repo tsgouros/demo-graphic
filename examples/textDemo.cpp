@@ -276,32 +276,36 @@ int main(int argc, char **argv) {
   // Make the drawableText texture shader
   bsg::bsgPtr<bsg::shaderMgr> textShader = new bsg::shaderMgr();
   textShader->addLights(lights);
-
   std::string vertexFile = std::string("../shaders/textShader.vp");
   textShader->addShader(bsg::GLSHADER_VERTEX, vertexFile);
-
   std::string fragmentFile = std::string("../shaders/textShader.fp");
   textShader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile);
-
   textShader->compileShaders();
 
-  // Draw the first text object -- it makes its own fontTextureMgr
+  // Draw the first text object, which creates its own fontTextureMgr.
   text1 = new bsg::drawableText(textShader, "Hello", 0.3,
       "../external/freetype-gl/fonts/Vera.ttf",
       glm::vec4(1.0, 1.0, 1.0, 1.0));
-  // scene.addObject(text1);
+  text1->setPosition(1.f, 0.f, -1.0f);
+  scene.addObject(text1);
 
-  // Retrieve that fontTextureMgr and reuse it for the second texture object
+  // Retrieve that fontTextureMgr and reuse it for the second texture object.
   bsg::bsgPtr<bsg::fontTextureMgr> texture = text1->getFontTexture();
 
-  // It can even handle different fonts!
-  text2 = new bsg::drawableText(textShader, texture, "Goodbye", 1, 
-      "../external/freetype-gl/fonts/LuckiestGuy.ttf",
-      glm::vec4(1.0, 0.0, 1.0, 1.0));
+  // Even though we're reusing the textureMgr from earlier, we can feed the text
+  // object a different font, and it'll handle that. So we can use just one
+  // fontTextureMgr throughout the whole project, provided that the atlas
+  // doesn't run out of space (see comments in bsgMenagerie.cpp for details).
+  text2 = new bsg::drawableText(textShader, texture, "Goodbye", 0.3,
+      "../external/freetype-gl/fonts/Vera.ttf",
+      glm::vec4(1.0, 1.0, 1.0, 1.0));
   text2->setPosition(-1.0f, 0.0f, -1.0f);
-  // scene.addObject(text2);
+  scene.addObject(text2);
 
-  // todo @martha this is the new shader! comment about it
+  // This next part shows the creation of a drawableTextRect or drawableTextBox.
+  // These are drawableCollections that can be used as buttons or menu items.
+
+  // First, create a separate shaderMgr for objects that just use solid colors.
   bsg::bsgPtr<bsg::shaderMgr> backgroundShader = new bsg::shaderMgr();
   backgroundShader->addLights(lights);
   std::string vertexFile2 = std::string("../shaders/shader2.vp");
@@ -310,16 +314,18 @@ int main(int argc, char **argv) {
   backgroundShader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile2);
   backgroundShader->compileShaders();
 
-  // TODO martha comment this
-  // also, bring back the example of textRect
-  textBox = new bsg::drawableTextBox(textShader, backgroundShader, 
-    "hello", "../external/freetype-gl/fonts/Vera.ttf", 0.4f, 0.6f,
-    glm::vec4(1.0, 0.0, 1.0, 1.0));
+  // Here's a drawableTextBox. Creating a drawableTextRect is exactly the same,
+  // except that it doesn't have an extrusion (the last arg).
+  // drawableTextBox and drawableTextRect have a bunch more arguments that you
+  // can use to fine-tune the background color, border width, border color,
+  // and box height and width, etc. Here, though, we just use the default args.
+  textBox = new bsg::drawableTextBox(textShader, backgroundShader, "hello",
+    "../external/freetype-gl/fonts/Lobster-Regular.ttf", texture, 0.4f);
   scene.addObject(textBox); 
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-  scene.setCameraPosition(glm::vec3(1, 1.5, 1));
+  scene.setCameraPosition(glm::vec3(0, 0, 1));
   
   // All the shapes are now added to the scene.
 
