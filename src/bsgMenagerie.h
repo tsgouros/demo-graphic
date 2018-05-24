@@ -11,10 +11,25 @@ class drawableRectangle : public drawableCompound {
 
  public:
   drawableRectangle(bsgPtr<shaderMgr> pShader,
-                    const float &width, const float &height);
+                    const float &width, const float &height,
+                    const glm::vec4 color = glm::vec4(0,0,0,0));
   drawableRectangle(bsgPtr<shaderMgr> pShader,
                     const float &width, const float &height,
                     const int &nDivs);
+
+};
+
+class drawableRectangleOutline : public drawableCompound {
+ private:
+
+  float _width, _height, _strokeWidth;
+  bsgPtr<drawableObj> _frontFace, _backFace;
+
+ public:
+  drawableRectangleOutline(bsgPtr<shaderMgr> pShader,
+                    const float &width, const float &height,
+                    const float &strokeWidth,
+                    const glm::vec4 color = glm::vec4(0,0,0,0));
 
 };
 
@@ -173,6 +188,129 @@ class drawablePoints : public drawableCompound {
   drawablePoints(bsgPtr<shaderMgr> pShader,
                  const std::vector<glm::vec4> &points,
                  const std::vector<glm::vec4> &colors);
+};
+
+/// \brief A line of text.
+///
+/// A single line of text in the size, color, and font you specify.
+/// If you pass in no texture object, it sees the default (null) and creates
+/// its own texture, which you can then retrieve using getFontTexture
+/// and reuse for all other text in the scene.
+/// If it is passed an already-initialized texture, it'll
+/// either use that texture with the existing font, or add a new font to the
+/// texture, but it's all stored within the same texture so as to save on
+/// memory usage.
+
+class drawableText : public drawableCompound {
+  private:
+    const char *_text;
+    const float _height;
+    const char *_fontFilePath;
+    const glm::vec4 _color;
+    bsgPtr<fontTextureMgr> _texture;
+
+  public:
+    drawableText(bsgPtr<shaderMgr> shader,
+                 const char *text,
+                 const float height,
+                 const char *fontFilePath,
+                 const glm::vec4 color,
+                 bsgPtr<fontTextureMgr> texture=NULL);
+
+    bsgPtr<fontTextureMgr> getFontTexture();
+    void _write();
+};
+
+/// \brief A rectangle of text, like a button.
+///
+/// Situates text in the size, color, and font you specify on a box of the
+/// dimensions, border color, and background color you specify. In order to
+/// avoid z-fighting, the drawableText is placed a teeny bit in front of
+/// the rectangle. The default is .001, but this is configurable using the
+/// argument offsetDist.
+/// Similar to drawableText, drawableTextRect also is capable of either
+/// creating its own texture OR receiving an already-initialized texture and
+/// simply using that. Again, you should pass it `null` the first time you
+/// add text to a scene, but other times, you should retrieve the original texture
+/// and reuse it to save on memory.
+
+class drawableTextRect : public drawableCollection {
+ private:
+   const char *_text;
+   const float _textHeight;
+   const char *_fontFilePath;
+   const float _boxHeight;
+   const float _boxWidth;
+   const float _borderWidth;
+   const float _offsetDist;
+   const glm::vec4 _textColor;
+   const glm::vec4 _backgroundColor;
+   const glm::vec4 _borderColor;
+   bsgPtr<fontTextureMgr> _texture;
+
+ public:
+   drawableTextRect(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   bsgPtr<fontTextureMgr> texture=NULL,
+                   const float textHeight=0.75,
+                   const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const glm::vec4 backgroundColor=glm::vec4(0.0, 0.0, 0.0, 1.0),
+                      // default is black
+                   const glm::vec4 borderColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const float boxHeight=1,
+                   const float boxWidth=2,
+                   const float borderWidth=0.1,
+                   const float offsetDist=0.001);
+
+   bsgPtr<fontTextureMgr> getFontTexture();
+};
+
+/// \brief A 3d box of text.
+///
+/// Situates text in the size, color, and font you specify within a 3s box of
+/// the dimensions, border color, background color, and extrusion you specify.
+
+class drawableTextBox : public drawableCollection {
+ private:
+   const char *_text;
+   const float _textHeight;
+   const char *_fontFilePath;
+   const float _boxHeight;
+   const float _boxWidth;
+   const float _borderWidth;
+   const float _extrusion;
+   const float _offsetDist;
+   const glm::vec4 _extrusionColor;
+   const glm::vec4 _textColor;
+   const glm::vec4 _backgroundColor;
+   const glm::vec4 _borderColor;
+   bsgPtr<fontTextureMgr> _texture;
+
+ public:
+   drawableTextBox(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   bsgPtr<fontTextureMgr> texture=NULL,
+                   const float extrusion=0.5,
+                   const float textHeight=0.75,
+                   const glm::vec4 textColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const glm::vec4 backgroundColor=glm::vec4(0.0, 0.0, 0.0, 1.0),
+                      // default is black
+                   const glm::vec4 borderColor=glm::vec4(1.0, 1.0, 1.0, 1.0),
+                      // default is white
+                   const float boxHeight=1,
+                   const float boxWidth=2,
+                   const float borderWidth=0.1,
+                   const float offsetDist=0.001,
+                   const glm::vec4 extrusionColor=glm::vec4(1.0, 1.0, 1.0, 1.0));
+
+   bsgPtr<fontTextureMgr> getFontTexture();
 };
 
 

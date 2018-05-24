@@ -1,4 +1,5 @@
 #include "bsgMenagerie.h"
+#include "../external/freetype-gl/freetype-gl.h"
 
 namespace bsg {
 
@@ -78,7 +79,8 @@ namespace bsg {
   }
 
   drawableRectangle::drawableRectangle(bsgPtr<shaderMgr> pShader,
-                                       const float &width, const float &height) :
+                                       const float &width, const float &height,
+                                       const glm::vec4 color) :
     drawableCompound(pShader), _height(height), _width(width) {
 
     _name = randomName("rect");
@@ -99,10 +101,24 @@ namespace bsg {
 
     // Here are the corresponding colors for the above vertices.
     std::vector<glm::vec4> frontFaceColors;
-    frontFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-    frontFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    frontFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    frontFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    // If no color has been provided, the default color arg is (0,0,0,0).
+    // If this is the case, then the default behavior is to make each of the
+    // 4 vertices a different color.
+    if (color == glm::vec4(0, 0, 0, 0)) {
+      frontFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+      frontFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+      frontFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+      frontFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    // If color data has been provided, on the other hand, then make all
+    // the vertices that color.
+    } else {
+      frontFaceColors.push_back(color);
+      frontFaceColors.push_back(color);
+      frontFaceColors.push_back(color);
+      frontFaceColors.push_back(color);
+    }
 
     _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
 
@@ -139,10 +155,18 @@ namespace bsg {
 
     // And the corresponding colors for the above vertices.
     std::vector<glm::vec4> backFaceColors;
-    backFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
-    backFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
-    backFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
-    backFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+
+    if (color == glm::vec4(0, 0, 0, 0)) {
+      backFaceColors.push_back(glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f));
+      backFaceColors.push_back(glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f));
+      backFaceColors.push_back(glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f));
+      backFaceColors.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 1.0f));
+    } else {
+      backFaceColors.push_back(color);
+      backFaceColors.push_back(color);
+      backFaceColors.push_back(color);
+      backFaceColors.push_back(color);
+    }
 
     _backFace->addData(bsg::GLDATA_COLORS, "color", backFaceColors);
 
@@ -163,6 +187,89 @@ namespace bsg {
     backFaceUVs.push_back(glm::vec2( 1.0f, 1.0f));
 
     _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
+
+    // The vertices above are arranged into a set of triangles.
+    _backFace->setDrawType(GL_TRIANGLE_STRIP);
+
+    addObject(_frontFace);
+    addObject(_backFace);
+  }
+
+  drawableRectangleOutline::drawableRectangleOutline(bsgPtr<shaderMgr> pShader,
+                                       const float &width, const float &height,
+                                       const float &strokeWidth,
+                                       const glm::vec4 color) :
+    drawableCompound(pShader), _height(height), _width(width),
+    _strokeWidth(strokeWidth) {
+
+    _name = randomName("rect");
+    _frontFace = new drawableObj();
+    _backFace = new drawableObj();
+
+    float w = _width/2.0f;
+    float h = _height/2.0f;
+    float s = _strokeWidth;
+
+    std::vector<glm::vec4> frontFaceVertices;
+
+    frontFaceVertices.push_back(glm::vec4(-w-s,-h-s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w,    -h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w-s, h+s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w,     h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w+s,  h+s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w,      h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w+s, -h-s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(w,     -h, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w-s,-h-s, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(-w,    -h, 0.0f, 1.0f));
+
+    _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
+
+    // Here are the corresponding colors for the above vertices.
+    std::vector<glm::vec4> frontFaceColors;
+
+    for (int i=0; i<10; i++) {
+      frontFaceColors.push_back(color);
+    }
+    
+    _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+
+    std::vector<glm::vec4> frontFaceNormals;
+
+    for (int i=0; i<10; i++) {
+      frontFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, 1.0f, 0.0f));
+    }
+
+    _frontFace->addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
+
+    // The vertices above are arranged into a set of triangles.
+    _frontFace->setDrawType(GL_TRIANGLE_STRIP);
+
+    std::vector<glm::vec4> backFaceVertices;
+
+    backFaceVertices.push_back(glm::vec4(w+s,-h-s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w,    -h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w+s, h+s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w,     h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w-s,  h+s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w,      h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w-s, -h-s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(-w,     -h, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w+s,-h-s, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(w,    -h, 0.0f, 1.0f));
+
+    _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
+
+    // Here are the corresponding colors for the above vertices.
+    _backFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+
+    std::vector<glm::vec4> backFaceNormals;
+
+    for (int i=0; i<10; i++) {
+      backFaceNormals.push_back(glm::vec4( 0.0f, 0.0f, -1.0f, 0.0f));
+    }
+
+    _backFace->addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
 
     // The vertices above are arranged into a set of triangles.
     _backFace->setDrawType(GL_TRIANGLE_STRIP);
@@ -718,5 +825,341 @@ drawablePoints::drawablePoints(bsgPtr<shaderMgr> pShader,
   addObject(_points);
 }
 
+drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text, 
+                           const float height, const char *fontFilePath,
+                           const glm::vec4 color, bsgPtr<fontTextureMgr> texture) :
+    drawableCompound(pShader),
+    _texture(texture),
+    _text(text),
+    _height(height),
+    _fontFilePath(fontFilePath),
+    _color(color) {
+
+  _name = randomName("text");
+
+  if (!_texture) {
+    _texture = new bsg::fontTextureMgr();
+    _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
+  }
+
+  // If the font requested isn't already in this texture's fontMap, we need to
+  // load it in. If it is, we don't do anything.
+  if (!_texture->getFont(_fontFilePath)) {
+    std::cout << "we have not got that font already" << std::endl;
+    _texture->readFile(bsg::textureTTF, _fontFilePath);
+  } else {
+    std::cout << "we have that font already" << std::endl;
+  }
+
+  _write();
+}
+
+void drawableText::_write() {
+
+  texture_font_t *font = _texture->getFont(_fontFilePath);
+
+  // vertex_buffer_t *buffer = vertex_buffer_new("vertex:3f,tex_coord:2f,color:4f");
+
+  // _height is the height we want the text to be, in world units. But
+  // freetypegl measures font size in pixels, so if we don't scale the
+  // coordinates it gives us somehow, the text will show up many times too big.
+  // So, we scale the coordinates by dividing height (the height that the user
+  // wanted) by font's height attribute. See:
+  // https://github.com/rougier/freetype-gl/blob/master/texture-font.h
+  float scaling_factor = _height / font->height;
+  int i = 0;
+  vec2 pen = {{0.0f, 0.0f}};
+
+  while(_text[i]) {
+    texture_glyph_t *glyph = texture_font_get_glyph(font, &_text[i]);
+
+    float kerning = 0.0f;
+    if (i > 0) {
+      kerning = texture_glyph_get_kerning(glyph, _text + i - 1);
+    }
+
+    pen.x += kerning;
+    pen.x += glyph->advance_x;
+
+    if (pen.y < glyph->height) {
+      pen.y = glyph->height;
+    }
+    i++;
+  }
+
+  float w = scaling_factor * pen.x;
+  float h = scaling_factor * pen.y;
+
+  i = 0;
+  pen.x = 0.0f;
+  pen.y = 0.0f;
+
+  while (_text[i]) {
+    bsgPtr<drawableObj> _frontFace = new drawableObj();
+    bsgPtr<drawableObj> _backFace = new drawableObj();
+    texture_glyph_t *glyph = texture_font_get_glyph(font, &_text[i]);
+
+    float kerning = 0.0f;
+    if (i > 0) {
+      kerning = texture_glyph_get_kerning(glyph, _text + i - 1);
+    }
+
+    pen.x += kerning;
+
+    float x0  = (pen.x + glyph->offset_x);
+    float y0  = (int)(pen.y + glyph->offset_y);
+    float x1  = (x0 + glyph->width);
+    float y1  = (int)(y0 - glyph->height);
+
+    std::vector<glm::vec4> frontFaceVertices;
+
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
+    frontFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
+
+    _frontFace->addData(bsg::GLDATA_VERTICES, "position", frontFaceVertices);
+
+    std::vector<glm::vec4> frontFaceNormals;
+
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+    frontFaceNormals.push_back(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+
+    _frontFace->addData(bsg::GLDATA_NORMALS, "normal", frontFaceNormals);
+
+    std::vector<glm::vec2> frontFaceUVs;
+
+    float u0 = glyph->s0;
+    float v0 = glyph->t0;
+    float u1 = glyph->s1;
+    float v1 = glyph->t1;
+
+    frontFaceUVs.push_back(glm::vec2(u0, v1));
+    frontFaceUVs.push_back(glm::vec2(u1, v1));
+    frontFaceUVs.push_back(glm::vec2(u0, v0));
+    frontFaceUVs.push_back(glm::vec2(u1, v0));
+
+    _frontFace->addData(bsg::GLDATA_TEXCOORDS, "texture", frontFaceUVs);
+
+    // Here are the corresponding colors for the above vertices.
+    std::vector<glm::vec4> frontFaceColors;
+    frontFaceColors.push_back(_color);
+    frontFaceColors.push_back(_color);
+    frontFaceColors.push_back(_color);
+    frontFaceColors.push_back(_color);
+
+    _frontFace->addData(bsg::GLDATA_COLORS, "color", frontFaceColors);
+    
+    // The vertices above are arranged into a set of triangles.
+    _frontFace->setDrawType(GL_TRIANGLE_STRIP);  
+
+    // Same thing for the back-facing rectangle.
+    std::vector<glm::vec4> backFaceVertices;
+
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x0-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y1-h/2, 0.0f, 1.0f));
+    backFaceVertices.push_back(glm::vec4(scaling_factor*x1-w/2, scaling_factor*y0-h/2, 0.0f, 1.0f));
+
+    _backFace->addData(bsg::GLDATA_VERTICES, "position", backFaceVertices);
+
+    std::vector<glm::vec4> backFaceNormals;
+
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    backFaceNormals.push_back(glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+
+    _backFace->addData(bsg::GLDATA_NORMALS, "normal", backFaceNormals);
+
+    std::vector<glm::vec2> backFaceUVs;
+
+    backFaceUVs.push_back(glm::vec2(u0, v1));
+    backFaceUVs.push_back(glm::vec2(u0, v0));
+    backFaceUVs.push_back(glm::vec2(u1, v1));
+    backFaceUVs.push_back(glm::vec2(u1, v0));
+
+    _backFace->addData(bsg::GLDATA_TEXCOORDS, "texture", backFaceUVs);
+
+    std::vector<glm::vec4> backFaceColors;
+    backFaceColors.push_back(_color);
+    backFaceColors.push_back(_color);
+    backFaceColors.push_back(_color);
+    backFaceColors.push_back(_color);
+
+    _backFace->addData(bsg::GLDATA_COLORS, "color", backFaceColors);
+    
+    _backFace->setDrawType(GL_TRIANGLE_STRIP);  
+
+    addObject(_frontFace);
+    addObject(_backFace);
+
+    pen.x += glyph->advance_x;
+
+    i++;
+  }
+}
+
+bsgPtr<fontTextureMgr> drawableText::getFontTexture() {
+  return _texture;
+}
+
+
+drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   bsgPtr<fontTextureMgr> texture,
+                   const float textHeight,
+                   const glm::vec4 textColor,
+                   const glm::vec4 backgroundColor,
+                   const glm::vec4 borderColor,
+                   const float boxHeight,
+                   const float boxWidth,
+                   const float borderWidth,
+                   const float offsetDist) : 
+    drawableCollection(),
+    _text(text),
+    _fontFilePath(fontFilePath),
+    _texture(texture),
+    _textHeight(textHeight),
+    _textColor(textColor),
+    _backgroundColor(backgroundColor),
+    _borderColor(borderColor),
+    _boxHeight(boxHeight),
+    _boxWidth(boxWidth),
+    _borderWidth(borderWidth),
+    _offsetDist(offsetDist) {
+
+  std::cout << "1" << std::endl;
+  // The background rectangle
+  drawableRectangle *rect = new drawableRectangle(backgroundShader, 
+    _boxWidth, _boxHeight, _backgroundColor);
+
+  // The outline for the rectangle
+  drawableRectangleOutline *outline = new drawableRectangleOutline(
+    backgroundShader, _boxWidth, _boxHeight, _borderWidth, _borderColor);
+
+  // The text itself
+  drawableText *drawText;
+  drawText = new drawableText(textShader, _text, _textHeight,
+    _fontFilePath, _textColor, _texture);
+
+  // If this object wasn't passed a _texture initially, that means this is
+  // probably the first piece of text to be displayed in the scene, so we
+  // grab the _texture that drawText is using and make that accessible to
+  // other people who might want to use it.
+  if (!_texture) {
+    _texture = drawText->getFontTexture();
+  }
+
+  // Bump it forward juust a bit to avoid z-fighting
+  drawText->setPosition(0.0f, 0.0f, _offsetDist);
+
+  // Add everybody together!
+  addObject(rect);
+  addObject(outline);
+  addObject(drawText);
+}
+
+bsgPtr<fontTextureMgr> drawableTextRect::getFontTexture() {
+  return _texture;
+}
+
+drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
+                   bsgPtr<shaderMgr> backgroundShader,
+                   const char *text,
+                   const char *fontFilePath,
+                   bsgPtr<fontTextureMgr> texture,
+                   const float extrusion,
+                   const float textHeight,
+                   const glm::vec4 textColor,
+                   const glm::vec4 backgroundColor,
+                   const glm::vec4 borderColor,
+                   const float boxHeight,
+                   const float boxWidth,
+                   const float borderWidth,
+                   const float offsetDist,
+                   const glm::vec4 extrusionColor) : 
+    drawableCollection(),
+    _text(text),
+    _fontFilePath(fontFilePath),
+    _texture(texture),
+    _extrusion(extrusion),
+    _textHeight(textHeight),
+    _textColor(textColor),
+    _backgroundColor(backgroundColor),
+    _borderColor(borderColor),
+    _boxHeight(boxHeight),
+    _boxWidth(boxWidth),
+    _borderWidth(borderWidth),
+    _offsetDist(offsetDist),
+    _extrusionColor(extrusionColor) {
+
+  _name = randomName("textBox");
+
+  // To make things 3d, we follow the (probably slow but much clearer) strategy
+  // of creating the six rectangular faces as individual 2d objects, then
+  // rotating them and moving them about until they form a rectangular prism.
+
+  // The front face, that actually has the text on it.
+  drawableTextRect *textRect = new drawableTextRect(textShader, backgroundShader, 
+    _text, _fontFilePath, _texture, _textHeight, _textColor, _backgroundColor, _borderColor,
+    _boxHeight, _boxWidth, _borderWidth, _offsetDist);
+  textRect->setPosition(0.f, 0.f, _extrusion/2);
+
+  // If this object wasn't passed a _texture initially, that means this is
+  // probably the first piece of text to be displayed in the scene, so we
+  // grab the _texture that drawText is using and make that accessible to
+  // other people who might want to use it.
+  if (!_texture) {
+    _texture = textRect->getFontTexture();
+  }
+
+  // The backface's outline and fill.
+  drawableRectangleOutline *backFaceOutline = new drawableRectangleOutline(
+    backgroundShader, _boxWidth, _boxHeight, _borderWidth, _borderColor);
+  backFaceOutline->setPosition(0.0f, 0.0f, -_extrusion/2);
+
+  drawableRectangle *backFace = new drawableRectangle(backgroundShader, 
+    _boxWidth, _boxHeight, _backgroundColor);
+  backFace->setPosition(0.0f, 0.0f, -_extrusion/2);
+
+  // The left, right, top, and bottom faces...
+  drawableRectangle *leftFace = new drawableRectangle(backgroundShader, 
+    _extrusion, _boxHeight + 2 * _borderWidth, _extrusionColor);
+  leftFace->setRotation(0.0f, M_PI/2, 0.0f);
+  leftFace->setPosition(-_boxWidth/2 - borderWidth, 0.f, 0.f);
+
+  drawableRectangle *rightFace = new drawableRectangle(backgroundShader, 
+    _extrusion, _boxHeight + 2 * _borderWidth, _extrusionColor);
+  rightFace->setRotation(0.0f, M_PI/2, 0.0f);
+  rightFace->setPosition(_boxWidth/2 + borderWidth, 0.f, 0.f);
+
+  drawableRectangle *topFace = new drawableRectangle(backgroundShader, 
+    _boxWidth + 2 * _borderWidth, _extrusion, _extrusionColor);
+  topFace->setRotation(M_PI/2, 0.0f, 0.0f);
+  topFace->setPosition(0.f, _boxHeight/2 + borderWidth, 0.f);
+
+  drawableRectangle *bottomFace = new drawableRectangle(backgroundShader, 
+    _boxWidth + 2 * _borderWidth, _extrusion, _extrusionColor);
+  bottomFace->setRotation(M_PI/2, 0.0f, 0.0f);
+  bottomFace->setPosition(0.f, -_boxHeight/2 - borderWidth, 0.f);
+
+  // Add everybody to the collection.
+  addObject(textRect);
+  addObject(backFaceOutline);
+  addObject(backFace);
+  addObject(leftFace);
+  addObject(rightFace);
+  addObject(topFace);
+  addObject(bottomFace);
+}
+
+bsgPtr<fontTextureMgr> drawableTextBox::getFontTexture() {
+  return _texture;
+}
 
 }

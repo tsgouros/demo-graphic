@@ -31,6 +31,8 @@
 #define M_PI 3.141592653589793238
 #endif
 
+#include "../external/freetype-gl/freetype-gl.h"
+
 namespace bsg {
 
 typedef enum {
@@ -220,11 +222,13 @@ template <class T>
 class drawableObjData {
  private:
   std::vector<T> _data;
+  std::vector<T> _fakeData;
 
  public:
  drawableObjData(): name("") {
     _data.reserve(50);
     ID = 0; bufferID = 0;
+    _fakeData.reserve(50);
   };
  drawableObjData(const std::string inName, const std::vector<T> inData) :
   name(inName), _data(inData) {}
@@ -390,21 +394,21 @@ typedef enum {
 ///  OpenGL slots where it belongs.
 ///
 class textureMgr {
- private:
+ protected:
   GLfloat _width, _height;
-
+  GLuint _textureBufferID;
   GLuint _textureAttribID;
   std::string _textureAttribName;
+
+ private:
 
   void _setupDefaultNames() {
     _textureAttribName = std::string("textureImage");
   };
 
-  GLuint _textureBufferID;
 
   GLuint _loadPNG(const std::string imagePath);
   GLuint _loadCheckerBoard (const int size, int numFields);
-  GLuint _loadTTF(const std::string ttfPath); // MKE
 
  public:
   textureMgr() { _setupDefaultNames(); };
@@ -434,6 +438,26 @@ class textureMgr {
   GLfloat getWidth() { return _width; };
   /// \brief Return the texture height.
   GLfloat getHeight() { return _height; };
+};
+
+/// \brief A manager of textures and specifically for font files.
+///
+///  A class to hold a font texture and take care of loading it into the
+///  OpenGL slots where it belongs. This inherits from the parent textureMgr
+///  class. The motivation for special-casing font textures is that we need to
+///  be able to return the Freetype texture_font_t object so that somebody else
+///  can access crucial info such as the location of a glyph in the text atlas
+///  (the texture), and how much kerning that glyph gets, etc.
+class fontTextureMgr : public textureMgr {
+ private:
+  GLuint _loadTTF(const std::string ttfPath);
+  std::map<std::string, texture_font_t *> _fontsMap;
+  texture_atlas_t *_atlas;
+ 
+ public:
+  fontTextureMgr();
+  void readFile(const textureType &type, const std::string &fileName);
+  texture_font_t *getFont(const std::string &fileName);
 };
 
 
@@ -586,6 +610,9 @@ class drawableObj {
   drawableObjData<glm::vec4> _normals;
   drawableObjData<glm::vec2> _uvs;
 
+  std::vector<glm::vec4> _fakeColors;
+  std::vector<glm::vec4> _realColors;
+
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
 
@@ -692,6 +719,13 @@ class drawableObj {
   ///
   /// Scans the vertex array to come up with a bounding box.
   void findBoundingBox();
+
+  void setFakeColors(const std::vector<glm::vec4>& data);
+  std::vector<glm::vec4> getFakeColors();
+
+  void setRealColors(const std::vector<glm::vec4>& data);
+  std::vector<glm::vec4> getRealColors();
+
 
   /// \brief Returns the upper limit of the bounding box.
   glm::vec4 getBoundingBoxUpper() {

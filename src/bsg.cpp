@@ -1,8 +1,12 @@
 #include "bsg.h"
+#include "../external/freetype-gl/freetype-gl.h"
 
 // Stb Image library
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#include <time.h>
+#include <stdlib.h>
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -72,17 +76,98 @@ void textureMgr::readFile(const textureType& type, const std::string& fileName) 
     break;
 
   case textureTTF:
-    _textureBufferID = _loadTTF(fileName);  // MKE
+    throw std::runtime_error("Perhaps you meant to use a fontTextureMgr?");
 
   default:
     throw std::runtime_error("What texture type is this?");
   }
 }
 
-GLuint textureMgr::_loadTTF(const std::string ttfPath) { // MKE
+fontTextureMgr::fontTextureMgr(): textureMgr() {
+  // Texture atlas stores individual glyphs. The point of the atlas is to pack
+  // as many glyphs as possible into a small space. See this blog post 
+  // http://wdobbie.com/post/gpu-text-rendering-with-vector-textures/
+  // if you want to visualize what this is doing.
+  // I chose this size atlas somewhat arbitrarily. This number is big enough
+  // to make a texture that doesn't look pixellated. But if you bump up the
+  // font size (below), you will likely need to bump up the size of the
+  // atlas, as well.
+  _width = 2048;
+  _height = 2048;
+  _atlas = texture_atlas_new(_width, _height, 1);
+}
 
-  std::cout << "READ AND PROCESS " << ttfPath << " HERE!" << std::endl;
-  return 0;
+void fontTextureMgr::readFile(const textureType& type, const std::string& fileName) {
+  switch (type) {
+  case textureTTF:
+    _textureBufferID = _loadTTF(fileName);
+    break;
+  default:
+    throw std::runtime_error("What texture type is this?");
+  }
+}
+
+// If this texture manager is a font, we need to be able to return a
+// texture_font_t object so that somebody can access crucial info
+// such as the location of a glyph in the text atlas (the texture), and how much
+// kerning it should get, for the specific font in question (indicated by
+// fileName). If this texture manager doesn't have that particular font loaded
+// alread, it returns null to let the user know they should load it in.
+texture_font_t *fontTextureMgr::getFont(const std::string &fileName) {
+  return _fontsMap[fileName];
+}
+
+GLuint fontTextureMgr::_loadTTF(const std::string ttfPath) {
+  // std::cout << "loading ttf " << ttfPath << std::endl;
+
+  // Build a new texture font from its description and size. This texture_font_t
+  // object will be in charge of building bitmap glyphs, putting them in the
+  // atlas, and storing information about their coordinates in the atlas
+  // and how much kerning each individual glyph gets, etc.
+  // Same as above, I chose a font size arbitrarily, just using one that seemed
+  // to work and allow us to avoid pixellation.
+  // #TODO: eventually in the future, it would be ideal to choose both the font
+  // size and the atlas size intelligently, based on the size of the text the
+  // user of this interface requested. For now, we don't handle that yet.
+  // On the other hand, however, note that we are planning to allow users to
+  // reuse font atlases since they can fit multiple fonts. Does this change the
+  // design choices we will make around this?
+  texture_font_t *font = texture_font_new_from_file(_atlas, 200, ttfPath.c_str());
+  _fontsMap[ttfPath] = font;
+
+  // Cache some glyphs to speed things up.
+  texture_font_load_glyphs(font,
+                          (std::string(" !\"#$%&'()*+,-./0123456789:;<=>?") +
+                          std::string("@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_") +
+                          std::string("`abcdefghijklmnopqrstuvwxyz{|}~")).c_str());
+
+  // Generate one texture and store its ID in the texture variable. Then, since
+  // OpenGL is a state machine, bind that texture so OpenGL knows to use it
+  // until it's told otherwise.
+  GLuint texture;
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+
+  // These are some preferences we set, instructing OpenGL how to use the
+  // currently bound texture. Setting WRAP to CLAMP is sort of like setting
+  // CSS background-repeat: no-repeat. It means tex coords will be clamped to
+  // one repetition of the texture, rather than allowing the texture to
+  // repeat in a tiled way.
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+  // And setting MIN_FILTER and MAG_FILTER to GL_NEAREST means that when
+  // deciding what color to make a particular pixel in world space, based upon
+  // the texture we are working with, it just chooses the nearest pixel
+  // rather than using any kind of linear interpolation.
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+
+  // Sets up how the texture image is defined in memory. We give it a width
+  // and a height, and send it the data present in _atlas->data.
+  glTexImage2D( GL_TEXTURE_2D, 0, GL_RED, _atlas->width, _atlas->height,
+                0, GL_RED, GL_UNSIGNED_BYTE, _atlas->data );
+  return texture;
 }
 
 GLuint textureMgr::_loadCheckerBoard (const int size, int numFields) {
@@ -518,6 +603,30 @@ void drawableObj::addData(const GLDATATYPE type,
   }
   _loadedIntoBuffer = false;
 }
+
+void drawableObj::setRealColors(
+  const std::vector<glm::vec4>& data) {
+  _realColors = data;
+  _loadedIntoBuffer = false;
+}
+
+std::vector<glm::vec4> drawableObj::getRealColors(){
+  return _realColors;
+}
+
+
+void drawableObj::setFakeColors(
+                          const std::vector<glm::vec4>& data) {
+
+  
+  _fakeColors = data;
+  _loadedIntoBuffer = false;
+}
+
+std::vector<glm::vec4> drawableObj::getFakeColors(){
+  return _fakeColors;
+}
+
 
 void drawableObj::setData(const GLDATATYPE type,
                           const std::vector<glm::vec4>& data) {

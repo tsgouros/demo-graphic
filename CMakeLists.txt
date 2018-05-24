@@ -90,6 +90,9 @@ else (MinVR_FOUND)
   message(STATUS "MinVR not found, my apologies.  Try specifying MINVR_INSTALL_DIR like this:\n   $ cmake .. -DMINVR_INSTALL_DIR=/path/to/your/MinVR/install")
 endif(MinVR_FOUND)
 
+# TODO @martha & tom: this is a hack, for now, because there is some problem with the linking
+# set(MINVR_LIBRARY /gpfs/runtime/opt/minvr/beta-bleeding/lib/MinVR-2.0/libMinVR.a)
+# set(MINVR_INCLUDE_DIR ~/Dropbox/ccv/MinVR/build/install/include)
 
 # set(MINVR_LIBRARY_DEBUG ${MINVR_LIBRARY})
 
@@ -114,8 +117,54 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 set(img_src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
 add_definitions(-DDATAPATH="${CMAKE_SOURCE_DIR}")
+
+## Need to oversee the installation and availability of freetype-gl.  It builds as
+## a static library, and the include files are not installed, but are simply
+## picked up from the source directory.  Code that depends on it can use
+## add_dependencies(whatever freetypegl) and make sure that FREETYPEGL_INCLUDE_DIR
+## is nominated in the include_directories() list.
+message(STATUS "LOOKING FOR GLFW3")
+find_package(glfw3)
+
+set(FREETYPEGL_CHECKOUT_DIR ${PROJECT_SOURCE_DIR}/external/freetype-gl)
+make_directory(${FREETYPEGL_CHECKOUT_DIR})
+include(ExternalProject)
+
+set(FREETYPEGL_BUILD_DIR ${CMAKE_BINARY_DIR}/freetypegl)
+set(FREETYPEGL_STAMP_DIR ${FREETYPEGL_BUILD_DIR}/stamp)
+set(FREETYPEGL_TMP_DIR ${FREETYPEGL_BUILD_DIR}/tmp)
+
+set(FREETYPEGL_PREFIX "${FREETYPEGL_CHECKOUT_DIR}")
+set(FREETYPEGL_INSTALL_DIR "${FREETYPEGL_BUILD_DIR}/install")
+
+set(FREETYPEGL_CMAKE_ARGS  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -Dfreetype-gl_BUILD_DEMOS=OFF -Dfreetype-gl_BUILD_APIDOC=OFF -Dfreetype-gl_BUILD_MAKEFONT=OFF -Dfreetype-gl_BUILD_TESTS=OFF)
+
+ExternalProject_add(freetypegl-download
+    PREFIX ${FREETYPEGL_PREFIX}
+    GIT_REPOSITORY https://github.com/rougier/freetype-gl.git
+    GIT_TAG master
+    INSTALL_DIR ${FREETYPEGL_INSTALL_DIR}
+    CMAKE_ARGS ${FREETYPEGL_CMAKE_ARGS}
+    UPDATE_COMMAND ""
+    DOWNLOAD_DIR ${FREETYPEGL_CHECKOUT_DIR}
+    SOURCE_DIR ${FREETYPEGL_CHECKOUT_DIR}
+    TMP_DIR ${FREETYPEGL_TMP_DIR}
+    STAMP_DIR ${FREETYPEGL_STAMP_DIR}
+    BINARY_DIR ${FREETYPEGL_BUILD_DIR}
+)
+
+message(STATUS "Building freetypegl from: ${FREETYPEGL_PREFIX}.")
+
+set(FREETYPEGL_INCLUDE_DIR ${FREETYPEGL_PREFIX} CACHE INTERNAL "Where the FreetypeGL include files are supposed to be.")
+set(FREETYPEGL_LIBRARY_DIR ${FREETYPEGL_BUILD_DIR} CACHE INTERNAL "Where the FreetypeGL library is supposed to be.")
+
+add_library(freetypegl STATIC IMPORTED GLOBAL)
+set_target_properties(freetypegl PROPERTIES IMPORTED_LOCATION ${FREETYPEGL_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}freetype-gl${CMAKE_STATIC_LIBRARY_SUFFIX})
+get_target_property(TMP_VAR freetypegl IMPORTED_LOCATION)
+
+message(STATUS "Freetype-GL library:  ${TMP_VAR}")
+message(STATUS "Freetype-GL includes: ${FREETYPEGL_INCLUDE_DIR}")
 
 add_subdirectory(src)
 add_subdirectory(examples)
