@@ -192,9 +192,14 @@ class drawablePoints : public drawableCompound {
 
 /// \brief A line of text.
 ///
-/// A single line of text in the size, color, and font you specify. Doesn't
-/// handle things like paragraph styling, margins, and rag; that's what
-/// drawableTextRect will be for.
+/// A single line of text in the size, color, and font you specify.
+/// If you pass in no texture object, it sees the default (null) and creates
+/// its own texture, which you can then retrieve using getFontTexture
+/// and reuse for all other text in the scene.
+/// If it is passed an already-initialized texture, it'll
+/// either use that texture with the existing font, or add a new font to the
+/// texture, but it's all stored within the same texture so as to save on
+/// memory usage.
 
 class drawableText : public drawableCompound {
   private:
@@ -205,14 +210,6 @@ class drawableText : public drawableCompound {
     bsgPtr<fontTextureMgr> _texture;
 
   public:
-
-    // If you pass in no texture object, it sees the default (null) and creates
-    // its own texture, which you can then retrieve using getTexture
-    // and reuse for all other text in the scene.
-    // If it is passed an already-initialized texture, it'll
-    // either use that texture with the existing font, or add a new font to the
-    // texture, but it's all stored within the same texture so as to save on
-    // memory usage.
     drawableText(bsgPtr<shaderMgr> shader,
                  const char *text,
                  const float height,
@@ -226,9 +223,16 @@ class drawableText : public drawableCompound {
 
 /// \brief A rectangle of text, like a button.
 ///
-/// Situates text in the size, color, and font you specify within a box of the
-/// dimensions, border color, and background color you specify.
-/// offsetDist TODO
+/// Situates text in the size, color, and font you specify on a box of the
+/// dimensions, border color, and background color you specify. In order to
+/// avoid z-fighting, the drawableText is placed a teeny bit in front of
+/// the rectangle. The default is .001, but this is configurable using the
+/// argument offsetDist.
+/// Similar to drawableText, drawableTextRect also is capable of either
+/// creating its own texture OR receiving an already-initialized texture and
+/// simply using that. Again, you should pass it `null` the first time you
+/// add text to a scene, but other times, you should retrieve the original texture
+/// and reuse it to save on memory.
 
 class drawableTextRect : public drawableCollection {
  private:
