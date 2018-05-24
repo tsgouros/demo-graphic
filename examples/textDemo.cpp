@@ -14,6 +14,7 @@ bsg::drawableAxes* axes;
 bsg::drawableText* text1;
 bsg::drawableText* text2;
 bsg::drawableTextBox* textBox;
+bsg::drawableTextRect* textRect;
 bsg::drawableRectangle* rect;
 bsg::drawableRectangleOutline* outline;
 bsg::drawableCollection* collection;
@@ -296,9 +297,9 @@ int main(int argc, char **argv) {
   // object a different font, and it'll handle that. So we can use just one
   // fontTextureMgr throughout the whole project, provided that the atlas
   // doesn't run out of space (see comments in bsgMenagerie.cpp for details).
-  text2 = new bsg::drawableText(textShader, texture, "Goodbye", 0.3,
+  text2 = new bsg::drawableText(textShader, "Goodbye", 0.3,
       "../external/freetype-gl/fonts/Vera.ttf",
-      glm::vec4(1.0, 1.0, 1.0, 1.0));
+      glm::vec4(1.0, 1.0, 1.0, 1.0), texture);
   text2->setPosition(-1.0f, 0.0f, -1.0f);
   scene.addObject(text2);
 
@@ -314,14 +315,14 @@ int main(int argc, char **argv) {
   backgroundShader->addShader(bsg::GLSHADER_FRAGMENT, fragmentFile2);
   backgroundShader->compileShaders();
 
-  // Here's a drawableTextBox. Creating a drawableTextRect is exactly the same,
+  // Here's a drawableTextBox. Creating a drawableTextRect is the same,
   // except that it doesn't have an extrusion (the last arg).
   // drawableTextBox and drawableTextRect have a bunch more arguments that you
   // can use to fine-tune the background color, border width, border color,
   // and box height and width, etc. Here, though, we just use the default args.
   textBox = new bsg::drawableTextBox(textShader, backgroundShader, "hello",
-    "../external/freetype-gl/fonts/Lobster-Regular.ttf", texture, 0.4f);
-  scene.addObject(textBox); 
+    "../external/freetype-gl/fonts/Lobster-Regular.ttf", texture, 0.2f);
+  scene.addObject(textBox);
 
   // Set some initial positions for the camera and where it's looking.
   scene.setLookAtPosition(glm::vec3(0.0f, 0.0f, 0.0f));

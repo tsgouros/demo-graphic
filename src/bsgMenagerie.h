@@ -206,25 +206,19 @@ class drawableText : public drawableCompound {
 
   public:
 
-    // This first constructor is for the first time you use text in a scene.
-    // It creates its own texture, which you can then retrieve using getTexture
+    // If you pass in no texture object, it sees the default (null) and creates
+    // its own texture, which you can then retrieve using getTexture
     // and reuse for all other text in the scene.
-    drawableText(bsgPtr<shaderMgr> shader,
-                 const char *text,
-                 const float height,
-                 const char *fontFilePath,
-                 const glm::vec4 color);
-
-    // This second constructor gets passed an already-initialized texture. It'll
+    // If it is passed an already-initialized texture, it'll
     // either use that texture with the existing font, or add a new font to the
     // texture, but it's all stored within the same texture so as to save on
     // memory usage.
     drawableText(bsgPtr<shaderMgr> shader,
-                 bsgPtr<fontTextureMgr> texture,
                  const char *text,
                  const float height,
                  const char *fontFilePath,
-                 const glm::vec4 color);
+                 const glm::vec4 color,
+                 bsgPtr<fontTextureMgr> texture=NULL);
 
     bsgPtr<fontTextureMgr> getFontTexture();
     void _write();
@@ -248,7 +242,7 @@ class drawableTextRect : public drawableCollection {
    const glm::vec4 _textColor;
    const glm::vec4 _backgroundColor;
    const glm::vec4 _borderColor;
-   const bsgPtr<fontTextureMgr> _texture;
+   bsgPtr<fontTextureMgr> _texture;
 
  public:
    drawableTextRect(bsgPtr<shaderMgr> textShader,
@@ -267,6 +261,8 @@ class drawableTextRect : public drawableCollection {
                    const float boxWidth=2,
                    const float borderWidth=0.1,
                    const float offsetDist=0.001);
+
+   bsgPtr<fontTextureMgr> getFontTexture();
 };
 
 /// \brief A 3d box of text.
@@ -288,7 +284,7 @@ class drawableTextBox : public drawableCollection {
    const glm::vec4 _textColor;
    const glm::vec4 _backgroundColor;
    const glm::vec4 _borderColor;
-   const bsgPtr<fontTextureMgr> _texture;
+   bsgPtr<fontTextureMgr> _texture;
 
  public:
    drawableTextBox(bsgPtr<shaderMgr> textShader,
@@ -309,6 +305,8 @@ class drawableTextBox : public drawableCollection {
                    const float borderWidth=0.1,
                    const float offsetDist=0.001,
                    const glm::vec4 extrusionColor=glm::vec4(1.0, 1.0, 1.0, 1.0));
+
+   bsgPtr<fontTextureMgr> getFontTexture();
 };
 
 

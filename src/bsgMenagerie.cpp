@@ -827,26 +827,7 @@ drawablePoints::drawablePoints(bsgPtr<shaderMgr> pShader,
 
 drawableText::drawableText(bsgPtr<shaderMgr> pShader, const char *text, 
                            const float height, const char *fontFilePath,
-                           const glm::vec4 color) :
-    drawableCompound(pShader),
-    _text(text),
-    _height(height),
-    _fontFilePath(fontFilePath),
-    _color(color) {
-
-  _name = randomName("text");
-
-  _texture = new bsg::fontTextureMgr();
-  _texture->readFile(bsg::textureTTF, _fontFilePath);
-  _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
-
-  _write();
-}
-
-drawableText::drawableText(bsgPtr<shaderMgr> pShader,
-                           bsgPtr<fontTextureMgr> texture, const char *text, 
-                           const float height, const char *fontFilePath,
-                           const glm::vec4 color) :
+                           const glm::vec4 color, bsgPtr<fontTextureMgr> texture) :
     drawableCompound(pShader),
     _texture(texture),
     _text(text),
@@ -855,6 +836,11 @@ drawableText::drawableText(bsgPtr<shaderMgr> pShader,
     _color(color) {
 
   _name = randomName("text");
+
+  if (!_texture) {
+    _texture = new bsg::fontTextureMgr();
+    _pShader->addTexture(bsgPtr<textureMgr>((textureMgr *) (_texture.ptr())));
+  }
 
   // If the font requested isn't already in this texture's fontMap, we need to
   // load it in. If it is, we don't do anything.
@@ -1047,8 +1033,7 @@ drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
     _borderWidth(borderWidth),
     _offsetDist(offsetDist) {
 
-  _name = randomName("textRect");
-
+  std::cout << "1" << std::endl;
   // The background rectangle
   drawableRectangle *rect = new drawableRectangle(backgroundShader, 
     _boxWidth, _boxHeight, _backgroundColor);
@@ -1057,16 +1042,19 @@ drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
   drawableRectangleOutline *outline = new drawableRectangleOutline(
     backgroundShader, _boxWidth, _boxHeight, _borderWidth, _borderColor);
 
-  drawableText *drawText;
   // The text itself
-  if (_texture) {
-    drawText = new drawableText(textShader, _texture, _text, _textHeight,
-      _fontFilePath, _textColor);
-  } else {
-    drawText = new drawableText(textShader, _text, _textHeight, _fontFilePath,
-      _textColor);
+  drawableText *drawText;
+  drawText = new drawableText(textShader, _text, _textHeight,
+    _fontFilePath, _textColor, _texture);
+
+  // If this object wasn't passed a _texture initially, that means this is
+  // probably the first piece of text to be displayed in the scene, so we
+  // grab the _texture that drawText is using and make that accessible to
+  // other people who might want to use it.
+  if (!_texture) {
+    _texture = drawText->getFontTexture();
   }
-  
+
   // Bump it forward juust a bit to avoid z-fighting
   drawText->setPosition(0.0f, 0.0f, _offsetDist);
 
@@ -1074,6 +1062,10 @@ drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
   addObject(rect);
   addObject(outline);
   addObject(drawText);
+}
+
+bsgPtr<fontTextureMgr> drawableTextRect::getFontTexture() {
+  return _texture;
 }
 
 drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
@@ -1118,6 +1110,14 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
     _boxHeight, _boxWidth, _borderWidth, _offsetDist);
   textRect->setPosition(0.f, 0.f, _extrusion/2);
 
+  // If this object wasn't passed a _texture initially, that means this is
+  // probably the first piece of text to be displayed in the scene, so we
+  // grab the _texture that drawText is using and make that accessible to
+  // other people who might want to use it.
+  if (!_texture) {
+    _texture = textRect->getFontTexture();
+  }
+
   // The backface's outline and fill.
   drawableRectangleOutline *backFaceOutline = new drawableRectangleOutline(
     backgroundShader, _boxWidth, _boxHeight, _borderWidth, _borderColor);
@@ -1156,6 +1156,10 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
   addObject(rightFace);
   addObject(topFace);
   addObject(bottomFace);
+}
+
+bsgPtr<fontTextureMgr> drawableTextBox::getFontTexture() {
+  return _texture;
 }
 
 }
