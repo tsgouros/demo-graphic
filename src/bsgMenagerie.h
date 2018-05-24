@@ -234,6 +234,7 @@ class drawableText : public drawableCompound {
 ///
 /// Situates text in the size, color, and font you specify within a box of the
 /// dimensions, border color, and background color you specify.
+/// offsetDist TODO
 
 class drawableTextRect : public drawableCollection {
  private:
@@ -243,6 +244,7 @@ class drawableTextRect : public drawableCollection {
    const float _boxHeight;
    const float _boxWidth;
    const float _borderWidth;
+   const float _offsetDist;
    const glm::vec4 _textColor;
    const glm::vec4 _backgroundColor;
    const glm::vec4 _borderColor;
@@ -263,7 +265,8 @@ class drawableTextRect : public drawableCollection {
                       // default is white
                    const float boxHeight=1,
                    const float boxWidth=2,
-                   const float borderWidth=0.1);
+                   const float borderWidth=0.1,
+                   const float offsetDist=0.001);
 };
 
 /// \brief A 3d box of text.
@@ -280,6 +283,8 @@ class drawableTextBox : public drawableCollection {
    const float _boxWidth;
    const float _borderWidth;
    const float _extrusion;
+   const float _offsetDist;
+   const glm::vec4 _extrusionColor;
    const glm::vec4 _textColor;
    const glm::vec4 _backgroundColor;
    const glm::vec4 _borderColor;
@@ -301,7 +306,9 @@ class drawableTextBox : public drawableCollection {
                       // default is white
                    const float boxHeight=1,
                    const float boxWidth=2,
-                   const float borderWidth=0.1);
+                   const float borderWidth=0.1,
+                   const float offsetDist=0.001,
+                   const glm::vec4 extrusionColor=glm::vec4(1.0, 1.0, 1.0, 1.0));
 };
 
 

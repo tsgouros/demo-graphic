@@ -222,11 +222,13 @@ template <class T>
 class drawableObjData {
  private:
   std::vector<T> _data;
+  std::vector<T> _fakeData;
 
  public:
  drawableObjData(): name("") {
     _data.reserve(50);
     ID = 0; bufferID = 0;
+    _fakeData.reserve(50);
   };
  drawableObjData(const std::string inName, const std::vector<T> inData) :
   name(inName), _data(inData) {}
@@ -608,6 +610,9 @@ class drawableObj {
   drawableObjData<glm::vec4> _normals;
   drawableObjData<glm::vec2> _uvs;
 
+  std::vector<glm::vec4> _fakeColors;
+  std::vector<glm::vec4> _realColors;
+
   std::string print() const { return std::string("drawableObj"); };
   friend std::ostream &operator<<(std::ostream &os, const drawableObj &obj);
 
@@ -714,6 +719,13 @@ class drawableObj {
   ///
   /// Scans the vertex array to come up with a bounding box.
   void findBoundingBox();
+
+  void setFakeColors(const std::vector<glm::vec4>& data);
+  std::vector<glm::vec4> getFakeColors();
+
+  void setRealColors(const std::vector<glm::vec4>& data);
+  std::vector<glm::vec4> getRealColors();
+
 
   /// \brief Returns the upper limit of the bounding box.
   glm::vec4 getBoundingBoxUpper() {

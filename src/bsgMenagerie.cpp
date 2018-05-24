@@ -1032,7 +1032,8 @@ drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
                    const glm::vec4 borderColor,
                    const float boxHeight,
                    const float boxWidth,
-                   const float borderWidth) : 
+                   const float borderWidth,
+                   const float offsetDist) : 
     drawableCollection(),
     _text(text),
     _fontFilePath(fontFilePath),
@@ -1043,7 +1044,8 @@ drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
     _borderColor(borderColor),
     _boxHeight(boxHeight),
     _boxWidth(boxWidth),
-    _borderWidth(borderWidth) {
+    _borderWidth(borderWidth),
+    _offsetDist(offsetDist) {
 
   _name = randomName("textRect");
 
@@ -1066,7 +1068,7 @@ drawableTextRect::drawableTextRect(bsgPtr<shaderMgr> textShader,
   }
   
   // Bump it forward juust a bit to avoid z-fighting
-  drawText->setPosition(0.0f, 0.0f, 0.001f);
+  drawText->setPosition(0.0f, 0.0f, _offsetDist);
 
   // Add everybody together!
   addObject(rect);
@@ -1086,7 +1088,9 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
                    const glm::vec4 borderColor,
                    const float boxHeight,
                    const float boxWidth,
-                   const float borderWidth) : 
+                   const float borderWidth,
+                   const float offsetDist,
+                   const glm::vec4 extrusionColor) : 
     drawableCollection(),
     _text(text),
     _fontFilePath(fontFilePath),
@@ -1098,7 +1102,9 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
     _borderColor(borderColor),
     _boxHeight(boxHeight),
     _boxWidth(boxWidth),
-    _borderWidth(borderWidth) {
+    _borderWidth(borderWidth),
+    _offsetDist(offsetDist),
+    _extrusionColor(extrusionColor) {
 
   _name = randomName("textBox");
 
@@ -1109,7 +1115,7 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
   // The front face, that actually has the text on it.
   drawableTextRect *textRect = new drawableTextRect(textShader, backgroundShader, 
     _text, _fontFilePath, _texture, _textHeight, _textColor, _backgroundColor, _borderColor,
-    _boxHeight, _boxWidth, _borderWidth);
+    _boxHeight, _boxWidth, _borderWidth, _offsetDist);
   textRect->setPosition(0.f, 0.f, _extrusion/2);
 
   // The backface's outline and fill.
@@ -1123,22 +1129,22 @@ drawableTextBox::drawableTextBox(bsgPtr<shaderMgr> textShader,
 
   // The left, right, top, and bottom faces...
   drawableRectangle *leftFace = new drawableRectangle(backgroundShader, 
-    _extrusion, _boxHeight + 2 * _borderWidth, _borderColor);
+    _extrusion, _boxHeight + 2 * _borderWidth, _extrusionColor);
   leftFace->setRotation(0.0f, M_PI/2, 0.0f);
   leftFace->setPosition(-_boxWidth/2 - borderWidth, 0.f, 0.f);
 
   drawableRectangle *rightFace = new drawableRectangle(backgroundShader, 
-    _extrusion, _boxHeight + 2 * _borderWidth, _borderColor);
+    _extrusion, _boxHeight + 2 * _borderWidth, _extrusionColor);
   rightFace->setRotation(0.0f, M_PI/2, 0.0f);
   rightFace->setPosition(_boxWidth/2 + borderWidth, 0.f, 0.f);
 
   drawableRectangle *topFace = new drawableRectangle(backgroundShader, 
-    _boxWidth + 2 * _borderWidth, _extrusion, _borderColor);
+    _boxWidth + 2 * _borderWidth, _extrusion, _extrusionColor);
   topFace->setRotation(M_PI/2, 0.0f, 0.0f);
   topFace->setPosition(0.f, _boxHeight/2 + borderWidth, 0.f);
 
   drawableRectangle *bottomFace = new drawableRectangle(backgroundShader, 
-    _boxWidth + 2 * _borderWidth, _extrusion, _borderColor);
+    _boxWidth + 2 * _borderWidth, _extrusion, _extrusionColor);
   bottomFace->setRotation(M_PI/2, 0.0f, 0.0f);
   bottomFace->setPosition(0.f, -_boxHeight/2 - borderWidth, 0.f);
 
